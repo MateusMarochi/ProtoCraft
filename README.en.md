@@ -42,6 +42,8 @@ cargo build --release --workspace
 
 `scripts/build.ps1` runs the build checks and compilation. `scripts/package.ps1` prepares the Windows package under `dist/ProtoCraft/`.
 
+After packaging, `scripts/installer.ps1` builds the Windows x64 installer; Inno Setup 6 must be installed.
+
 ## CLI
 
 Run CLI commands from the repository root with `cargo run -p eda-cli --`, or use the packaged `protocraft-cli.exe`:
