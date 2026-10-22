@@ -1,0 +1,291 @@
+{
+  "format_version": 5,
+  "name": "Contador de década — dez saídas",
+  "components": {
+    "1": {
+      "id": 1,
+      "reference": "V1",
+      "kind": "VoltageSource",
+      "value": 5.0,
+      "position": {
+        "x": -24,
+        "y": -8
+      },
+      "rotation": 1
+    },
+    "4": {
+      "id": 4,
+      "reference": "V2",
+      "kind": "SquareVoltage",
+      "value": 2.5,
+      "position": {
+        "x": -24,
+        "y": 5
+      },
+      "rotation": 1,
+      "parameters": {
+        "frequency_hz": 1000.0,
+        "offset_v": 2.5,
+        "phase_deg": 180.0,
+        "duty_cycle": 0.5,
+        "closed": false,
+        "wiper": 0.5,
+        "gain": 100000.0,
+        "rail_low": -15.0,
+        "rail_high": 15.0,
+        "threshold_v": 2.5,
+        "on_resistance": 0.01,
+        "off_resistance": 1000000000.0,
+        "output_resistance": 100.0,
+        "saturation_current": 1e-14,
+        "ideality": 1.0,
+        "mos_threshold_v": 2.0,
+        "channel_modulation": 0.01,
+        "hysteresis_v": 0.05,
+        "propagation_delay_s": 1e-7,
+        "initial_state": 0
+      }
+    },
+    "7": {
+      "id": 7,
+      "reference": "U3",
+      "kind": "Counter10",
+      "value": 0.0,
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0
+    },
+    "23": {
+      "id": 23,
+      "reference": "R4",
+      "kind": "Resistor",
+      "value": 330.0,
+      "position": {
+        "x": 18,
+        "y": 13
+      },
+      "rotation": 0
+    },
+    "26": {
+      "id": 26,
+      "reference": "D5",
+      "kind": "Led",
+      "value": 1e-30,
+      "position": {
+        "x": 18,
+        "y": 23
+      },
+      "rotation": 1
+    },
+    "29": {
+      "id": 29,
+      "reference": "GND1",
+      "kind": "Ground",
+      "value": 0.0,
+      "position": {
+        "x": -20,
+        "y": 18
+      },
+      "rotation": 0
+    }
+  },
+  "wires": {},
+  "junctions": {},
+  "labels": {
+    "2": {
+      "id": 2,
+      "position": {
+        "x": -24,
+        "y": -11
+      },
+      "name": "VCC"
+    },
+    "3": {
+      "id": 3,
+      "position": {
+        "x": -24,
+        "y": -5
+      },
+      "name": "0"
+    },
+    "5": {
+      "id": 5,
+      "position": {
+        "x": -24,
+        "y": 2
+      },
+      "name": "CLK"
+    },
+    "6": {
+      "id": 6,
+      "position": {
+        "x": -24,
+        "y": 8
+      },
+      "name": "0"
+    },
+    "8": {
+      "id": 8,
+      "position": {
+        "x": -6,
+        "y": -4
+      },
+      "name": "CLK"
+    },
+    "9": {
+      "id": 9,
+      "position": {
+        "x": -6,
+        "y": -2
+      },
+      "name": "0"
+    },
+    "10": {
+      "id": 10,
+      "position": {
+        "x": -6,
+        "y": 0
+      },
+      "name": "VCC"
+    },
+    "11": {
+      "id": 11,
+      "position": {
+        "x": -6,
+        "y": 2
+      },
+      "name": "VCC"
+    },
+    "12": {
+      "id": 12,
+      "position": {
+        "x": -6,
+        "y": 4
+      },
+      "name": "0"
+    },
+    "13": {
+      "id": 13,
+      "position": {
+        "x": 6,
+        "y": -9
+      },
+      "name": "Q0"
+    },
+    "14": {
+      "id": 14,
+      "position": {
+        "x": 6,
+        "y": -7
+      },
+      "name": "Q1"
+    },
+    "15": {
+      "id": 15,
+      "position": {
+        "x": 6,
+        "y": -5
+      },
+      "name": "Q2"
+    },
+    "16": {
+      "id": 16,
+      "position": {
+        "x": 6,
+        "y": -3
+      },
+      "name": "Q3"
+    },
+    "17": {
+      "id": 17,
+      "position": {
+        "x": 6,
+        "y": -1
+      },
+      "name": "Q4"
+    },
+    "18": {
+      "id": 18,
+      "position": {
+        "x": 6,
+        "y": 1
+      },
+      "name": "Q5"
+    },
+    "19": {
+      "id": 19,
+      "position": {
+        "x": 6,
+        "y": 3
+      },
+      "name": "Q6"
+    },
+    "20": {
+      "id": 20,
+      "position": {
+        "x": 6,
+        "y": 5
+      },
+      "name": "Q7"
+    },
+    "21": {
+      "id": 21,
+      "position": {
+        "x": 6,
+        "y": 7
+      },
+      "name": "Q8"
+    },
+    "22": {
+      "id": 22,
+      "position": {
+        "x": 6,
+        "y": 9
+      },
+      "name": "Q9"
+    },
+    "24": {
+      "id": 24,
+      "position": {
+        "x": 15,
+        "y": 13
+      },
+      "name": "Q0"
+    },
+    "25": {
+      "id": 25,
+      "position": {
+        "x": 21,
+        "y": 13
+      },
+      "name": "LED"
+    },
+    "27": {
+      "id": 27,
+      "position": {
+        "x": 18,
+        "y": 20
+      },
+      "name": "LED"
+    },
+    "28": {
+      "id": 28,
+      "position": {
+        "x": 18,
+        "y": 26
+      },
+      "name": "0"
+    },
+    "30": {
+      "id": 30,
+      "position": {
+        "x": -20,
+        "y": 18
+      },
+      "name": "0"
+    }
+  },
+  "next_id": 31
+}

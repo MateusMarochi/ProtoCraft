@@ -1,0 +1,284 @@
+{
+  "format_version": 5,
+  "name": "Flip-flop D — divisão por dois e clear interativo",
+  "components": {
+    "1": {
+      "id": 1,
+      "reference": "V1",
+      "kind": "VoltageSource",
+      "value": 5.0,
+      "position": {
+        "x": -24,
+        "y": -8
+      },
+      "rotation": 1
+    },
+    "4": {
+      "id": 4,
+      "reference": "V2",
+      "kind": "SquareVoltage",
+      "value": 2.5,
+      "position": {
+        "x": -24,
+        "y": 5
+      },
+      "rotation": 1,
+      "parameters": {
+        "frequency_hz": 500.0,
+        "offset_v": 2.5,
+        "phase_deg": 180.0,
+        "duty_cycle": 0.5,
+        "closed": false,
+        "wiper": 0.5,
+        "gain": 100000.0,
+        "rail_low": -15.0,
+        "rail_high": 15.0,
+        "threshold_v": 2.5,
+        "on_resistance": 0.01,
+        "off_resistance": 1000000000.0,
+        "output_resistance": 100.0,
+        "saturation_current": 1e-14,
+        "ideality": 1.0,
+        "mos_threshold_v": 2.0,
+        "channel_modulation": 0.01,
+        "hysteresis_v": 0.05,
+        "propagation_delay_s": 1e-7,
+        "initial_state": 0
+      }
+    },
+    "7": {
+      "id": 7,
+      "reference": "V3",
+      "kind": "LogicInput",
+      "value": 5.0,
+      "position": {
+        "x": -24,
+        "y": 17
+      },
+      "rotation": 1,
+      "parameters": {
+        "frequency_hz": 1000.0,
+        "offset_v": 0.0,
+        "phase_deg": 0.0,
+        "duty_cycle": 0.5,
+        "closed": true,
+        "wiper": 0.5,
+        "gain": 100000.0,
+        "rail_low": -15.0,
+        "rail_high": 15.0,
+        "threshold_v": 2.5,
+        "on_resistance": 0.01,
+        "off_resistance": 1000000000.0,
+        "output_resistance": 100.0,
+        "saturation_current": 1e-14,
+        "ideality": 1.0,
+        "mos_threshold_v": 2.0,
+        "channel_modulation": 0.01,
+        "hysteresis_v": 0.05,
+        "propagation_delay_s": 1e-7,
+        "initial_state": 0
+      }
+    },
+    "10": {
+      "id": 10,
+      "reference": "U4",
+      "kind": "DFlipFlop",
+      "value": 0.0,
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0
+    },
+    "19": {
+      "id": 19,
+      "reference": "R5",
+      "kind": "Resistor",
+      "value": 10000.0,
+      "position": {
+        "x": 20,
+        "y": -3
+      },
+      "rotation": 1
+    },
+    "22": {
+      "id": 22,
+      "reference": "R6",
+      "kind": "Resistor",
+      "value": 10000.0,
+      "position": {
+        "x": 20,
+        "y": 9
+      },
+      "rotation": 1
+    },
+    "25": {
+      "id": 25,
+      "reference": "GND1",
+      "kind": "Ground",
+      "value": 0.0,
+      "position": {
+        "x": -20,
+        "y": 18
+      },
+      "rotation": 0
+    }
+  },
+  "wires": {},
+  "junctions": {},
+  "labels": {
+    "2": {
+      "id": 2,
+      "position": {
+        "x": -24,
+        "y": -11
+      },
+      "name": "VCC"
+    },
+    "3": {
+      "id": 3,
+      "position": {
+        "x": -24,
+        "y": -5
+      },
+      "name": "0"
+    },
+    "5": {
+      "id": 5,
+      "position": {
+        "x": -24,
+        "y": 2
+      },
+      "name": "CLK"
+    },
+    "6": {
+      "id": 6,
+      "position": {
+        "x": -24,
+        "y": 8
+      },
+      "name": "0"
+    },
+    "8": {
+      "id": 8,
+      "position": {
+        "x": -24,
+        "y": 14
+      },
+      "name": "CLRn"
+    },
+    "9": {
+      "id": 9,
+      "position": {
+        "x": -24,
+        "y": 20
+      },
+      "name": "0"
+    },
+    "11": {
+      "id": 11,
+      "position": {
+        "x": -6,
+        "y": -3
+      },
+      "name": "QN"
+    },
+    "12": {
+      "id": 12,
+      "position": {
+        "x": -6,
+        "y": -1
+      },
+      "name": "CLK"
+    },
+    "13": {
+      "id": 13,
+      "position": {
+        "x": -6,
+        "y": 1
+      },
+      "name": "VCC"
+    },
+    "14": {
+      "id": 14,
+      "position": {
+        "x": -6,
+        "y": 3
+      },
+      "name": "CLRn"
+    },
+    "15": {
+      "id": 15,
+      "position": {
+        "x": 6,
+        "y": 3
+      },
+      "name": "VOUT"
+    },
+    "16": {
+      "id": 16,
+      "position": {
+        "x": 6,
+        "y": 1
+      },
+      "name": "QN"
+    },
+    "17": {
+      "id": 17,
+      "position": {
+        "x": 6,
+        "y": -1
+      },
+      "name": "VCC"
+    },
+    "18": {
+      "id": 18,
+      "position": {
+        "x": 6,
+        "y": -3
+      },
+      "name": "0"
+    },
+    "20": {
+      "id": 20,
+      "position": {
+        "x": 20,
+        "y": -6
+      },
+      "name": "VOUT"
+    },
+    "21": {
+      "id": 21,
+      "position": {
+        "x": 20,
+        "y": 0
+      },
+      "name": "0"
+    },
+    "23": {
+      "id": 23,
+      "position": {
+        "x": 20,
+        "y": 6
+      },
+      "name": "QN"
+    },
+    "24": {
+      "id": 24,
+      "position": {
+        "x": 20,
+        "y": 12
+      },
+      "name": "0"
+    },
+    "26": {
+      "id": 26,
+      "position": {
+        "x": -20,
+        "y": 18
+      },
+      "name": "0"
+    }
+  },
+  "next_id": 27
+}

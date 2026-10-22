@@ -1,0 +1,168 @@
+{
+  "format_version": 5,
+  "name": "NMOS genérico — chaveamento de carga",
+  "components": {
+    "1": {
+      "id": 1,
+      "reference": "V1",
+      "kind": "VoltageSource",
+      "value": 12.0,
+      "position": {
+        "x": -24,
+        "y": -8
+      },
+      "rotation": 1
+    },
+    "4": {
+      "id": 4,
+      "reference": "V2",
+      "kind": "SquareVoltage",
+      "value": 2.5,
+      "position": {
+        "x": -24,
+        "y": 7
+      },
+      "rotation": 1,
+      "parameters": {
+        "frequency_hz": 500.0,
+        "offset_v": 2.5,
+        "phase_deg": 180.0,
+        "duty_cycle": 0.5,
+        "closed": false,
+        "wiper": 0.5,
+        "gain": 100000.0,
+        "rail_low": -15.0,
+        "rail_high": 15.0,
+        "threshold_v": 2.5,
+        "on_resistance": 0.01,
+        "off_resistance": 1000000000.0,
+        "output_resistance": 100.0,
+        "saturation_current": 1e-14,
+        "ideality": 1.0,
+        "mos_threshold_v": 2.0,
+        "channel_modulation": 0.01,
+        "hysteresis_v": 0.05,
+        "propagation_delay_s": 1e-7,
+        "initial_state": 0
+      }
+    },
+    "7": {
+      "id": 7,
+      "reference": "R3",
+      "kind": "Resistor",
+      "value": 1000.0,
+      "position": {
+        "x": 15,
+        "y": -8
+      },
+      "rotation": 1
+    },
+    "10": {
+      "id": 10,
+      "reference": "M4",
+      "kind": "Nmos",
+      "value": 0.02,
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0
+    },
+    "14": {
+      "id": 14,
+      "reference": "GND1",
+      "kind": "Ground",
+      "value": 0.0,
+      "position": {
+        "x": -20,
+        "y": 18
+      },
+      "rotation": 0
+    }
+  },
+  "wires": {},
+  "junctions": {},
+  "labels": {
+    "2": {
+      "id": 2,
+      "position": {
+        "x": -24,
+        "y": -11
+      },
+      "name": "VCC"
+    },
+    "3": {
+      "id": 3,
+      "position": {
+        "x": -24,
+        "y": -5
+      },
+      "name": "0"
+    },
+    "5": {
+      "id": 5,
+      "position": {
+        "x": -24,
+        "y": 4
+      },
+      "name": "GATE"
+    },
+    "6": {
+      "id": 6,
+      "position": {
+        "x": -24,
+        "y": 10
+      },
+      "name": "0"
+    },
+    "8": {
+      "id": 8,
+      "position": {
+        "x": 15,
+        "y": -11
+      },
+      "name": "VCC"
+    },
+    "9": {
+      "id": 9,
+      "position": {
+        "x": 15,
+        "y": -5
+      },
+      "name": "VOUT"
+    },
+    "11": {
+      "id": 11,
+      "position": {
+        "x": -3,
+        "y": 0
+      },
+      "name": "GATE"
+    },
+    "12": {
+      "id": 12,
+      "position": {
+        "x": 3,
+        "y": -2
+      },
+      "name": "VOUT"
+    },
+    "13": {
+      "id": 13,
+      "position": {
+        "x": 3,
+        "y": 2
+      },
+      "name": "0"
+    },
+    "15": {
+      "id": 15,
+      "position": {
+        "x": -20,
+        "y": 18
+      },
+      "name": "0"
+    }
+  },
+  "next_id": 16
+}

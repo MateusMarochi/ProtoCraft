@@ -1,0 +1,18 @@
+[package]
+name = "eda-storage"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+eda-pcb.workspace = true
+eda-core.workspace = true
+eda-simulation.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+tempfile.workspace = true
+zip = { version = "9.0.5", default-features = false, features = ["deflate"] }
+
+[dev-dependencies]
+eda-library.workspace = true

@@ -1,0 +1,581 @@
+{
+  "format_version": 6,
+  "name": "PCB — trilhas, vias e furos",
+  "components": {
+    "1": {
+      "id": 1,
+      "reference": "R1",
+      "kind": "Resistor",
+      "value": 1000.0,
+      "position": {
+        "x": -20,
+        "y": 0
+      },
+      "rotation": 0,
+      "footprint": {
+        "id": "Resistor_SMD:R_0805_2012Metric",
+        "description": "Resistor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)",
+        "body_layer": "F.Fab",
+        "body_bounds": {
+          "min": {
+            "x": -1000000,
+            "y": -625000
+          },
+          "max": {
+            "x": 1000000,
+            "y": 625000
+          }
+        },
+        "pads": [
+          {
+            "number": "1",
+            "position": {
+              "x": -912500,
+              "y": 0
+            },
+            "size": {
+              "x": 1025000,
+              "y": 1400000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 243902,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "2",
+            "position": {
+              "x": 912500,
+              "y": 0
+            },
+            "size": {
+              "x": 1025000,
+              "y": 1400000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 243902,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          }
+        ],
+        "lines": [
+          {
+            "start": {
+              "x": -227064,
+              "y": -735000
+            },
+            "end": {
+              "x": 227064,
+              "y": -735000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -227064,
+              "y": 735000
+            },
+            "end": {
+              "x": 227064,
+              "y": 735000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1680000,
+              "y": -950000
+            },
+            "end": {
+              "x": 1680000,
+              "y": -950000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 1680000,
+              "y": -950000
+            },
+            "end": {
+              "x": 1680000,
+              "y": 950000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 1680000,
+              "y": 950000
+            },
+            "end": {
+              "x": -1680000,
+              "y": 950000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -1680000,
+              "y": 950000
+            },
+            "end": {
+              "x": -1680000,
+              "y": -950000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -1000000,
+              "y": -625000
+            },
+            "end": {
+              "x": 1000000,
+              "y": -625000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1000000,
+              "y": -625000
+            },
+            "end": {
+              "x": 1000000,
+              "y": 625000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1000000,
+              "y": 625000
+            },
+            "end": {
+              "x": -1000000,
+              "y": 625000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1000000,
+              "y": 625000
+            },
+            "end": {
+              "x": -1000000,
+              "y": -625000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          }
+        ],
+        "keepouts": [],
+        "source": {
+          "project": "KiCad Libraries",
+          "revision": "819223b66f96508feaeaa305301b5e6bb5c1038b",
+          "url": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/819223b66f96508feaeaa305301b5e6bb5c1038b/Resistor_SMD.pretty/R_0805_2012Metric.kicad_mod",
+          "license": "CC-BY-SA-4.0 WITH KiCad-library-exception"
+        }
+      }
+    },
+    "2": {
+      "id": 2,
+      "reference": "R2",
+      "kind": "Resistor",
+      "value": 1000.0,
+      "position": {
+        "x": 20,
+        "y": 0
+      },
+      "rotation": 0,
+      "footprint": {
+        "id": "Resistor_SMD:R_0805_2012Metric",
+        "description": "Resistor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)",
+        "body_layer": "F.Fab",
+        "body_bounds": {
+          "min": {
+            "x": -1000000,
+            "y": -625000
+          },
+          "max": {
+            "x": 1000000,
+            "y": 625000
+          }
+        },
+        "pads": [
+          {
+            "number": "1",
+            "position": {
+              "x": -912500,
+              "y": 0
+            },
+            "size": {
+              "x": 1025000,
+              "y": 1400000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 243902,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "2",
+            "position": {
+              "x": 912500,
+              "y": 0
+            },
+            "size": {
+              "x": 1025000,
+              "y": 1400000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 243902,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          }
+        ],
+        "lines": [
+          {
+            "start": {
+              "x": -227064,
+              "y": -735000
+            },
+            "end": {
+              "x": 227064,
+              "y": -735000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -227064,
+              "y": 735000
+            },
+            "end": {
+              "x": 227064,
+              "y": 735000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1680000,
+              "y": -950000
+            },
+            "end": {
+              "x": 1680000,
+              "y": -950000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 1680000,
+              "y": -950000
+            },
+            "end": {
+              "x": 1680000,
+              "y": 950000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 1680000,
+              "y": 950000
+            },
+            "end": {
+              "x": -1680000,
+              "y": 950000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -1680000,
+              "y": 950000
+            },
+            "end": {
+              "x": -1680000,
+              "y": -950000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -1000000,
+              "y": -625000
+            },
+            "end": {
+              "x": 1000000,
+              "y": -625000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1000000,
+              "y": -625000
+            },
+            "end": {
+              "x": 1000000,
+              "y": 625000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1000000,
+              "y": 625000
+            },
+            "end": {
+              "x": -1000000,
+              "y": 625000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1000000,
+              "y": 625000
+            },
+            "end": {
+              "x": -1000000,
+              "y": -625000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          }
+        ],
+        "keepouts": [],
+        "source": {
+          "project": "KiCad Libraries",
+          "revision": "819223b66f96508feaeaa305301b5e6bb5c1038b",
+          "url": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/819223b66f96508feaeaa305301b5e6bb5c1038b/Resistor_SMD.pretty/R_0805_2012Metric.kicad_mod",
+          "license": "CC-BY-SA-4.0 WITH KiCad-library-exception"
+        }
+      }
+    }
+  },
+  "wires": {},
+  "junctions": {},
+  "labels": {
+    "3": {
+      "id": 3,
+      "position": {
+        "x": -23,
+        "y": 0
+      },
+      "name": "SIGNAL"
+    },
+    "4": {
+      "id": 4,
+      "position": {
+        "x": 17,
+        "y": 0
+      },
+      "name": "SIGNAL"
+    }
+  },
+  "next_id": 5,
+  "board": {
+    "width_nm": 40000000,
+    "height_nm": 30000000,
+    "thickness_nm": 1600000,
+    "clearance_nm": 200000,
+    "edge_clearance_nm": 250000,
+    "placements": {
+      "1": {
+        "position": {
+          "x": 20000000,
+          "y": 20000000
+        },
+        "rotation": 0,
+        "side": "Top"
+      },
+      "2": {
+        "position": {
+          "x": 30000000,
+          "y": 20000000
+        },
+        "rotation": 0,
+        "side": "Top"
+      }
+    },
+    "tracks": {
+      "1": {
+        "id": 1,
+        "start": {
+          "x": 19087500,
+          "y": 20000000
+        },
+        "end": {
+          "x": 19087500,
+          "y": 18000000
+        },
+        "width_nm": 300000,
+        "layer": "Top",
+        "net": {
+          "component": 1,
+          "pin": 0
+        }
+      },
+      "2": {
+        "id": 2,
+        "start": {
+          "x": 19087500,
+          "y": 18000000
+        },
+        "end": {
+          "x": 29087500,
+          "y": 18000000
+        },
+        "width_nm": 250000,
+        "layer": "Bottom",
+        "net": {
+          "component": 1,
+          "pin": 0
+        }
+      },
+      "3": {
+        "id": 3,
+        "start": {
+          "x": 29087500,
+          "y": 18000000
+        },
+        "end": {
+          "x": 29087500,
+          "y": 20000000
+        },
+        "width_nm": 250000,
+        "layer": "Top",
+        "net": {
+          "component": 1,
+          "pin": 0
+        }
+      }
+    },
+    "vias": {
+      "1": {
+        "id": 1,
+        "position": {
+          "x": 19087500,
+          "y": 18000000
+        },
+        "diameter_nm": 800000,
+        "drill_nm": 400000,
+        "net": {
+          "component": 1,
+          "pin": 0
+        }
+      },
+      "2": {
+        "id": 2,
+        "position": {
+          "x": 29087500,
+          "y": 18000000
+        },
+        "diameter_nm": 800000,
+        "drill_nm": 400000,
+        "net": {
+          "component": 1,
+          "pin": 0
+        }
+      }
+    },
+    "holes": {
+      "1": {
+        "id": 1,
+        "position": {
+          "x": 5000000,
+          "y": 5000000
+        },
+        "drill_nm": 3200000
+      },
+      "2": {
+        "id": 2,
+        "position": {
+          "x": 36000000,
+          "y": 4000000
+        },
+        "drill_nm": 3200000
+      },
+      "3": {
+        "id": 3,
+        "position": {
+          "x": 36000000,
+          "y": 26000000
+        },
+        "drill_nm": 3200000
+      },
+      "4": {
+        "id": 4,
+        "position": {
+          "x": 4000000,
+          "y": 26000000
+        },
+        "drill_nm": 3200000
+      }
+    }
+  }
+}

@@ -1,0 +1,4455 @@
+{
+  "format_version": 5,
+  "name": "STM32 + ESP32-S3 — pinagem e PCB",
+  "components": {
+    "1": {
+      "id": 1,
+      "reference": "U1",
+      "kind": "Device",
+      "value": 0.0,
+      "position": {
+        "x": -35,
+        "y": 0
+      },
+      "rotation": 0,
+      "device": {
+        "id": "STM32F103C8Tx",
+        "requested_part": "STM32F103C8Tx",
+        "manufacturer": "STMicroelectronics",
+        "family": "STM32F1",
+        "form": "Chip",
+        "description": "STMicroelectronics Arm Cortex-M3 MCU, 64KB flash, 20KB RAM, 72 MHz, 2.0-3.6V, 37 GPIO, LQFP48",
+        "datasheet": "https://www.st.com/resource/en/datasheet/stm32f103c8.pdf",
+        "pins": [
+          {
+            "number": "1",
+            "name": "VBAT",
+            "electrical_type": "power_in",
+            "offset": {
+              "x": -4,
+              "y": -32
+            },
+            "pads": [
+              "1"
+            ]
+          },
+          {
+            "number": "2",
+            "name": "PC13",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": -12
+            },
+            "pads": [
+              "2"
+            ]
+          },
+          {
+            "number": "3",
+            "name": "PC14",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": -10
+            },
+            "pads": [
+              "3"
+            ]
+          },
+          {
+            "number": "4",
+            "name": "PC15",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": -8
+            },
+            "pads": [
+              "4"
+            ]
+          },
+          {
+            "number": "5",
+            "name": "PD0",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": -18
+            },
+            "pads": [
+              "5"
+            ]
+          },
+          {
+            "number": "6",
+            "name": "PD1",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": -16
+            },
+            "pads": [
+              "6"
+            ]
+          },
+          {
+            "number": "7",
+            "name": "NRST",
+            "electrical_type": "input",
+            "offset": {
+              "x": -14,
+              "y": -26
+            },
+            "pads": [
+              "7"
+            ]
+          },
+          {
+            "number": "8",
+            "name": "VSSA",
+            "electrical_type": "power_in",
+            "offset": {
+              "x": 2,
+              "y": 32
+            },
+            "pads": [
+              "8"
+            ]
+          },
+          {
+            "number": "9",
+            "name": "VDDA",
+            "electrical_type": "power_in",
+            "offset": {
+              "x": 4,
+              "y": -32
+            },
+            "pads": [
+              "9"
+            ]
+          },
+          {
+            "number": "10",
+            "name": "PA0",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": -26
+            },
+            "pads": [
+              "10"
+            ]
+          },
+          {
+            "number": "11",
+            "name": "PA1",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": -24
+            },
+            "pads": [
+              "11"
+            ]
+          },
+          {
+            "number": "12",
+            "name": "PA2",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": -22
+            },
+            "pads": [
+              "12"
+            ]
+          },
+          {
+            "number": "13",
+            "name": "PA3",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": -20
+            },
+            "pads": [
+              "13"
+            ]
+          },
+          {
+            "number": "14",
+            "name": "PA4",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": -18
+            },
+            "pads": [
+              "14"
+            ]
+          },
+          {
+            "number": "15",
+            "name": "PA5",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": -16
+            },
+            "pads": [
+              "15"
+            ]
+          },
+          {
+            "number": "16",
+            "name": "PA6",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": -14
+            },
+            "pads": [
+              "16"
+            ]
+          },
+          {
+            "number": "17",
+            "name": "PA7",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": -12
+            },
+            "pads": [
+              "17"
+            ]
+          },
+          {
+            "number": "18",
+            "name": "PB0",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": -4
+            },
+            "pads": [
+              "18"
+            ]
+          },
+          {
+            "number": "19",
+            "name": "PB1",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": -2
+            },
+            "pads": [
+              "19"
+            ]
+          },
+          {
+            "number": "20",
+            "name": "PB2",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": 0
+            },
+            "pads": [
+              "20"
+            ]
+          },
+          {
+            "number": "21",
+            "name": "PB10",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": 16
+            },
+            "pads": [
+              "21"
+            ]
+          },
+          {
+            "number": "22",
+            "name": "PB11",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": 18
+            },
+            "pads": [
+              "22"
+            ]
+          },
+          {
+            "number": "23",
+            "name": "VSS",
+            "electrical_type": "power_in",
+            "offset": {
+              "x": 0,
+              "y": 32
+            },
+            "pads": [
+              "23"
+            ]
+          },
+          {
+            "number": "24",
+            "name": "VDD",
+            "electrical_type": "power_in",
+            "offset": {
+              "x": -2,
+              "y": -32
+            },
+            "pads": [
+              "24"
+            ]
+          },
+          {
+            "number": "25",
+            "name": "PB12",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": 20
+            },
+            "pads": [
+              "25"
+            ]
+          },
+          {
+            "number": "26",
+            "name": "PB13",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": 22
+            },
+            "pads": [
+              "26"
+            ]
+          },
+          {
+            "number": "27",
+            "name": "PB14",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": 24
+            },
+            "pads": [
+              "27"
+            ]
+          },
+          {
+            "number": "28",
+            "name": "PB15",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": 26
+            },
+            "pads": [
+              "28"
+            ]
+          },
+          {
+            "number": "29",
+            "name": "PA8",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": -10
+            },
+            "pads": [
+              "29"
+            ]
+          },
+          {
+            "number": "30",
+            "name": "PA9",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": -8
+            },
+            "pads": [
+              "30"
+            ]
+          },
+          {
+            "number": "31",
+            "name": "PA10",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": -6
+            },
+            "pads": [
+              "31"
+            ]
+          },
+          {
+            "number": "32",
+            "name": "PA11",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": -4
+            },
+            "pads": [
+              "32"
+            ]
+          },
+          {
+            "number": "33",
+            "name": "PA12",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": -2
+            },
+            "pads": [
+              "33"
+            ]
+          },
+          {
+            "number": "34",
+            "name": "PA13",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": 0
+            },
+            "pads": [
+              "34"
+            ]
+          },
+          {
+            "number": "35",
+            "name": "VSS",
+            "electrical_type": "passive",
+            "offset": {
+              "x": 0,
+              "y": 32
+            },
+            "pads": [
+              "35"
+            ]
+          },
+          {
+            "number": "36",
+            "name": "VDD",
+            "electrical_type": "power_in",
+            "offset": {
+              "x": 0,
+              "y": -32
+            },
+            "pads": [
+              "36"
+            ]
+          },
+          {
+            "number": "37",
+            "name": "PA14",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": 2
+            },
+            "pads": [
+              "37"
+            ]
+          },
+          {
+            "number": "38",
+            "name": "PA15",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 14,
+              "y": 4
+            },
+            "pads": [
+              "38"
+            ]
+          },
+          {
+            "number": "39",
+            "name": "PB3",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": 2
+            },
+            "pads": [
+              "39"
+            ]
+          },
+          {
+            "number": "40",
+            "name": "PB4",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": 4
+            },
+            "pads": [
+              "40"
+            ]
+          },
+          {
+            "number": "41",
+            "name": "PB5",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": 6
+            },
+            "pads": [
+              "41"
+            ]
+          },
+          {
+            "number": "42",
+            "name": "PB6",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": 8
+            },
+            "pads": [
+              "42"
+            ]
+          },
+          {
+            "number": "43",
+            "name": "PB7",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": 10
+            },
+            "pads": [
+              "43"
+            ]
+          },
+          {
+            "number": "44",
+            "name": "BOOT0",
+            "electrical_type": "input",
+            "offset": {
+              "x": -14,
+              "y": -22
+            },
+            "pads": [
+              "44"
+            ]
+          },
+          {
+            "number": "45",
+            "name": "PB8",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": 12
+            },
+            "pads": [
+              "45"
+            ]
+          },
+          {
+            "number": "46",
+            "name": "PB9",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -14,
+              "y": 14
+            },
+            "pads": [
+              "46"
+            ]
+          },
+          {
+            "number": "47",
+            "name": "VSS",
+            "electrical_type": "passive",
+            "offset": {
+              "x": 0,
+              "y": 32
+            },
+            "pads": [
+              "47"
+            ]
+          },
+          {
+            "number": "48",
+            "name": "VDD",
+            "electrical_type": "power_in",
+            "offset": {
+              "x": 2,
+              "y": -32
+            },
+            "pads": [
+              "48"
+            ]
+          }
+        ],
+        "source": {
+          "project": "KiCad Libraries",
+          "revision": "7800d91437ce44e2ed0928f2ad31a287457b8a68",
+          "url": "https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/7800d91437ce44e2ed0928f2ad31a287457b8a68/MCU_ST_STM32F1.kicad_symdir/STM32F103C8Tx.kicad_sym",
+          "license": "CC-BY-SA-4.0 WITH KiCad-library-exception"
+        }
+      },
+      "footprint": {
+        "id": "Package_QFP:LQFP-48_7x7mm_P0.5mm",
+        "description": "LQFP, 48 Pin (JEDEC MS-026 variation BBC, 1.40mm body thickness, https://www.jedec.org/document_search?search_api_views_fulltext=MS-026, https://www.analog.com/media/en/package-pcb-resources/package/pkg_pdf/ltc-legacy-lqfp/05081760_a_lx48.pdf)",
+        "body_layer": "F.Fab",
+        "body_bounds": {
+          "min": {
+            "x": -3500000,
+            "y": -3500000
+          },
+          "max": {
+            "x": 3500000,
+            "y": 3500000
+          }
+        },
+        "pads": [
+          {
+            "number": "1",
+            "position": {
+              "x": -4162500,
+              "y": -2750000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "2",
+            "position": {
+              "x": -4162500,
+              "y": -2250000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "3",
+            "position": {
+              "x": -4162500,
+              "y": -1750000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "4",
+            "position": {
+              "x": -4162500,
+              "y": -1250000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "5",
+            "position": {
+              "x": -4162500,
+              "y": -750000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "6",
+            "position": {
+              "x": -4162500,
+              "y": -250000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "7",
+            "position": {
+              "x": -4162500,
+              "y": 250000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "8",
+            "position": {
+              "x": -4162500,
+              "y": 750000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "9",
+            "position": {
+              "x": -4162500,
+              "y": 1250000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "10",
+            "position": {
+              "x": -4162500,
+              "y": 1750000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "11",
+            "position": {
+              "x": -4162500,
+              "y": 2250000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "12",
+            "position": {
+              "x": -4162500,
+              "y": 2750000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "13",
+            "position": {
+              "x": -2750000,
+              "y": 4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "14",
+            "position": {
+              "x": -2250000,
+              "y": 4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "15",
+            "position": {
+              "x": -1750000,
+              "y": 4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "16",
+            "position": {
+              "x": -1250000,
+              "y": 4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "17",
+            "position": {
+              "x": -750000,
+              "y": 4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "18",
+            "position": {
+              "x": -250000,
+              "y": 4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "19",
+            "position": {
+              "x": 250000,
+              "y": 4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "20",
+            "position": {
+              "x": 750000,
+              "y": 4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "21",
+            "position": {
+              "x": 1250000,
+              "y": 4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "22",
+            "position": {
+              "x": 1750000,
+              "y": 4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "23",
+            "position": {
+              "x": 2250000,
+              "y": 4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "24",
+            "position": {
+              "x": 2750000,
+              "y": 4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "25",
+            "position": {
+              "x": 4162500,
+              "y": 2750000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "26",
+            "position": {
+              "x": 4162500,
+              "y": 2250000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "27",
+            "position": {
+              "x": 4162500,
+              "y": 1750000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "28",
+            "position": {
+              "x": 4162500,
+              "y": 1250000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "29",
+            "position": {
+              "x": 4162500,
+              "y": 750000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "30",
+            "position": {
+              "x": 4162500,
+              "y": 250000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "31",
+            "position": {
+              "x": 4162500,
+              "y": -250000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "32",
+            "position": {
+              "x": 4162500,
+              "y": -750000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "33",
+            "position": {
+              "x": 4162500,
+              "y": -1250000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "34",
+            "position": {
+              "x": 4162500,
+              "y": -1750000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "35",
+            "position": {
+              "x": 4162500,
+              "y": -2250000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "36",
+            "position": {
+              "x": 4162500,
+              "y": -2750000
+            },
+            "size": {
+              "x": 1475000,
+              "y": 300000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "37",
+            "position": {
+              "x": 2750000,
+              "y": -4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "38",
+            "position": {
+              "x": 2250000,
+              "y": -4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "39",
+            "position": {
+              "x": 1750000,
+              "y": -4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "40",
+            "position": {
+              "x": 1250000,
+              "y": -4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "41",
+            "position": {
+              "x": 750000,
+              "y": -4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "42",
+            "position": {
+              "x": 250000,
+              "y": -4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "43",
+            "position": {
+              "x": -250000,
+              "y": -4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "44",
+            "position": {
+              "x": -750000,
+              "y": -4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "45",
+            "position": {
+              "x": -1250000,
+              "y": -4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "46",
+            "position": {
+              "x": -1750000,
+              "y": -4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "47",
+            "position": {
+              "x": -2250000,
+              "y": -4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "48",
+            "position": {
+              "x": -2750000,
+              "y": -4162500
+            },
+            "size": {
+              "x": 300000,
+              "y": 1475000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Mask",
+              "F.Paste"
+            ],
+            "roundrect_ratio_ppm": 250000,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          }
+        ],
+        "lines": [
+          {
+            "start": {
+              "x": -3610000,
+              "y": -3610000
+            },
+            "end": {
+              "x": -3160000,
+              "y": -3610000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -3610000,
+              "y": -3160000
+            },
+            "end": {
+              "x": -3610000,
+              "y": -3610000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -3610000,
+              "y": 3610000
+            },
+            "end": {
+              "x": -3610000,
+              "y": 3160000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -3160000,
+              "y": 3610000
+            },
+            "end": {
+              "x": -3610000,
+              "y": 3610000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 3160000,
+              "y": -3610000
+            },
+            "end": {
+              "x": 3610000,
+              "y": -3610000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 3610000,
+              "y": -3610000
+            },
+            "end": {
+              "x": 3610000,
+              "y": -3160000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 3610000,
+              "y": 3160000
+            },
+            "end": {
+              "x": 3610000,
+              "y": 3610000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 3610000,
+              "y": 3610000
+            },
+            "end": {
+              "x": 3160000,
+              "y": 3610000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -4250000,
+              "y": -3160000
+            },
+            "end": {
+              "x": -4590000,
+              "y": -3630000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -4590000,
+              "y": -3630000
+            },
+            "end": {
+              "x": -3910000,
+              "y": -3630000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -3910000,
+              "y": -3630000
+            },
+            "end": {
+              "x": -4250000,
+              "y": -3160000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -5150000,
+              "y": -3150000
+            },
+            "end": {
+              "x": -3750000,
+              "y": -3150000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -5150000,
+              "y": 3150000
+            },
+            "end": {
+              "x": -5150000,
+              "y": -3150000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -3750000,
+              "y": -3750000
+            },
+            "end": {
+              "x": -3150000,
+              "y": -3750000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -3750000,
+              "y": -3150000
+            },
+            "end": {
+              "x": -3750000,
+              "y": -3750000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -3750000,
+              "y": 3150000
+            },
+            "end": {
+              "x": -5150000,
+              "y": 3150000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -3750000,
+              "y": 3750000
+            },
+            "end": {
+              "x": -3750000,
+              "y": 3150000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -3150000,
+              "y": -5150000
+            },
+            "end": {
+              "x": 3150000,
+              "y": -5150000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -3150000,
+              "y": -3750000
+            },
+            "end": {
+              "x": -3150000,
+              "y": -5150000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -3150000,
+              "y": 3750000
+            },
+            "end": {
+              "x": -3750000,
+              "y": 3750000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -3150000,
+              "y": 5150000
+            },
+            "end": {
+              "x": -3150000,
+              "y": 3750000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 3150000,
+              "y": -5150000
+            },
+            "end": {
+              "x": 3150000,
+              "y": -3750000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 3150000,
+              "y": -3750000
+            },
+            "end": {
+              "x": 3750000,
+              "y": -3750000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 3150000,
+              "y": 3750000
+            },
+            "end": {
+              "x": 3150000,
+              "y": 5150000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 3150000,
+              "y": 5150000
+            },
+            "end": {
+              "x": -3150000,
+              "y": 5150000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 3750000,
+              "y": -3750000
+            },
+            "end": {
+              "x": 3750000,
+              "y": -3150000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 3750000,
+              "y": -3150000
+            },
+            "end": {
+              "x": 5150000,
+              "y": -3150000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 3750000,
+              "y": 3150000
+            },
+            "end": {
+              "x": 3750000,
+              "y": 3750000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 3750000,
+              "y": 3750000
+            },
+            "end": {
+              "x": 3150000,
+              "y": 3750000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 5150000,
+              "y": -3150000
+            },
+            "end": {
+              "x": 5150000,
+              "y": 3150000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 5150000,
+              "y": 3150000
+            },
+            "end": {
+              "x": 3750000,
+              "y": 3150000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -2500000,
+              "y": -3500000
+            },
+            "end": {
+              "x": 3500000,
+              "y": -3500000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 3500000,
+              "y": -3500000
+            },
+            "end": {
+              "x": 3500000,
+              "y": 3500000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 3500000,
+              "y": 3500000
+            },
+            "end": {
+              "x": -3500000,
+              "y": 3500000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -3500000,
+              "y": 3500000
+            },
+            "end": {
+              "x": -3500000,
+              "y": -2500000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -3500000,
+              "y": -2500000
+            },
+            "end": {
+              "x": -2500000,
+              "y": -3500000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          }
+        ],
+        "keepouts": [],
+        "source": {
+          "project": "KiCad Libraries",
+          "revision": "819223b66f96508feaeaa305301b5e6bb5c1038b",
+          "url": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/819223b66f96508feaeaa305301b5e6bb5c1038b/Package_QFP.pretty/LQFP-48_7x7mm_P0.5mm.kicad_mod",
+          "license": "CC-BY-SA-4.0 WITH KiCad-library-exception"
+        }
+      }
+    },
+    "2": {
+      "id": 2,
+      "reference": "U2",
+      "kind": "Device",
+      "value": 0.0,
+      "position": {
+        "x": 35,
+        "y": 0
+      },
+      "rotation": 0,
+      "device": {
+        "id": "ESP32-S3-WROOM-1",
+        "requested_part": "ESP32-S3-WROOM-1",
+        "manufacturer": "Espressif",
+        "family": "ESP32",
+        "form": "Module",
+        "description": "2.4 GHz WiFi (802.11 b/g/n) and Bluetooth ® 5 (LE) module Built around ESP32S3 series of SoCs, Xtensa ® dualcore 32bit LX7 microprocessor Flash up to 16 MB, PSRAM up to 8 MB 36 GPIOs, rich set of peripherals Onboard PCB antenna",
+        "datasheet": "https://www.espressif.com/sites/default/files/documentation/esp32-s3-wroom-1_wroom-1u_datasheet_en.pdf",
+        "pins": [
+          {
+            "number": "1",
+            "name": "GND",
+            "electrical_type": "power_in",
+            "offset": {
+              "x": 0,
+              "y": 32
+            },
+            "pads": [
+              "1"
+            ]
+          },
+          {
+            "number": "2",
+            "name": "3V3",
+            "electrical_type": "power_in",
+            "offset": {
+              "x": 0,
+              "y": -32
+            },
+            "pads": [
+              "2"
+            ]
+          },
+          {
+            "number": "3",
+            "name": "EN",
+            "electrical_type": "input",
+            "offset": {
+              "x": -36,
+              "y": -28
+            },
+            "pads": [
+              "3"
+            ]
+          },
+          {
+            "number": "4",
+            "name": "GPIO4/TOUCH4/ADC1_CH3",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": -8
+            },
+            "pads": [
+              "4"
+            ]
+          },
+          {
+            "number": "5",
+            "name": "GPIO5/TOUCH5/ADC1_CH4",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": -6
+            },
+            "pads": [
+              "5"
+            ]
+          },
+          {
+            "number": "6",
+            "name": "GPIO6/TOUCH6/ADC1_CH5",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": -4
+            },
+            "pads": [
+              "6"
+            ]
+          },
+          {
+            "number": "7",
+            "name": "GPIO7/TOUCH7/ADC1_CH6",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": -2
+            },
+            "pads": [
+              "7"
+            ]
+          },
+          {
+            "number": "8",
+            "name": "GPIO15/U0RTS/ADC2_CH4/XTAL_32K_P",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -36,
+              "y": -22
+            },
+            "pads": [
+              "8"
+            ]
+          },
+          {
+            "number": "9",
+            "name": "GPIO16/U0CTS/ADC2_CH5/XTAL_32K_N",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -36,
+              "y": -20
+            },
+            "pads": [
+              "9"
+            ]
+          },
+          {
+            "number": "10",
+            "name": "GPIO17/U1TXD/ADC2_CH6",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": 14
+            },
+            "pads": [
+              "10"
+            ]
+          },
+          {
+            "number": "11",
+            "name": "GPIO18/U1RXD/ADC2_CH7/CLK_OUT3",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": 16
+            },
+            "pads": [
+              "11"
+            ]
+          },
+          {
+            "number": "12",
+            "name": "GPIO8/TOUCH8/ADC1_CH7/SUBSPICS1",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": 0
+            },
+            "pads": [
+              "12"
+            ]
+          },
+          {
+            "number": "13",
+            "name": "GPIO19/U1RTS/ADC2_CH8/CLK_OUT2/USB_D-",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": -20
+            },
+            "pads": [
+              "13"
+            ]
+          },
+          {
+            "number": "14",
+            "name": "GPIO20/U1CTS/ADC2_CH9/CLK_OUT1/USB_D+",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": -22
+            },
+            "pads": [
+              "14"
+            ]
+          },
+          {
+            "number": "15",
+            "name": "GPIO3/TOUCH3/ADC1_CH2",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": -10
+            },
+            "pads": [
+              "15"
+            ]
+          },
+          {
+            "number": "16",
+            "name": "GPIO46",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": 24
+            },
+            "pads": [
+              "16"
+            ]
+          },
+          {
+            "number": "17",
+            "name": "GPIO9/TOUCH9/ADC1_CH8/FSPIHD/SUBSPIHD",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": 2
+            },
+            "pads": [
+              "17"
+            ]
+          },
+          {
+            "number": "18",
+            "name": "GPIO10/TOUCH10/ADC1_CH9/FSPICS0/FSPIIO4/SUBSPICS0",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": 4
+            },
+            "pads": [
+              "18"
+            ]
+          },
+          {
+            "number": "19",
+            "name": "GPIO11/TOUCH11/ADC2_CH0/FSPID/FSPIIO5/SUBSPID",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": 6
+            },
+            "pads": [
+              "19"
+            ]
+          },
+          {
+            "number": "20",
+            "name": "GPIO12/TOUCH12/ADC2_CH1/FSPICLK/FSPIIO6/SUBSPICLK",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": 8
+            },
+            "pads": [
+              "20"
+            ]
+          },
+          {
+            "number": "21",
+            "name": "GPIO13/TOUCH13/ADC2_CH2/FSPIQ/FSPIIO7/SUBSPIQ",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": 10
+            },
+            "pads": [
+              "21"
+            ]
+          },
+          {
+            "number": "22",
+            "name": "GPIO14/TOUCH14/ADC2_CH3/FSPIWP/FSPIDQS/SUBSPIWP",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": 12
+            },
+            "pads": [
+              "22"
+            ]
+          },
+          {
+            "number": "23",
+            "name": "GPIO21",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": 18
+            },
+            "pads": [
+              "23"
+            ]
+          },
+          {
+            "number": "24",
+            "name": "GPIO47/SPICLK_P/SUBSPICLK_P_DIFF",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": 26
+            },
+            "pads": [
+              "24"
+            ]
+          },
+          {
+            "number": "25",
+            "name": "GPIO48/SPICLK_N/SUBSPICLK_N_DIFF",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": 28
+            },
+            "pads": [
+              "25"
+            ]
+          },
+          {
+            "number": "26",
+            "name": "GPIO45",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": 22
+            },
+            "pads": [
+              "26"
+            ]
+          },
+          {
+            "number": "27",
+            "name": "GPIO0/BOOT",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": -16
+            },
+            "pads": [
+              "27"
+            ]
+          },
+          {
+            "number": "28",
+            "name": "SPIIO6/GPIO35/FSPID/SUBSPID",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -36,
+              "y": 24
+            },
+            "pads": [
+              "28"
+            ]
+          },
+          {
+            "number": "29",
+            "name": "SPIIO7/GPIO36/FSPICLK/SUBSPICLK",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -36,
+              "y": 26
+            },
+            "pads": [
+              "29"
+            ]
+          },
+          {
+            "number": "30",
+            "name": "SPIDQS/GPIO37/FSPIQ/SUBSPIQ",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -36,
+              "y": 28
+            },
+            "pads": [
+              "30"
+            ]
+          },
+          {
+            "number": "31",
+            "name": "GPIO38/FSPIWP/SUBSPIWP",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": 20
+            },
+            "pads": [
+              "31"
+            ]
+          },
+          {
+            "number": "32",
+            "name": "MTCK/GPIO39/CLK_OUT3/SUBSPICS1",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -36,
+              "y": -16
+            },
+            "pads": [
+              "32"
+            ]
+          },
+          {
+            "number": "33",
+            "name": "MTDO/GPIO40/CLK_OUT2",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -36,
+              "y": -14
+            },
+            "pads": [
+              "33"
+            ]
+          },
+          {
+            "number": "34",
+            "name": "MTDI/GPIO41/CLK_OUT1",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -36,
+              "y": -12
+            },
+            "pads": [
+              "34"
+            ]
+          },
+          {
+            "number": "35",
+            "name": "MTMS/GPIO42",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": -36,
+              "y": -10
+            },
+            "pads": [
+              "35"
+            ]
+          },
+          {
+            "number": "36",
+            "name": "U0RXD/GPIO44/CLK_OUT2",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": -26
+            },
+            "pads": [
+              "36"
+            ]
+          },
+          {
+            "number": "37",
+            "name": "U0TXD/GPIO43/CLK_OUT1",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": -28
+            },
+            "pads": [
+              "37"
+            ]
+          },
+          {
+            "number": "38",
+            "name": "GPIO2/TOUCH2/ADC1_CH1",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": -12
+            },
+            "pads": [
+              "38"
+            ]
+          },
+          {
+            "number": "39",
+            "name": "GPIO1/TOUCH1/ADC1_CH0",
+            "electrical_type": "bidirectional",
+            "offset": {
+              "x": 36,
+              "y": -14
+            },
+            "pads": [
+              "39"
+            ]
+          },
+          {
+            "number": "40",
+            "name": "GND",
+            "electrical_type": "passive",
+            "offset": {
+              "x": 0,
+              "y": 32
+            },
+            "pads": [
+              "40"
+            ]
+          },
+          {
+            "number": "41",
+            "name": "GND",
+            "electrical_type": "passive",
+            "offset": {
+              "x": 0,
+              "y": 32
+            },
+            "pads": [
+              "41"
+            ]
+          }
+        ],
+        "source": {
+          "project": "Espressif KiCad Libraries",
+          "revision": "dd76561812ab300351234ba6e0ec1295641796f0",
+          "url": "https://github.com/espressif/kicad-libraries/blob/dd76561812ab300351234ba6e0ec1295641796f0/symbols/Espressif.kicad_sym",
+          "license": "CC-BY-SA-4.0 WITH KiCad-library-exception"
+        }
+      },
+      "footprint": {
+        "id": "PCM_Espressif:ESP32-S3-WROOM-1",
+        "description": "ESP32-S3-WROOM-1 is a powerful, generic Wi-Fi + Bluetooth LE MCU modules that have Dual core CPU , a rich set of peripherals, provides acceleration for neural network computing and signal processing workloads. They are an ideal choice for a wide variety of application scenarios related to AI + Internet of Things (AIoT), such as wake word detection and speech commands recognition , face detection and recognition, smart home, smart appliance, smart control panel, smart speaker etc.",
+        "body_layer": "Eco2.User",
+        "body_bounds": {
+          "min": {
+            "x": -9000000,
+            "y": -15750000
+          },
+          "max": {
+            "x": 9000000,
+            "y": 9750000
+          }
+        },
+        "pads": [
+          {
+            "number": "1",
+            "position": {
+              "x": -8750000,
+              "y": -8260000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "2",
+            "position": {
+              "x": -8750000,
+              "y": -6990000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "3",
+            "position": {
+              "x": -8750000,
+              "y": -5720000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "4",
+            "position": {
+              "x": -8750000,
+              "y": -4450000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "5",
+            "position": {
+              "x": -8750000,
+              "y": -3180000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "6",
+            "position": {
+              "x": -8750000,
+              "y": -1910000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "7",
+            "position": {
+              "x": -8750000,
+              "y": -640000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "8",
+            "position": {
+              "x": -8750000,
+              "y": 630000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "9",
+            "position": {
+              "x": -8750000,
+              "y": 1900000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "10",
+            "position": {
+              "x": -8750000,
+              "y": 3170000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "11",
+            "position": {
+              "x": -8750000,
+              "y": 4440000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "12",
+            "position": {
+              "x": -8750000,
+              "y": 5710000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "13",
+            "position": {
+              "x": -8750000,
+              "y": 6980000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "14",
+            "position": {
+              "x": -8750000,
+              "y": 8250000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "15",
+            "position": {
+              "x": -6985000,
+              "y": 9500000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 90000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "16",
+            "position": {
+              "x": -5715000,
+              "y": 9500000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 90000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "17",
+            "position": {
+              "x": -4445000,
+              "y": 9500000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 90000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "18",
+            "position": {
+              "x": -3175000,
+              "y": 9500000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 90000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "19",
+            "position": {
+              "x": -1905000,
+              "y": 9500000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 90000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "20",
+            "position": {
+              "x": -635000,
+              "y": 9500000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 90000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "21",
+            "position": {
+              "x": 635000,
+              "y": 9500000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 90000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "22",
+            "position": {
+              "x": 1905000,
+              "y": 9500000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 90000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "23",
+            "position": {
+              "x": 3175000,
+              "y": 9500000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 90000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "24",
+            "position": {
+              "x": 4445000,
+              "y": 9500000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 90000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "25",
+            "position": {
+              "x": 5715000,
+              "y": 9500000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 90000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "26",
+            "position": {
+              "x": 6985000,
+              "y": 9500000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 90000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "27",
+            "position": {
+              "x": 8750000,
+              "y": 8250000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "28",
+            "position": {
+              "x": 8750000,
+              "y": 6980000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "29",
+            "position": {
+              "x": 8750000,
+              "y": 5710000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "30",
+            "position": {
+              "x": 8750000,
+              "y": 4440000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "31",
+            "position": {
+              "x": 8750000,
+              "y": 3170000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "32",
+            "position": {
+              "x": 8750000,
+              "y": 1900000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "33",
+            "position": {
+              "x": 8750000,
+              "y": 630000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "34",
+            "position": {
+              "x": 8750000,
+              "y": -640000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "35",
+            "position": {
+              "x": 8750000,
+              "y": -1910000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "36",
+            "position": {
+              "x": 8750000,
+              "y": -3180000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "37",
+            "position": {
+              "x": 8750000,
+              "y": -4450000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "38",
+            "position": {
+              "x": 8750000,
+              "y": -5720000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "39",
+            "position": {
+              "x": 8750000,
+              "y": -6990000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "40",
+            "position": {
+              "x": 8750000,
+              "y": -8260000
+            },
+            "size": {
+              "x": 1500000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "41",
+            "position": {
+              "x": -2900000,
+              "y": -1940000
+            },
+            "size": {
+              "x": 900000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "41",
+            "position": {
+              "x": -2900000,
+              "y": -540000
+            },
+            "size": {
+              "x": 900000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "41",
+            "position": {
+              "x": -2900000,
+              "y": 860000
+            },
+            "size": {
+              "x": 900000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "41",
+            "position": {
+              "x": -1500000,
+              "y": -1940000
+            },
+            "size": {
+              "x": 900000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "41",
+            "position": {
+              "x": -1500000,
+              "y": -540000
+            },
+            "size": {
+              "x": 900000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "41",
+            "position": {
+              "x": -1500000,
+              "y": 860000
+            },
+            "size": {
+              "x": 900000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "41",
+            "position": {
+              "x": -100000,
+              "y": -1940000
+            },
+            "size": {
+              "x": 900000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "41",
+            "position": {
+              "x": -100000,
+              "y": -540000
+            },
+            "size": {
+              "x": 900000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "41",
+            "position": {
+              "x": -100000,
+              "y": 860000
+            },
+            "size": {
+              "x": 900000,
+              "y": 900000
+            },
+            "rotation_mdeg": 180000,
+            "shape": "Rect",
+            "technology": "Smd",
+            "drill": null,
+            "layers": [
+              "F.Cu",
+              "F.Paste",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          }
+        ],
+        "lines": [
+          {
+            "start": {
+              "x": -9000000,
+              "y": -15750000
+            },
+            "end": {
+              "x": -9000000,
+              "y": -9000000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -9000000,
+              "y": -15750000
+            },
+            "end": {
+              "x": 9000000,
+              "y": -15750000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -9000000,
+              "y": 9000000
+            },
+            "end": {
+              "x": -9000000,
+              "y": 9750000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -9000000,
+              "y": 9750000
+            },
+            "end": {
+              "x": -8000000,
+              "y": 9750000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 9000000,
+              "y": -15750000
+            },
+            "end": {
+              "x": 9000000,
+              "y": -9000000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 9000000,
+              "y": -9810000
+            },
+            "end": {
+              "x": -9000000,
+              "y": -9810000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 9000000,
+              "y": 9000000
+            },
+            "end": {
+              "x": 9000000,
+              "y": 9750000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 9000000,
+              "y": 9750000
+            },
+            "end": {
+              "x": 8000000,
+              "y": 9750000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -9000000,
+              "y": -15750000
+            },
+            "end": {
+              "x": 9000000,
+              "y": -15750000
+            },
+            "width_nm": 120000,
+            "layer": "Eco2.User"
+          },
+          {
+            "start": {
+              "x": -9000000,
+              "y": -9810000
+            },
+            "end": {
+              "x": 9000000,
+              "y": -9810000
+            },
+            "width_nm": 120000,
+            "layer": "Eco2.User"
+          },
+          {
+            "start": {
+              "x": -9000000,
+              "y": 9750000
+            },
+            "end": {
+              "x": -9000000,
+              "y": -15750000
+            },
+            "width_nm": 120000,
+            "layer": "Eco2.User"
+          },
+          {
+            "start": {
+              "x": 9000000,
+              "y": -15750000
+            },
+            "end": {
+              "x": 9000000,
+              "y": 9750000
+            },
+            "width_nm": 120000,
+            "layer": "Eco2.User"
+          },
+          {
+            "start": {
+              "x": 9000000,
+              "y": 9750000
+            },
+            "end": {
+              "x": -9000000,
+              "y": 9750000
+            },
+            "width_nm": 120000,
+            "layer": "Eco2.User"
+          },
+          {
+            "start": {
+              "x": -9800000,
+              "y": -16050000
+            },
+            "end": {
+              "x": -9800000,
+              "y": 10550000
+            },
+            "width_nm": 120000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -9800000,
+              "y": 10550000
+            },
+            "end": {
+              "x": 9800000,
+              "y": 10550000
+            },
+            "width_nm": 120000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 9800000,
+              "y": -16050000
+            },
+            "end": {
+              "x": -9800000,
+              "y": -16050000
+            },
+            "width_nm": 120000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 9800000,
+              "y": -16050000
+            },
+            "end": {
+              "x": 9800000,
+              "y": 10550000
+            },
+            "width_nm": 120000,
+            "layer": "F.CrtYd"
+          }
+        ],
+        "keepouts": [
+          {
+            "polygon": [
+              {
+                "x": 9000000,
+                "y": -9800000
+              },
+              {
+                "x": -9000000,
+                "y": -9800000
+              },
+              {
+                "x": -9000000,
+                "y": -15750000
+              },
+              {
+                "x": 9000000,
+                "y": -15750000
+              }
+            ],
+            "tracks": true,
+            "vias": true,
+            "pads": true,
+            "copper": true
+          }
+        ],
+        "source": {
+          "project": "Espressif KiCad Libraries",
+          "revision": "dd76561812ab300351234ba6e0ec1295641796f0",
+          "url": "https://github.com/espressif/kicad-libraries/blob/dd76561812ab300351234ba6e0ec1295641796f0/footprints/Espressif.pretty/ESP32-S3-WROOM-1.kicad_mod",
+          "license": "CC-BY-SA-4.0 WITH KiCad-library-exception"
+        }
+      }
+    },
+    "3": {
+      "id": 3,
+      "reference": "GND1",
+      "kind": "Ground",
+      "value": 0.0,
+      "position": {
+        "x": 0,
+        "y": 45
+      },
+      "rotation": 0
+    }
+  },
+  "wires": {},
+  "junctions": {},
+  "labels": {
+    "4": {
+      "id": 4,
+      "position": {
+        "x": -39,
+        "y": -32
+      },
+      "name": "3V3"
+    },
+    "5": {
+      "id": 5,
+      "position": {
+        "x": -33,
+        "y": 32
+      },
+      "name": "GND"
+    },
+    "6": {
+      "id": 6,
+      "position": {
+        "x": -31,
+        "y": -32
+      },
+      "name": "3V3"
+    },
+    "7": {
+      "id": 7,
+      "position": {
+        "x": -35,
+        "y": 32
+      },
+      "name": "GND"
+    },
+    "8": {
+      "id": 8,
+      "position": {
+        "x": -37,
+        "y": -32
+      },
+      "name": "3V3"
+    },
+    "9": {
+      "id": 9,
+      "position": {
+        "x": -21,
+        "y": -8
+      },
+      "name": "UART_A"
+    },
+    "10": {
+      "id": 10,
+      "position": {
+        "x": -21,
+        "y": -6
+      },
+      "name": "UART_B"
+    },
+    "11": {
+      "id": 11,
+      "position": {
+        "x": -35,
+        "y": 32
+      },
+      "name": "GND"
+    },
+    "12": {
+      "id": 12,
+      "position": {
+        "x": -35,
+        "y": -32
+      },
+      "name": "3V3"
+    },
+    "13": {
+      "id": 13,
+      "position": {
+        "x": -35,
+        "y": 32
+      },
+      "name": "GND"
+    },
+    "14": {
+      "id": 14,
+      "position": {
+        "x": -33,
+        "y": -32
+      },
+      "name": "3V3"
+    },
+    "15": {
+      "id": 15,
+      "position": {
+        "x": 35,
+        "y": 32
+      },
+      "name": "GND"
+    },
+    "16": {
+      "id": 16,
+      "position": {
+        "x": 35,
+        "y": -32
+      },
+      "name": "3V3"
+    },
+    "17": {
+      "id": 17,
+      "position": {
+        "x": 71,
+        "y": -26
+      },
+      "name": "UART_A"
+    },
+    "18": {
+      "id": 18,
+      "position": {
+        "x": 71,
+        "y": -28
+      },
+      "name": "UART_B"
+    },
+    "19": {
+      "id": 19,
+      "position": {
+        "x": 35,
+        "y": 32
+      },
+      "name": "GND"
+    },
+    "20": {
+      "id": 20,
+      "position": {
+        "x": 35,
+        "y": 32
+      },
+      "name": "GND"
+    },
+    "21": {
+      "id": 21,
+      "position": {
+        "x": 0,
+        "y": 45
+      },
+      "name": "GND"
+    }
+  },
+  "next_id": 22,
+  "board": {
+    "width_nm": 90000000,
+    "height_nm": 70000000,
+    "thickness_nm": 1600000,
+    "clearance_nm": 200000,
+    "edge_clearance_nm": 250000,
+    "placements": {
+      "1": {
+        "position": {
+          "x": 25000000,
+          "y": 35000000
+        },
+        "rotation": 0,
+        "side": "Top"
+      },
+      "2": {
+        "position": {
+          "x": 60000000,
+          "y": 35000000
+        },
+        "rotation": 0,
+        "side": "Top"
+      }
+    },
+    "tracks": {},
+    "vias": {}
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "format_version": 5,
+  "name": "Zener genérico em polarização reversa",
+  "components": {
+    "1": {
+      "id": 1,
+      "reference": "V1",
+      "kind": "VoltageSource",
+      "value": -10.0,
+      "position": {
+        "x": -12,
+        "y": 0
+      },
+      "rotation": 1
+    },
+    "2": {
+      "id": 2,
+      "reference": "R1",
+      "kind": "Resistor",
+      "value": 1000.0,
+      "position": {
+        "x": 0,
+        "y": -8
+      },
+      "rotation": 0
+    },
+    "3": {
+      "id": 3,
+      "reference": "D1",
+      "kind": "Zener",
+      "value": 5.1,
+      "position": {
+        "x": 10,
+        "y": 0
+      },
+      "rotation": 1
+    },
+    "4": {
+      "id": 4,
+      "reference": "GND1",
+      "kind": "Ground",
+      "value": 0.0,
+      "position": {
+        "x": -12,
+        "y": 8
+      },
+      "rotation": 0
+    }
+  },
+  "wires": {
+    "5": {
+      "id": 5,
+      "start": {
+        "x": -12,
+        "y": -3
+      },
+      "end": {
+        "x": -12,
+        "y": -8
+      }
+    },
+    "6": {
+      "id": 6,
+      "start": {
+        "x": -12,
+        "y": -8
+      },
+      "end": {
+        "x": -3,
+        "y": -8
+      }
+    },
+    "7": {
+      "id": 7,
+      "start": {
+        "x": 3,
+        "y": -8
+      },
+      "end": {
+        "x": 10,
+        "y": -8
+      }
+    },
+    "8": {
+      "id": 8,
+      "start": {
+        "x": 10,
+        "y": -8
+      },
+      "end": {
+        "x": 10,
+        "y": -3
+      }
+    },
+    "9": {
+      "id": 9,
+      "start": {
+        "x": 10,
+        "y": 3
+      },
+      "end": {
+        "x": 10,
+        "y": 8
+      }
+    },
+    "10": {
+      "id": 10,
+      "start": {
+        "x": 10,
+        "y": 8
+      },
+      "end": {
+        "x": -12,
+        "y": 8
+      }
+    },
+    "11": {
+      "id": 11,
+      "start": {
+        "x": -12,
+        "y": 3
+      },
+      "end": {
+        "x": -12,
+        "y": 8
+      }
+    }
+  },
+  "junctions": {},
+  "labels": {
+    "12": {
+      "id": 12,
+      "position": {
+        "x": -12,
+        "y": -8
+      },
+      "name": "VIN"
+    },
+    "13": {
+      "id": 13,
+      "position": {
+        "x": 10,
+        "y": -8
+      },
+      "name": "VOUT"
+    }
+  },
+  "next_id": 14
+}

@@ -1,0 +1,27 @@
+[workspace]
+members = ["crates/eda-core", "crates/eda-netlist", "crates/eda-simulation", "crates/eda-storage", "crates/eda-import", "crates/eda-app", "crates/eda-cli", "crates/eda-library", "crates/eda-pcb"]
+resolver = "2"
+
+[workspace.package]
+version = "0.6.1"
+edition = "2024"
+publish = false
+
+[workspace.dependencies]
+eda-core = { path = "crates/eda-core" }
+eda-netlist = { path = "crates/eda-netlist" }
+eda-simulation = { path = "crates/eda-simulation" }
+eda-storage = { path = "crates/eda-storage" }
+eda-import = { path = "crates/eda-import" }
+eda-library = { path = "crates/eda-library" }
+eda-pcb = { path = "crates/eda-pcb" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["float_roundtrip"] }
+thiserror = "2.0"
+tempfile = "3.27"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+strip = true
+

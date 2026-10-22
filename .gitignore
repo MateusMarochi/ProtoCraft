@@ -1,0 +1,12 @@
+/target/
+/dist/
+*.protocraft.bak
+*.protocraft.recovery
+*.tmp
+/artifacts/
+/imports/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo

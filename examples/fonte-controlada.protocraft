@@ -1,0 +1,127 @@
+{
+  "format_version": 5,
+  "name": "Fonte controlada — amplificação ideal",
+  "components": {
+    "1": {
+      "id": 1,
+      "reference": "V1",
+      "kind": "SineVoltage",
+      "value": 1.0,
+      "position": {
+        "x": -18,
+        "y": 0
+      },
+      "rotation": 1
+    },
+    "4": {
+      "id": 4,
+      "reference": "E2",
+      "kind": "Vcvs",
+      "value": 5.0,
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0
+    },
+    "9": {
+      "id": 9,
+      "reference": "R3",
+      "kind": "Resistor",
+      "value": 10000.0,
+      "position": {
+        "x": 18,
+        "y": 0
+      },
+      "rotation": 1
+    },
+    "12": {
+      "id": 12,
+      "reference": "GND1",
+      "kind": "Ground",
+      "value": 0.0,
+      "position": {
+        "x": -20,
+        "y": 18
+      },
+      "rotation": 0
+    }
+  },
+  "wires": {},
+  "junctions": {},
+  "labels": {
+    "2": {
+      "id": 2,
+      "position": {
+        "x": -18,
+        "y": -3
+      },
+      "name": "VIN"
+    },
+    "3": {
+      "id": 3,
+      "position": {
+        "x": -18,
+        "y": 3
+      },
+      "name": "0"
+    },
+    "5": {
+      "id": 5,
+      "position": {
+        "x": -4,
+        "y": -2
+      },
+      "name": "VIN"
+    },
+    "6": {
+      "id": 6,
+      "position": {
+        "x": -4,
+        "y": 2
+      },
+      "name": "0"
+    },
+    "7": {
+      "id": 7,
+      "position": {
+        "x": 4,
+        "y": -2
+      },
+      "name": "VOUT"
+    },
+    "8": {
+      "id": 8,
+      "position": {
+        "x": 4,
+        "y": 2
+      },
+      "name": "0"
+    },
+    "10": {
+      "id": 10,
+      "position": {
+        "x": 18,
+        "y": -3
+      },
+      "name": "VOUT"
+    },
+    "11": {
+      "id": 11,
+      "position": {
+        "x": 18,
+        "y": 3
+      },
+      "name": "0"
+    },
+    "13": {
+      "id": 13,
+      "position": {
+        "x": -20,
+        "y": 18
+      },
+      "name": "0"
+    }
+  },
+  "next_id": 14
+}

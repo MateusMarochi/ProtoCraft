@@ -1,0 +1,25 @@
+[package]
+name = "eda-app"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "protocraft"
+path = "src/main.rs"
+
+[dependencies]
+eda-library.workspace = true
+eda-pcb.workspace = true
+eda-core.workspace = true
+eda-netlist.workspace = true
+eda-simulation.workspace = true
+eda-storage.workspace = true
+eda-import.workspace = true
+eframe = { version = "0.33", default-features = false, features = ["default_fonts", "glow", "x11", "wayland"] }
+rfd = "0.15.4"
+png = "0.18"
+serde.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true
+
