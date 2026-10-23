@@ -11,6 +11,7 @@ use std::{
 pub struct Settings {
     pub language: LanguagePreference,
     pub engine: SimulationEngine,
+    pub recent_projects: Vec<PathBuf>,
     pub voltage_colors: bool,
     pub current_dots: bool,
     pub voltage_scale: f64,
@@ -24,6 +25,7 @@ impl Default for Settings {
         Self {
             language: LanguagePreference::System,
             engine: SimulationEngine::Mixed,
+            recent_projects: Vec::new(),
             voltage_colors: true,
             current_dots: true,
             voltage_scale: 5.0,
@@ -35,10 +37,26 @@ impl Default for Settings {
     }
 }
 impl Settings {
+    pub const MAX_RECENT_PROJECTS: usize = 10;
+
+    pub fn remember_project(&mut self, path: PathBuf) {
+        let path = path.canonicalize().unwrap_or(path);
+        self.recent_projects
+            .retain(|existing| !same_path(existing, &path));
+        self.recent_projects.insert(0, path);
+        self.recent_projects.truncate(Self::MAX_RECENT_PROJECTS);
+    }
+
+    pub fn forget_project(&mut self, path: &std::path::Path) {
+        self.recent_projects
+            .retain(|existing| !same_path(existing, path));
+    }
+
     pub fn validate(&self) -> bool {
         (0.001..=1e6).contains(&self.voltage_scale)
             && (1e-12..=1.0).contains(&self.live_step)
             && (1..=256).contains(&self.steps_per_frame)
+            && self.recent_projects.len() <= Self::MAX_RECENT_PROJECTS
     }
     pub fn path() -> Result<PathBuf, String> {
         let base = std::env::var_os("APPDATA")
@@ -85,6 +103,18 @@ impl Settings {
         file.as_file().sync_all().map_err(|e| e.to_string())?;
         file.persist(path).map_err(|e| e.error.to_string())?;
         Ok(())
+    }
+}
+
+fn same_path(left: &std::path::Path, right: &std::path::Path) -> bool {
+    #[cfg(windows)]
+    {
+        left.to_string_lossy()
+            .eq_ignore_ascii_case(&right.to_string_lossy())
+    }
+    #[cfg(not(windows))]
+    {
+        left == right
     }
 }
 

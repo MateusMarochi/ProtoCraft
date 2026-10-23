@@ -10,10 +10,20 @@ enum GeometrySelection {
     Hole(u64),
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+enum PcbInspectorTab {
+    #[default]
+    Board,
+    Layers,
+    Drc,
+}
+
 pub(super) struct PcbUi {
     pub active: bool,
     pub fit: bool,
     pub report: Option<eda_pcb::PcbReport>,
+    inspector_tab: PcbInspectorTab,
+    pub(super) show_inspector: bool,
     report_revision: u64,
     canvas_rect: Option<Rect>,
     pub route: Option<(NmPoint, PinRef)>,
@@ -37,7 +47,7 @@ pub(super) struct PcbUi {
     edit_width: f64,
     edit_drill: f64,
     edit_layer: BoardSide,
-    layer: BoardSide,
+    pub(super) layer: BoardSide,
     width: f64,
     zoom: f32,
     pan: Vec2,
@@ -59,6 +69,8 @@ impl Default for PcbUi {
             active: false,
             fit: true,
             report: None,
+            inspector_tab: PcbInspectorTab::Board,
+            show_inspector: false,
             report_revision: u64::MAX,
             canvas_rect: None,
             route: None,
@@ -109,6 +121,10 @@ fn point_distance(p: NmPoint, a: NmPoint, b: NmPoint) -> f64 {
     ((p.x - a.x) as f64 - t * x).hypot((p.y - a.y) as f64 - t * y)
 }
 impl ProtoCraft {
+    pub(super) fn pcb_zoom_percent(&self) -> f32 {
+        self.pcb.zoom / 8.0 * 100.0
+    }
+
     pub(super) fn sync_board(&mut self) {
         self.pcb.finish_route();
         let board = self
@@ -331,43 +347,592 @@ impl ProtoCraft {
             ctx.request_repaint_after(Duration::from_millis(100));
         }
 
-        egui::SidePanel::left("pcb_tools").default_width(310.0).width_range(285.0..=440.0).show(ctx,|ui| {
-            egui::ScrollArea::vertical().show(ui,|ui| {
-                ui.heading(tr!("PCB · duas camadas"));ui.small(tr!("Dimensões e furação em milímetros."));
-                if ui.button(tr!("Voltar ao esquemático")).clicked() {self.pcb.active=false;return;}
-                if ui.button(tr!("Criar / sincronizar footprints")).clicked() {self.sync_board();}
-                let Some(board)=self.engine.project().board.as_deref().cloned() else {ui.label(tr!("Crie a PCB para adicionar trilhas e furos."));return;};
-                ui.separator();self.pcb_edit_controls(ui,&board);
-                egui::CollapsingHeader::new(tr!("Dimensões e regras da placa")).show(ui,|ui| {
-                    if self.pcb.dimensions_revision!=self.engine.revision() {self.pcb.width_mm=board.width_nm as f64/1e6;self.pcb.height_mm=board.height_nm as f64/1e6;self.pcb.clearance_mm=board.clearance_nm as f64/1e6;self.pcb.dimensions_revision=self.engine.revision();}
-                    ui.horizontal(|ui|{ui.label(tr!("Largura"));ui.add(egui::DragValue::new(&mut self.pcb.width_mm).speed(1.0).range(1.0..=2000.0));});
-                    ui.horizontal(|ui|{ui.label(tr!("Altura"));ui.add(egui::DragValue::new(&mut self.pcb.height_mm).speed(1.0).range(1.0..=2000.0));});
-                    ui.horizontal(|ui|{ui.label(tr!("Folga de cobre"));ui.add(egui::DragValue::new(&mut self.pcb.clearance_mm).speed(0.025).range(0.0..=10.0));});
-                    if ui.button(tr!("Aplicar dimensões e folga")).clicked() {let mut b=board.clone();b.width_nm=nm(self.pcb.width_mm);b.height_nm=nm(self.pcb.height_mm);b.clearance_nm=nm(self.pcb.clearance_mm);self.command(Command::SetBoard{board:b});self.pcb.finish_route();self.pcb.fit=true;self.pcb.report=None;}
+        let panel_fill = if self.dark {
+            egui::Color32::from_rgb(32, 41, 47)
+        } else {
+            egui::Color32::from_rgb(225, 236, 242)
+        };
+        egui::SidePanel::left("pcb_tools")
+            .default_width(160.0)
+            .width_range(140.0..=250.0)
+            .frame(egui::Frame::new().fill(panel_fill))
+            .show(ctx, |ui| {
+                egui::ScrollArea::vertical().show(ui, |ui| {
+                    ui.add_space(5.0);
+                    ui.heading(egui::RichText::new(tr!("Componentes")).strong());
+                    ui.small(tr!("PCB · duas camadas · milímetros"));
+                    let Some(board) = self.engine.project().board.as_deref().cloned() else {
+                        ui.label(tr!("Crie a PCB para adicionar trilhas e furos."));
+                        return;
+                    };
+
+                    let (preview, _) = ui.allocate_exact_size(
+                        Vec2::new(ui.available_width(), 92.0),
+                        egui::Sense::hover(),
+                    );
+                    let painter = ui.painter();
+                    painter.rect_filled(preview, 0.0, egui::Color32::from_rgb(11, 14, 18));
+                    for x in (preview.left() as i32..preview.right() as i32).step_by(14) {
+                        painter.line_segment(
+                            [Pos2::new(x as f32, preview.top()), Pos2::new(x as f32, preview.bottom())],
+                            Stroke::new(0.5_f32, egui::Color32::from_rgb(38, 44, 50)),
+                        );
+                    }
+                    for y in (preview.top() as i32..preview.bottom() as i32).step_by(14) {
+                        painter.line_segment(
+                            [Pos2::new(preview.left(), y as f32), Pos2::new(preview.right(), y as f32)],
+                            Stroke::new(0.5_f32, egui::Color32::from_rgb(38, 44, 50)),
+                        );
+                    }
+                    let scale = ((preview.width() - 28.0) / (board.width_nm as f32 / 1e6))
+                        .min((preview.height() - 20.0) / (board.height_nm as f32 / 1e6));
+                    let board_size = Vec2::new(
+                        board.width_nm as f32 / 1e6 * scale,
+                        board.height_nm as f32 / 1e6 * scale,
+                    );
+                    let board_rect = Rect::from_center_size(preview.center(), board_size);
+                    painter.rect_stroke(
+                        board_rect,
+                        0.0,
+                        Stroke::new(1.5_f32, egui::Color32::from_rgb(48, 126, 207)),
+                        egui::StrokeKind::Inside,
+                    );
+                    for placement in board.placements.values() {
+                        let position = Pos2::new(
+                            board_rect.left() + placement.position.x as f32 / 1e6 * scale,
+                            board_rect.top() + placement.position.y as f32 / 1e6 * scale,
+                        );
+                        painter.circle_filled(position, 2.0, egui::Color32::from_rgb(216, 173, 75));
+                    }
+                    ui.add_space(4.0);
+
+                    egui::CollapsingHeader::new(tr!("Componentes"))
+                        .default_open(true)
+                        .show(ui, |ui| {
+                            let rows: Vec<_> = self
+                                .engine
+                                .project()
+                                .components
+                                .values()
+                                .filter(|component| component.footprint.is_some())
+                                .map(|component| {
+                                    (
+                                        component.id,
+                                        component.reference.clone(),
+                                        component.device.as_ref().map_or_else(
+                                            || localized_component_label(component.kind),
+                                            |device| device.id.clone(),
+                                        ),
+                                    )
+                                })
+                                .collect();
+                            for (id, reference, name) in rows {
+                                if ui
+                                    .selectable_label(
+                                        self.pcb.selected == Some(id),
+                                        trf!("{reference} · {name}", reference = reference, name = name),
+                                    )
+                                    .clicked()
+                                {
+                                    self.pcb.clear_geometry_selection();
+                                    self.pcb.selected = Some(id);
+                                    self.pcb.finish_route();
+                                    self.pcb.routing = false;
+                                    self.pcb.hole_tool = false;
+                                }
+                            }
+                            if let Some(id) = self.pcb.selected
+                                && let Some(component) = self.engine.project().components.get(&id).cloned()
+                            {
+                                if let Some(footprint) = &component.footprint {
+                                    ui.small(&footprint.id);
+                                    ui.label(trf!(
+                                        "Corpo {width} × {height} mm",
+                                        width = format!("{:.3}", footprint.body_bounds.width() as f64 / 1e6),
+                                        height = format!("{:.3}", footprint.body_bounds.height() as f64 / 1e6)
+                                    ));
+                                }
+                                if let Some(placement) = board.placements.get(&id) {
+                                    ui.label(trf!(
+                                        "X {x} · Y {y} mm · {rotation}°",
+                                        x = format!("{:.3}", placement.position.x as f64 / 1e6),
+                                        y = format!("{:.3}", placement.position.y as f64 / 1e6),
+                                        rotation = u16::from(placement.rotation) * 90
+                                    ));
+                                    ui.horizontal(|ui| {
+                                        if ui.button(tr!("Girar 90° · R")).clicked() {
+                                            self.rotate_board_selection();
+                                        }
+                                        if ui.button(tr!("Trocar face")).clicked() {
+                                            let mut placement = *placement;
+                                            placement.side = if placement.side == BoardSide::Top {
+                                                BoardSide::Bottom
+                                            } else {
+                                                BoardSide::Top
+                                            };
+                                            self.command(Command::PlaceOnBoard { id, placement });
+                                            self.pcb.report = None;
+                                        }
+                                    });
+                                } else {
+                                    ui.label(tr!("Clique no canvas para posicionar."));
+                                }
+                            }
+                        });
+
+                    ui.separator();
+                    egui::CollapsingHeader::new(tr!("Trilhas e furos"))
+                        .default_open(false)
+                        .show(ui, |ui| self.pcb_edit_controls(ui, &board));
+                    egui::CollapsingHeader::new(tr!("Configuração da placa")).show(ui, |ui| {
+                        if self.pcb.dimensions_revision != self.engine.revision() {
+                            self.pcb.width_mm = board.width_nm as f64 / 1e6;
+                            self.pcb.height_mm = board.height_nm as f64 / 1e6;
+                            self.pcb.clearance_mm = board.clearance_nm as f64 / 1e6;
+                            self.pcb.dimensions_revision = self.engine.revision();
+                        }
+                        ui.horizontal(|ui| {
+                            ui.label(tr!("Largura"));
+                            ui.add(egui::DragValue::new(&mut self.pcb.width_mm).speed(1.0).range(1.0..=2000.0));
+                        });
+                        ui.horizontal(|ui| {
+                            ui.label(tr!("Altura"));
+                            ui.add(egui::DragValue::new(&mut self.pcb.height_mm).speed(1.0).range(1.0..=2000.0));
+                        });
+                        ui.horizontal(|ui| {
+                            ui.label(tr!("Folga de cobre"));
+                            ui.add(egui::DragValue::new(&mut self.pcb.clearance_mm).speed(0.025).range(0.0..=10.0));
+                        });
+                        if ui.button(tr!("Aplicar dimensões e folga")).clicked() {
+                            let mut board = board.clone();
+                            board.width_nm = nm(self.pcb.width_mm);
+                            board.height_nm = nm(self.pcb.height_mm);
+                            board.clearance_nm = nm(self.pcb.clearance_mm);
+                            self.command(Command::SetBoard { board });
+                            self.pcb.finish_route();
+                            self.pcb.fit = true;
+                            self.pcb.report = None;
+                        }
+                    });
+                    if ui.button(tr!("Enquadrar · F")).clicked() {
+                        self.pcb.fit = true;
+                    }
+                    egui::CollapsingHeader::new(tr!("Fabricação")).show(ui, |ui| {
+                        self.pcb_fabrication_controls(ui);
+                        if ui.button(tr!("Exportar PCB KiCad…")).clicked() {
+                            self.export_pcb_dialog(false);
+                        }
+                        if ui.button(tr!("Exportar desenho SVG em escala…")).clicked() {
+                            self.export_pcb_dialog(true);
+                        }
+                    });
+                    if let Some(report) = &self.pcb.report {
+                        egui::CollapsingHeader::new(tr!("Diagnósticos DRC")).show(ui, |ui| {
+                            for diagnostic in report.diagnostics.iter().take(80) {
+                                let color = if diagnostic.severity == "error" {
+                                    egui::Color32::from_rgb(221, 92, 87)
+                                } else {
+                                    Palette::new(ctx).muted
+                                };
+                                ui.colored_label(
+                                    color,
+                                    trf!(
+                                        "{code}: {message}",
+                                        code = &diagnostic.code,
+                                        message = eda_i18n::text(&diagnostic.message)
+                                    ),
+                                );
+                            }
+                        });
+                    }
+                    ui.small(tr!("As trilhas usam as redes do esquemático. DRC é conferido antes de confirmar cobre e furos."));
                 });
-                if ui.button(tr!("Enquadrar · F")).clicked() {self.pcb.fit=true;}
-                egui::CollapsingHeader::new(tr!("Fabricação e exportação")).show(ui,|ui| {
-                    self.pcb_fabrication_controls(ui);
-                    if ui.button(tr!("Exportar PCB KiCad…")).clicked(){self.export_pcb_dialog(false);}
-                    if ui.button(tr!("Exportar desenho SVG em escala…")).clicked(){self.export_pcb_dialog(true);}
-                });
-                egui::CollapsingHeader::new(tr!("Componentes e posicionamento")).show(ui,|ui| {
-                    let rows:Vec<_>=self.engine.project().components.values().filter(|c|c.footprint.is_some()).map(|c|(c.id,c.reference.clone(),c.device.as_ref().map_or_else(|| localized_component_label(c.kind),|d|d.id.clone()))).collect();
-                    for (id,reference,name) in rows {if ui.selectable_label(self.pcb.selected==Some(id),trf!("{reference} · {name}", reference=reference, name=name)).clicked() {self.pcb.clear_geometry_selection();self.pcb.selected=Some(id);self.pcb.finish_route();self.pcb.routing=false;self.pcb.hole_tool=false;}}
-                    if let Some(id)=self.pcb.selected && let Some(c)=self.engine.project().components.get(&id).cloned() {
-                        if let Some(f)=&c.footprint {ui.small(&f.id);ui.label(trf!("Corpo {width} × {height} mm", width=format!("{:.3}", f.body_bounds.width() as f64/1e6), height=format!("{:.3}", f.body_bounds.height() as f64/1e6)));}
-                        if let Some(p)=board.placements.get(&id) {ui.label(trf!("X {x} · Y {y} mm · {rotation}°",x=format!("{:.3}",p.position.x as f64/1e6),y=format!("{:.3}",p.position.y as f64/1e6),rotation=u16::from(p.rotation)*90));
-                            if ui.button(tr!("Girar 90° · R")).clicked(){self.rotate_board_selection();}
-                            if ui.button(tr!("Trocar face")).clicked(){let mut p=*p;p.side=if p.side==BoardSide::Top{BoardSide::Bottom}else{BoardSide::Top};self.command(Command::PlaceOnBoard{id,placement:p});self.pcb.report=None;}
-                        } else {ui.label(tr!("Clique no canvas para posicionar."));}
+            });
+    }
+    pub(super) fn pcb_mode_strip(&mut self, ctx: &egui::Context) {
+        let strip_fill = if self.dark {
+            egui::Color32::from_rgb(36, 47, 54)
+        } else {
+            egui::Color32::from_rgb(212, 228, 237)
+        };
+        egui::SidePanel::left("pcb_mode_strip")
+            .exact_width(46.0)
+            .resizable(false)
+            .frame(egui::Frame::new().fill(strip_fill))
+            .show(ctx, |ui| {
+                ui.add_space(8.0);
+                let tools = [
+                    (
+                        ToolIcon::Select,
+                        tr!("Selecionar"),
+                        !self.pcb.routing && !self.pcb.hole_tool,
+                    ),
+                    (ToolIcon::Wire, tr!("Trilha · X"), self.pcb.routing),
+                    (ToolIcon::Hole, tr!("Furo · H"), self.pcb.hole_tool),
+                ];
+                for (icon, tooltip, active) in tools {
+                    let response =
+                        ui.add_sized([34.0, 30.0], egui::Button::new("").selected(active));
+                    let color = if active {
+                        ui.visuals().text_color()
+                    } else {
+                        ui.visuals().widgets.inactive.fg_stroke.color
+                    };
+                    paint_tool_icon(ui.painter(), response.rect.shrink(7.0), icon, color);
+                    if response.on_hover_text(tooltip).clicked() {
+                        match icon {
+                            ToolIcon::Select => {
+                                self.pcb.routing = false;
+                                self.pcb.hole_tool = false;
+                                self.pcb.finish_route();
+                            }
+                            ToolIcon::Wire => {
+                                self.pcb.routing = true;
+                                self.pcb.hole_tool = false;
+                                self.pcb.selected = None;
+                                self.pcb.clear_geometry_selection();
+                            }
+                            ToolIcon::Hole => {
+                                self.pcb.finish_route();
+                                self.pcb.routing = false;
+                                self.pcb.hole_tool = true;
+                                self.pcb.selected = None;
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+                ui.separator();
+                ui.label(egui::RichText::new(tr!("Camada")).small());
+                for (side, name) in [(BoardSide::Top, "T"), (BoardSide::Bottom, "B")] {
+                    let active = self.pcb.layer == side;
+                    let tooltip = if side == BoardSide::Top {
+                        tr!("Camada superior de cobre")
+                    } else {
+                        tr!("Camada inferior de cobre")
+                    };
+                    if ui
+                        .add_sized([34.0, 28.0], egui::Button::new(name).selected(active))
+                        .on_hover_text(tooltip)
+                        .clicked()
+                    {
+                        if self.pcb.route.is_some() {
+                            self.message(
+                                tr!("Use V para inserir uma via e trocar de camada."),
+                                false,
+                            );
+                        } else {
+                            self.pcb.layer = side;
+                        }
+                    }
+                }
+                ui.separator();
+                let autoroute_enabled = self.engine.project().board.is_some()
+                    && self.pcb.autorouting.is_none()
+                    && self.pcb.fabrication.is_none();
+                let response =
+                    ui.add_enabled(autoroute_enabled, egui::Button::new("").selected(false));
+                let color = ui.visuals().widgets.inactive.fg_stroke.color;
+                paint_tool_icon(
+                    ui.painter(),
+                    response.rect.shrink(7.0),
+                    ToolIcon::AutoRoute,
+                    color,
+                );
+                if response
+                    .on_hover_text(tr!("Autorrotear conexões pendentes"))
+                    .clicked()
+                {
+                    self.start_autorouting();
+                }
+            });
+    }
+
+    pub(super) fn pcb_inspector(&mut self, ctx: &egui::Context) {
+        let theme = Palette::new(ctx);
+        let Some(board) = self.engine.project().board.as_deref().cloned() else {
+            return;
+        };
+        egui::SidePanel::right("pcb_inspector")
+            .default_width(265.0)
+            .width_range(220.0..=380.0)
+            .show(ctx, |ui| {
+                ui.add_space(8.0);
+                ui.heading(tr!("Explorador da PCB"));
+                ui.horizontal(|ui| {
+                    if ui
+                        .selectable_label(
+                            self.pcb.inspector_tab == PcbInspectorTab::Board,
+                            tr!("Placa"),
+                        )
+                        .clicked()
+                    {
+                        self.pcb.inspector_tab = PcbInspectorTab::Board;
+                    }
+                    if ui
+                        .selectable_label(
+                            self.pcb.inspector_tab == PcbInspectorTab::Layers,
+                            tr!("Camadas"),
+                        )
+                        .clicked()
+                    {
+                        self.pcb.inspector_tab = PcbInspectorTab::Layers;
+                    }
+                    if ui
+                        .selectable_label(
+                            self.pcb.inspector_tab == PcbInspectorTab::Drc,
+                            tr!("DRC"),
+                        )
+                        .clicked()
+                    {
+                        self.pcb.inspector_tab = PcbInspectorTab::Drc;
                     }
                 });
-                if let Some(report)=&self.pcb.report {egui::CollapsingHeader::new(tr!("Diagnósticos DRC")).show(ui,|ui| {for d in report.diagnostics.iter().take(80) {ui.colored_label(if d.severity=="error" {egui::Color32::from_rgb(221,92,87)} else {Palette::new(ctx).muted},trf!("{code}: {message}", code=&d.code, message=eda_i18n::text(&d.message)));}});}
-                ui.small(tr!("As trilhas usam as redes do esquemático. DRC é conferido antes de confirmar cobre e furos."));
+                ui.separator();
+                egui::ScrollArea::vertical().show(ui, |ui| match self.pcb.inspector_tab {
+                    PcbInspectorTab::Board => {
+                        ui.strong(tr!("Visão geral"));
+                        ui.label(trf!(
+                            "Dimensões: {width} × {height} mm",
+                            width = format!("{:.2}", board.width_nm as f64 / 1e6),
+                            height = format!("{:.2}", board.height_nm as f64 / 1e6)
+                        ));
+                        ui.label(trf!(
+                            "{count} componentes · {tracks} trilhas · {vias} vias",
+                            count = board.placements.len(),
+                            tracks = board.tracks.len(),
+                            vias = board.vias.len()
+                        ));
+                        ui.label(trf!("{count} furos de montagem", count = board.holes.len()));
+                        ui.horizontal(|ui| {
+                            ui.label(tr!("Camada ativa"));
+                            ui.strong(if self.pcb.layer == BoardSide::Top {
+                                tr!("Superior")
+                            } else {
+                                tr!("Inferior")
+                            });
+                        });
+                        ui.checkbox(
+                            &mut self.pcb.show_airwires,
+                            tr!("Mostrar conexões não roteadas"),
+                        );
+
+                        ui.separator();
+                        ui.strong(tr!("Componentes e posicionamento"));
+                        let rows: Vec<_> = self
+                            .engine
+                            .project()
+                            .components
+                            .values()
+                            .filter(|component| component.footprint.is_some())
+                            .map(|component| {
+                                (
+                                    component.id,
+                                    component.reference.clone(),
+                                    component.device.as_ref().map_or_else(
+                                        || localized_component_label(component.kind),
+                                        |device| device.id.clone(),
+                                    ),
+                                )
+                            })
+                            .collect();
+                        for (id, reference, name) in rows {
+                            if ui
+                                .selectable_label(
+                                    self.pcb.selected == Some(id),
+                                    format!("{reference} · {name}"),
+                                )
+                                .clicked()
+                            {
+                                self.pcb.clear_geometry_selection();
+                                self.pcb.selected = Some(id);
+                                self.pcb.finish_route();
+                                self.pcb.routing = false;
+                                self.pcb.hole_tool = false;
+                            }
+                        }
+                        if let Some(id) = self.pcb.selected
+                            && let Some(component) = self.engine.project().components.get(&id)
+                        {
+                            ui.separator();
+                            ui.strong(&component.reference);
+                            if let Some(footprint) = &component.footprint {
+                                ui.label(&footprint.id);
+                                ui.label(trf!(
+                                    "Corpo {width} × {height} mm",
+                                    width = format!(
+                                        "{:.3}",
+                                        footprint.body_bounds.width() as f64 / 1e6
+                                    ),
+                                    height = format!(
+                                        "{:.3}",
+                                        footprint.body_bounds.height() as f64 / 1e6
+                                    )
+                                ));
+                            }
+                            if let Some(placement) = board.placements.get(&id) {
+                                ui.label(trf!(
+                                    "X {x} · Y {y} mm",
+                                    x = format!("{:.3}", placement.position.x as f64 / 1e6),
+                                    y = format!("{:.3}", placement.position.y as f64 / 1e6)
+                                ));
+                                ui.horizontal(|ui| {
+                                    if ui.button(tr!("Girar 90° · R")).clicked() {
+                                        self.rotate_board_selection();
+                                    }
+                                    if ui.button(tr!("Trocar face")).clicked() {
+                                        let mut placement = *placement;
+                                        placement.side = if placement.side == BoardSide::Top {
+                                            BoardSide::Bottom
+                                        } else {
+                                            BoardSide::Top
+                                        };
+                                        self.command(Command::PlaceOnBoard { id, placement });
+                                        self.pcb.report = None;
+                                    }
+                                });
+                            }
+                        } else if let Some(id) = self.pcb.selected_track
+                            && let Some(track) = board.tracks.get(&id)
+                        {
+                            ui.separator();
+                            ui.strong(tr!("Trilha selecionada"));
+                            ui.label(trf!(
+                                "Camada: {layer}",
+                                layer = if track.layer == BoardSide::Top {
+                                    tr!("Superior")
+                                } else {
+                                    tr!("Inferior")
+                                }
+                            ));
+                            ui.label(trf!(
+                                "Largura: {width} mm",
+                                width = format!("{:.3}", track.width_nm as f64 / 1e6)
+                            ));
+                            if let Some(component) =
+                                self.engine.project().components.get(&track.net.component)
+                            {
+                                ui.label(trf!(
+                                    "Rede de {reference} · pino {pin}",
+                                    reference = &component.reference,
+                                    pin = component.pin_number(track.net.pin)
+                                ));
+                            }
+                        } else if let Some(id) = self.pcb.selected_via
+                            && let Some(via) = board.vias.get(&id)
+                        {
+                            ui.separator();
+                            ui.strong(tr!("Via selecionada"));
+                            ui.label(trf!(
+                                "Diâmetro: {diameter} mm · furação: {drill} mm",
+                                diameter = format!("{:.3}", via.diameter_nm as f64 / 1e6),
+                                drill = format!("{:.3}", via.drill_nm as f64 / 1e6)
+                            ));
+                        } else if let Some(id) = self.pcb.selected_hole
+                            && let Some(hole) = board.holes.get(&id)
+                        {
+                            ui.separator();
+                            ui.strong(tr!("Furo selecionado"));
+                            ui.label(trf!(
+                                "Diâmetro de furação: {drill} mm",
+                                drill = format!("{:.3}", hole.drill_nm as f64 / 1e6)
+                            ));
+                        } else if let Some(report) = &self.pcb.report {
+                            ui.separator();
+                            ui.strong(tr!("Diagnósticos DRC"));
+                            ui.label(trf!("{count} erros", count = report.errors()));
+                        } else {
+                            ui.separator();
+                            ui.label(
+                                egui::RichText::new(tr!("Nenhum componente selecionado."))
+                                    .color(theme.muted),
+                            );
+                        }
+                    }
+                    PcbInspectorTab::Layers => {
+                        ui.strong(tr!("Camadas de cobre"));
+                        ui.add_enabled_ui(self.pcb.route.is_none(), |ui| {
+                            ui.selectable_value(
+                                &mut self.pcb.layer,
+                                BoardSide::Top,
+                                tr!("Superior"),
+                            );
+                            ui.selectable_value(
+                                &mut self.pcb.layer,
+                                BoardSide::Bottom,
+                                tr!("Inferior"),
+                            );
+                        });
+                        ui.separator();
+                        ui.label(trf!(
+                            "Camada superior: {count} trilhas",
+                            count = board
+                                .tracks
+                                .values()
+                                .filter(|track| track.layer == BoardSide::Top)
+                                .count()
+                        ));
+                        ui.label(trf!(
+                            "Camada inferior: {count} trilhas",
+                            count = board
+                                .tracks
+                                .values()
+                                .filter(|track| track.layer == BoardSide::Bottom)
+                                .count()
+                        ));
+                        ui.label(trf!("{count} vias atravessantes", count = board.vias.len()));
+                        ui.checkbox(
+                            &mut self.pcb.show_airwires,
+                            tr!("Mostrar conexões não roteadas"),
+                        );
+                    }
+                    PcbInspectorTab::Drc => {
+                        if ui.button(tr!("Verificar DRC e conexões")).clicked() {
+                            match eda_pcb::check(self.engine.project()) {
+                                Ok(report) => {
+                                    let errors = report.errors();
+                                    self.pcb.report = Some(report);
+                                    self.message(
+                                        trf!("DRC concluído: {errors} erros.", errors = errors),
+                                        errors > 0,
+                                    );
+                                }
+                                Err(error) => self.message(error, true),
+                            }
+                        }
+                        if let Some(report) = &self.pcb.report {
+                            ui.label(trf!(
+                                "{errors} erros · {warnings} avisos",
+                                errors = report.errors(),
+                                warnings = report.diagnostics.len().saturating_sub(report.errors())
+                            ));
+                            for diagnostic in report.diagnostics.iter().take(100) {
+                                let color = if diagnostic.severity == "error" {
+                                    theme.error
+                                } else {
+                                    theme.muted
+                                };
+                                ui.colored_label(
+                                    color,
+                                    trf!(
+                                        "{code}: {message}",
+                                        code = &diagnostic.code,
+                                        message = eda_i18n::text(&diagnostic.message)
+                                    ),
+                                );
+                            }
+                        } else {
+                            ui.label(
+                                egui::RichText::new(tr!("Nenhum diagnóstico disponível."))
+                                    .color(theme.muted),
+                            );
+                        }
+                    }
+                });
             });
-        });
     }
-    fn start_autorouting(&mut self) {
+
+    pub(super) fn start_autorouting(&mut self) {
         if self.pcb.autorouting.is_some() || self.pcb.fabrication.is_some() {
             return;
         }
@@ -523,15 +1088,48 @@ impl ProtoCraft {
                     ui.allocate_painter(ui.available_size(), Sense::click_and_drag());
                 let rect = response.rect;
                 self.pcb.canvas_rect = Some(rect);
-                painter.rect_filled(
-                    rect,
-                    0.0,
-                    if self.dark {
-                        Color32::from_rgb(22, 28, 28)
-                    } else {
-                        Color32::from_rgb(230, 234, 229)
-                    },
-                );
+                let canvas = Color32::from_rgb(10, 12, 15);
+                painter.rect_filled(rect, 0.0, canvas);
+                let grid_pixels = (self.pcb.grid_mm as f32 * self.pcb.zoom).clamp(8.0, 42.0);
+                let grid_origin = rect.center() + self.pcb.pan;
+                let first_x = rect.left() + (grid_origin.x - rect.left()).rem_euclid(grid_pixels);
+                let first_y = rect.top() + (grid_origin.y - rect.top()).rem_euclid(grid_pixels);
+                let mut x = first_x;
+                let mut column = ((first_x - grid_origin.x) / grid_pixels).round() as i32;
+                while x <= rect.right() {
+                    let major = column.rem_euclid(5) == 0;
+                    painter.line_segment(
+                        [Pos2::new(x, rect.top()), Pos2::new(x, rect.bottom())],
+                        Stroke::new(
+                            if major { 1.0_f32 } else { 0.55_f32 },
+                            if major {
+                                Color32::from_rgb(51, 56, 62)
+                            } else {
+                                Color32::from_rgb(28, 32, 37)
+                            },
+                        ),
+                    );
+                    x += grid_pixels;
+                    column += 1;
+                }
+                let mut y = first_y;
+                let mut row = ((first_y - grid_origin.y) / grid_pixels).round() as i32;
+                while y <= rect.bottom() {
+                    let major = row.rem_euclid(5) == 0;
+                    painter.line_segment(
+                        [Pos2::new(rect.left(), y), Pos2::new(rect.right(), y)],
+                        Stroke::new(
+                            if major { 1.0_f32 } else { 0.55_f32 },
+                            if major {
+                                Color32::from_rgb(51, 56, 62)
+                            } else {
+                                Color32::from_rgb(28, 32, 37)
+                            },
+                        ),
+                    );
+                    y += grid_pixels;
+                    row += 1;
+                }
                 let Some(board) = self.engine.project().board.as_deref().cloned() else {
                     painter.text(
                         rect.center(),
@@ -590,34 +1188,12 @@ impl ProtoCraft {
                     screen(NmPoint::new(0, 0)),
                     screen(NmPoint::new(board.width_nm, board.height_nm)),
                 );
-                painter.rect_filled(outline, 0.0, Color32::from_rgb(25, 72, 52));
                 painter.rect_stroke(
                     outline,
                     0.0,
-                    Stroke::new(2.0_f32, Color32::from_rgb(189, 198, 162)),
+                    Stroke::new(1.5_f32, Color32::from_rgb(39, 108, 184)),
                     egui::StrokeKind::Inside,
                 );
-                let mut grid_step = grid;
-                while grid_step as f32 / 1e6 * zoom < 8.0 {
-                    grid_step *= 2;
-                }
-                let visible_min = world_raw(rect.left_top());
-                let visible_max = world_raw(rect.right_bottom());
-                let minx = visible_min.x.max(0) / grid_step * grid_step;
-                let miny = visible_min.y.max(0) / grid_step * grid_step;
-                let maxx = visible_max.x.min(board.width_nm);
-                let maxy = visible_max.y.min(board.height_nm);
-                if minx <= maxx && miny <= maxy {
-                    for x in (minx..=maxx).step_by(grid_step as usize).take(1000) {
-                        for y in (miny..=maxy).step_by(grid_step as usize).take(1000) {
-                            painter.circle_filled(
-                                screen(NmPoint::new(x, y)),
-                                0.65,
-                                Color32::from_rgba_unmultiplied(180, 200, 180, 45),
-                            );
-                        }
-                    }
-                }
                 if self.pcb.report_revision != self.engine.revision() {
                     self.pcb.report_revision = self.engine.revision();
                     match eda_pcb::check(self.engine.project()) {

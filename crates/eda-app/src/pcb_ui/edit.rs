@@ -278,7 +278,6 @@ impl ProtoCraft {
         }
     }
     pub(super) fn pcb_edit_controls(&mut self, ui: &mut egui::Ui, board: &Board) {
-        ui.strong(tr!("Trilhas e furos"));
         ui.horizontal(|ui| {
             if ui
                 .selectable_label(!self.pcb.routing && !self.pcb.hole_tool, tr!("Selecionar"))
@@ -371,7 +370,7 @@ impl ProtoCraft {
                         pin = c.pin_number(anchor.pin)
                     ));
                 }
-                if ui.button(tr!("Via neste ponto · trocar camada")).clicked() {
+                if ui.button(tr!("Inserir via")).clicked() {
                     self.pcb_route_to(position, None, true);
                 }
                 ui.small(tr!("Clique: fixa trecho · Espaço: inverte dobra · V: via no cursor · Backspace: desfaz trecho · Esc: encerra."));
@@ -400,8 +399,9 @@ impl ProtoCraft {
         if ui
             .add_enabled(
                 self.pcb.autorouting.is_none() && self.pcb.fabrication.is_none(),
-                egui::Button::new(tr!("Autorrotear conexões pendentes")),
+                egui::Button::new(tr!("Autorrotear")),
             )
+            .on_hover_text(tr!("Autorrotear conexões pendentes"))
             .clicked()
         {
             self.start_autorouting();
@@ -411,7 +411,11 @@ impl ProtoCraft {
                 "A busca está em execução em segundo plano; edições novas descartam o resultado."
             ));
         }
-        if ui.button(tr!("Verificar DRC e conexões")).clicked() {
+        if ui
+            .button(tr!("Executar DRC"))
+            .on_hover_text(tr!("Verificar DRC e conexões"))
+            .clicked()
+        {
             match eda_pcb::check(self.engine.project()) {
                 Ok(r) => {
                     self.message(

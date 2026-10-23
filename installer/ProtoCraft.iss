@@ -1,6 +1,6 @@
 #define AppName "ProtoCraft"
 #ifndef AppVersion
-#define AppVersion "0.6.1"
+#define AppVersion "0.7.0"
 #endif
 #define AppPublisher "MateusMarochi"
 #define AppURL "https://github.com/MateusMarochi/ProtoCraft"

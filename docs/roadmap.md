@@ -64,6 +64,12 @@ Próxima prioridade de importação: geradores, outros terminais/probes, reconci
 - Recorte local mantém identidade; cópias recebem novo ID e referência; foco de texto e ferramentas PCB não conflitam com os atalhos.
 - Fluxos de esquema/PCB, preservação de snapshots e restauração do cobre cobertos por 14 testes egui adicionais; suíte completa reexecutada.
 
+## Interface da versão 0.7.0
+
+- Página inicial com abertura de projetos recentes e acesso aos fluxos de captura, simulação e PCB.
+- Organização de menus, abas, ferramentas e painéis aproximada do fluxo de trabalho de CAD eletrônico, com temas claro e escuro.
+- Marca renderizada com mipmaps para reduzir serrilhamento e perda de forma em tamanhos pequenos.
+
 ## Autorroteador inicial no estado atual
 
 - Motor original em Rust com busca octilinear A* em duas camadas, índice espacial de obstáculos, custo de curvas/vias/congestionamento e refinamento limitado.

@@ -3,7 +3,7 @@ members = ["crates/eda-core", "crates/eda-netlist", "crates/eda-simulation", "cr
 resolver = "2"
 
 [workspace.package]
-version = "0.6.1"
+version = "0.7.0"
 edition = "2024"
 publish = false
 license = "MIT OR Apache-2.0"
