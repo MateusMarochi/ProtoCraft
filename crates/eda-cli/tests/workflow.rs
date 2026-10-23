@@ -323,7 +323,7 @@ fn cli_runs_mixed_timer_and_rejects_unsupported_engine() {
     assert!(contents.contains("V(VOUT)"));
     let result = cli(&["simulate", path_text(&input), "--engine", "stable"]);
     assert!(!result.status.success());
-    assert!(String::from_utf8_lossy(&result.stderr).contains(&eda_i18n::text("Misto")));
+    assert!(String::from_utf8_lossy(&result.stderr).contains("(mixed)"));
 }
 
 #[test]
