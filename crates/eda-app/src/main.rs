@@ -4144,7 +4144,7 @@ mod tests {
                 .as_ref()
                 .unwrap()
                 .backend
-                .contains(&eda_i18n::text("Dinâmico"))
+                .contains(app.settings.engine.label())
         );
     }
 }
