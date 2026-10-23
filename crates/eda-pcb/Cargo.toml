@@ -3,6 +3,7 @@ name = "eda-pcb"
 version.workspace = true
 edition.workspace = true
 publish.workspace = true
+license.workspace = true
 
 [dependencies]
 eda-core.workspace = true

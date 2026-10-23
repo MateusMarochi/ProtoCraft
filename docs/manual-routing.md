@@ -19,6 +19,21 @@ Uma [placa de exemplo](examples/pcb-trilhas-furos.protocraft) está incluída em
 
 O DRC recusa novas violações físicas, como curto, folga insuficiente, borda ou área de exclusão. Conexões ainda pendentes não impedem continuar a placa; aparecem nas linhas de ligação e no relatório. Erros físicos anteriores independentes podem continuar visíveis enquanto outras áreas são corrigidas. Não há afastamento automático de trilhas.
 
+## Autorroteamento inicial
+
+Use **Autorrotear conexões pendentes** no painel da PCB. A busca roda em segundo plano e o resultado só é aplicado se a placa não tiver sido editada enquanto o cálculo ocorria. O lote inteiro entra no histórico como uma edição única, para que **Ctrl+Z** desfaça todas as rotas de uma vez.
+
+O motor em Rust trabalha nas duas camadas com uma busca octilinear A* em malha local esparsa. Ele considera pads, trilhas, vias, furos, áreas de exclusão, folga, largura, curvas e custo de troca de camada. Ordena as ligações mais longas primeiro, tenta uma resolução refinada quando a primeira busca falha e faz uma passada limitada de melhoria das rotas encontradas. Orçamentos por conexão e globais limitam as expansões. As rotas planejadas passam pelo DRC antes de serem aceitas; um novo erro físico cancela o lote.
+
+Também há uma operação de CLI que preserva o projeto de entrada e grava um novo arquivo:
+
+```powershell
+protocraft-cli pcb-route placa.protocraft --output placa-roteada.protocraft
+protocraft-cli pcb-route placa.protocraft --output placa-roteada.protocraft --grid-mm 0.25 --track-width-mm 0.25 --max-expansions 600000 --no-optimize
+```
+
+O relatório JSON informa conexões roteadas, rotas pendentes, trilhas, vias, comprimento, expansões e falhas individuais. O autorroteador atual cobre placas retangulares de duas camadas; ainda não faz rip-up de trilhas manuais, zonas de cobre, pares diferenciais, controle de impedância ou regras por classe de rede. Para essas situações, revise o resultado e execute **Verificar DRC e conexões** antes de fabricar.
+
 ## Vias e troca de camada
 
 Configure **Via / furo (mm)**: o primeiro valor é o diâmetro do cobre; o segundo é a furação. O padrão é 0,6/0,3 mm. O furo deve ser menor que o diâmetro, com anel mínimo de 0,1 mm no DRC inicial.

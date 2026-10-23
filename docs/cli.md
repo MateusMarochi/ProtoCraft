@@ -2,6 +2,33 @@
 
 O executável `protocraft-cli` usa os mesmos crates de domínio que a interface desktop. `run` aplica comandos tipados pelo `Engine`, valida o projeto e pode salvar uma cópia em `.protocraft`, sem abrir janela.
 
+No Windows, `ProtoCraft-CLI.cmd` compila a versão release do workspace e encaminha os argumentos para a CLI. Ele pode ser chamado da raiz do repositório ou por outro terminal apontando para o caminho do `.cmd`.
+
+## Criar e abrir projetos
+
+`templates` lista os IDs e os nomes de todos os modelos. `new` cria um arquivo novo sem substituir um arquivo já existente; por padrão, cria uma folha esquemática vazia.
+
+```powershell
+ProtoCraft-CLI.cmd templates
+ProtoCraft-CLI.cmd new --output projetos\meu-circuito.protocraft --name "Meu circuito" --open
+ProtoCraft-CLI.cmd open projetos\meu-circuito.protocraft
+```
+
+O desktop precisa estar distribuído ao lado de `protocraft-cli.exe` para usar `--open` ou `open`. O atalho `Iniciar-ProtoCraft.cmd` continua disponível para abrir o aplicativo diretamente.
+
+### Modelo 555 com LED perto de 1 Hz
+
+O modelo cria uma fonte de 5 V, 555 astável, RA=47 kΩ, RB=47 kΩ, C1=10 µF, LED, resistor limitador de 680 Ω e bypass de 10 nF no pino CTRL. A estimativa pela equação clássica é `f ≈ 1.44 / ((RA + 2 RB) C)`, cerca de 1,02 Hz. A simulação usa o motor Misto e componentes genéricos.
+
+```powershell
+ProtoCraft-CLI.cmd new --template 555-led-1hz --output projetos\pisca-1hz.protocraft --open
+ProtoCraft-CLI.cmd simulate projetos\pisca-1hz.protocraft --engine mixed --transient 0.00025 3 --csv projetos\pisca-1hz.csv
+```
+
+É possível informar `--ra-ohms`, `--rb-ohms`, `--c-farads` e `--led-resistor-ohms`. Use `--frequency-hz` para calcular C1 automaticamente a partir de RA e RB; ele não pode ser combinado com `--c-farads`. Os valores são em unidades SI. Por exemplo, `--frequency-hz 1` calcula C1 em aproximadamente 10,21 µF. A CLI informa a frequência teórica estimada e o CSV permite conferir o resultado transiente. O preset é um ponto de partida de esquemático, não uma PCB roteada.
+
+O comando `examples <pasta>` continua gravando o conjunto completo, agora sem substituir nenhum arquivo existente; caso encontre um conflito, interrompe antes de criar os exemplos.
+
 ## Inspecionar um projeto
 
 ```powershell
@@ -79,6 +106,8 @@ O [guia de simulação mista](mixed-simulation.md) documenta pinagens, parâmetr
 ## Biblioteca física e PCB
 
 `devices --filter termo --limit N --offset N` retorna JSON paginado; `device <modelo>` retorna pinagem, footprint e origem completos. `device-project <modelo> --output circuito.protocraft` cria um projeto com o dispositivo e PCB inicial. `pcb-info`, `pcb-check` e `pcb-export --format kicad|svg` inspecionam, verificam e exportam a placa. `pcb-manufacture <projeto> --output pasta-nova --kicad caminho/kicad-cli.exe [--preset jlcpcb|standard]` exige DRC aprovado e usa ferramenta externa explícita para Gerber/Excellon. O padrão `jlcpcb` gera `JLCPCB.zip` com RS-274X/Protel em mm, escala 1:1 e Excellon absoluto; `standard` conserva os arquivos avulsos anteriores. O JSON de resultado informa `preset` e `archive`. Consulte [o preset completo](mcu-pcb.md#preset-jlcpcb--duas-camadas).
+
+`pcb-route <projeto> --output roteado.protocraft [--grid-mm 0.25] [--track-width-mm 0.25] [--max-expansions 600000] [--no-optimize]` executa o autorroteador nativo e grava uma cópia do projeto; a saída não pode substituir a entrada. O plano é limitado por orçamento, usa as duas camadas e valida o DRC antes de ser salvo. O JSON lista rotas realizadas e falhas restantes. Consulte [o guia de autorroteamento](manual-routing.md#autorroteamento-inicial).
 
 As ações físicas estão em `commands` e no [guia STM32/ESP32 e PCB](mcu-pcb.md). Toda coordenada física de ação usa nanômetros; a extensão nativa permanece `.protocraft` (v6). O CLI não emula firmware.
 

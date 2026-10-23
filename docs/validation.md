@@ -42,7 +42,7 @@ O ngspice serviu de ferramenta externa de verificação e não é dependência d
 
 ## Entrega e limitações
 
-`dist/ProtoCraft/` contém os executáveis portáteis `protocraft.exe` e `protocraft-cli.exe`, exemplos originais, documentação e avisos de terceiros. A fonte está no workspace da raiz. A aplicação suporta somente o formato `.protocraft` v1 e os componentes/análises documentados. PCB, firmware/MCU, lógica digital, AC e importação Proteus permanecem planejados. A licença principal de distribuição está pendente; não houve publicação externa.
+`dist/ProtoCraft/` contém os executáveis portáteis `protocraft.exe` e `protocraft-cli.exe`, exemplos originais, documentação e avisos de terceiros. A fonte está no workspace da raiz. A aplicação suporta somente o formato `.protocraft` v1 e os componentes/análises documentados. PCB, firmware/MCU, lógica digital, AC e importação Proteus permanecem planejados. Naquela entrega 0.1, a licença principal ainda estava pendente; depois foi definida como MIT ou Apache-2.0, conforme `NOTICE.md`. Não houve publicação externa naquela validação.
 
 # Validação da entrega 0.2
 
@@ -164,3 +164,11 @@ Foram acrescentados **14 testes de integração egui com RawInput**, passando po
 `scripts/build.ps1` concluiu com código zero: fmt/check, Clippy de todos os alvos sem avisos, **146 testes aprovados**, zero falhas, um teste externo opt-in ignorado, e build release de todo o workspace. O log está em `artifacts/clipboard-0.6.1/integration.log`. A suíte completa também reexecuta os testes de PCB, persistência, importação e simulação anteriores. O arquivo de projeto continua v6.
 
 A versão release abriu a demonstração de PCB no monitor secundário e gerou `artifacts/clipboard-0.6.1/release-pcb.png`. A verificação dos atalhos é automatizada pelos eventos reais de egui e pela saída esperada para o backend; não foi feita injeção de teclas físicas em uma sessão manual do Windows. A documentação diferencia copiar de recortar e os efeitos sobre esquema/cobre em [clipboard.md](clipboard.md).
+
+## CLI de criação e modelo 555 LED
+
+Implementado em 23/10/2026. `cargo fmt --all`, `cargo check --workspace --locked`, Clippy do workspace com avisos como erros e `cargo build --release --workspace --locked` passaram. A suíte de testes não foi executada nesta alteração.
+
+A CLI release listou o modelo `555-led-1hz`, criou `examples/555-led-1hz.protocraft` e a validação do esquema registrou nove componentes e zero erros/avisos ERC. A criação com `--frequency-hz 1` calculou C1=10,21 µF e reportou 1,00 Hz estimado. O modo Misto simulou três segundos, exportou CSV com 12.016 amostras e observou transições de subida separadas por 0,998358 s após o primeiro ciclo de partida. No ponto final, a corrente genérica do LED era 4,30 mA. Isso valida o modelo/simulador do ProtoCraft; não é caracterização de um NE555 ou LED comercial.
+
+O fluxo também foi iniciado por `ProtoCraft-CLI.cmd --version`, que recompilou incrementalmente o workspace e respondeu `ProtoCraft 0.6.1`. O modo `new` agora pode criar folha vazia ou modelo sem substituir destinos existentes, `--open`/`open` inicia a GUI que acompanha a CLI, e `examples` interrompe antes de sobrescrever nomes em conflito. A GUI não foi aberta nesta validação; o teste de instalação visual permanece pendente.

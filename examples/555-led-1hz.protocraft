@@ -1,0 +1,294 @@
+{
+  "format_version": 6,
+  "name": "555 astable com LED — aproximadamente 1 Hz",
+  "components": {
+    "1": {
+      "id": 1,
+      "reference": "V1",
+      "kind": "VoltageSource",
+      "value": 5.0,
+      "position": {
+        "x": -24,
+        "y": -8
+      },
+      "rotation": 1
+    },
+    "4": {
+      "id": 4,
+      "reference": "U1",
+      "kind": "Timer555",
+      "value": 0.0,
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0
+    },
+    "13": {
+      "id": 13,
+      "reference": "RA",
+      "kind": "Resistor",
+      "value": 47000.0,
+      "position": {
+        "x": 20,
+        "y": -8
+      },
+      "rotation": 1
+    },
+    "16": {
+      "id": 16,
+      "reference": "RB",
+      "kind": "Resistor",
+      "value": 47000.0,
+      "position": {
+        "x": 20,
+        "y": 3
+      },
+      "rotation": 1
+    },
+    "19": {
+      "id": 19,
+      "reference": "C1",
+      "kind": "Capacitor",
+      "value": 0.00001,
+      "position": {
+        "x": 20,
+        "y": 14
+      },
+      "rotation": 1
+    },
+    "22": {
+      "id": 22,
+      "reference": "D1",
+      "kind": "Led",
+      "value": 1e-30,
+      "position": {
+        "x": -16,
+        "y": 12
+      },
+      "rotation": 1
+    },
+    "25": {
+      "id": 25,
+      "reference": "GND1",
+      "kind": "Ground",
+      "value": 0.0,
+      "position": {
+        "x": -20,
+        "y": 18
+      },
+      "rotation": 0
+    },
+    "27": {
+      "id": 27,
+      "reference": "RLED",
+      "kind": "Resistor",
+      "value": 680.0,
+      "position": {
+        "x": -32,
+        "y": 12
+      },
+      "rotation": 1
+    },
+    "30": {
+      "id": 30,
+      "reference": "C2",
+      "kind": "Capacitor",
+      "value": 1e-8,
+      "position": {
+        "x": 4,
+        "y": 10
+      },
+      "rotation": 1
+    }
+  },
+  "wires": {},
+  "junctions": {},
+  "labels": {
+    "2": {
+      "id": 2,
+      "position": {
+        "x": -24,
+        "y": -11
+      },
+      "name": "VCC"
+    },
+    "3": {
+      "id": 3,
+      "position": {
+        "x": -24,
+        "y": -5
+      },
+      "name": "0"
+    },
+    "5": {
+      "id": 5,
+      "position": {
+        "x": -6,
+        "y": -3
+      },
+      "name": "0"
+    },
+    "6": {
+      "id": 6,
+      "position": {
+        "x": -6,
+        "y": -1
+      },
+      "name": "CAP"
+    },
+    "7": {
+      "id": 7,
+      "position": {
+        "x": -6,
+        "y": 1
+      },
+      "name": "VOUT"
+    },
+    "8": {
+      "id": 8,
+      "position": {
+        "x": -6,
+        "y": 3
+      },
+      "name": "VCC"
+    },
+    "9": {
+      "id": 9,
+      "position": {
+        "x": 6,
+        "y": 3
+      },
+      "name": "CTRL"
+    },
+    "10": {
+      "id": 10,
+      "position": {
+        "x": 6,
+        "y": 1
+      },
+      "name": "CAP"
+    },
+    "11": {
+      "id": 11,
+      "position": {
+        "x": 6,
+        "y": -1
+      },
+      "name": "DIS"
+    },
+    "12": {
+      "id": 12,
+      "position": {
+        "x": 6,
+        "y": -3
+      },
+      "name": "VCC"
+    },
+    "14": {
+      "id": 14,
+      "position": {
+        "x": 20,
+        "y": -11
+      },
+      "name": "VCC"
+    },
+    "15": {
+      "id": 15,
+      "position": {
+        "x": 20,
+        "y": -5
+      },
+      "name": "DIS"
+    },
+    "17": {
+      "id": 17,
+      "position": {
+        "x": 20,
+        "y": 0
+      },
+      "name": "DIS"
+    },
+    "18": {
+      "id": 18,
+      "position": {
+        "x": 20,
+        "y": 6
+      },
+      "name": "CAP"
+    },
+    "20": {
+      "id": 20,
+      "position": {
+        "x": 20,
+        "y": 11
+      },
+      "name": "CAP"
+    },
+    "21": {
+      "id": 21,
+      "position": {
+        "x": 20,
+        "y": 17
+      },
+      "name": "0"
+    },
+    "23": {
+      "id": 23,
+      "position": {
+        "x": -16,
+        "y": 9
+      },
+      "name": "VOUT"
+    },
+    "24": {
+      "id": 24,
+      "position": {
+        "x": -16,
+        "y": 15
+      },
+      "name": "LED_K"
+    },
+    "26": {
+      "id": 26,
+      "position": {
+        "x": -20,
+        "y": 18
+      },
+      "name": "0"
+    },
+    "28": {
+      "id": 28,
+      "position": {
+        "x": -32,
+        "y": 9
+      },
+      "name": "LED_K"
+    },
+    "29": {
+      "id": 29,
+      "position": {
+        "x": -32,
+        "y": 15
+      },
+      "name": "0"
+    },
+    "31": {
+      "id": 31,
+      "position": {
+        "x": 4,
+        "y": 7
+      },
+      "name": "CTRL"
+    },
+    "32": {
+      "id": 32,
+      "position": {
+        "x": 4,
+        "y": 13
+      },
+      "name": "0"
+    }
+  },
+  "next_id": 33
+}

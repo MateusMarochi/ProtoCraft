@@ -10,6 +10,7 @@ pub fn handles(cmd: &str) -> bool {
             | "device-project"
             | "pcb-info"
             | "pcb-check"
+            | "pcb-route"
             | "pcb-export"
             | "pcb-manufacture"
     )
@@ -22,7 +23,7 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
     let cmd = &args[0];
     if args.get(1).is_some_and(|a| a == "--help") {
         println!(
-            "devices [--filter texto] [--limit N] [--offset N]\ndevice <modelo>\ndevice-project <modelo> --output arquivo.protocraft\npcb-info <projeto>\npcb-check <projeto>\npcb-export <projeto> --format kicad|svg --output arquivo\npcb-manufacture <projeto> --output pasta-nova --kicad caminho/kicad-cli.exe [--preset jlcpcb|standard]\nPreset padrão: jlcpcb. Produz JLCPCB.zip, RS-274X/Protel, mm, 1:1, furação absoluta Excellon.\nCoordenadas físicas em nanômetros; 1 mm = 1.000.000 nm. Catálogo físico, sem emulação de firmware."
+            "devices [--filter texto] [--limit N] [--offset N]\ndevice <modelo>\ndevice-project <modelo> --output arquivo.protocraft\npcb-info <projeto>\npcb-check <projeto>\npcb-route <projeto> --output novo.protocraft [--grid-mm 0.25] [--track-width-mm 0.25] [--max-expansions 600000] [--no-optimize]\npcb-export <projeto> --format kicad|svg --output arquivo\npcb-manufacture <projeto> --output pasta-nova --kicad caminho/kicad-cli.exe [--preset jlcpcb|standard]\nPreset padrão: jlcpcb. Produz JLCPCB.zip, RS-274X/Protel, mm, 1:1, furação absoluta Excellon.\nCoordenadas físicas em nanômetros; 1 mm = 1.000.000 nm. Catálogo físico, sem emulação de firmware."
         );
         return Ok(());
     }
@@ -114,6 +115,66 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
         }
         return Ok(());
     }
+    if cmd == "pcb-route" {
+        let mut output = None;
+        let mut config = eda_pcb::AutorouteConfig::default();
+        let mut i = 2;
+        while i < args.len() {
+            match args[i].as_str() {
+                "--output" if output.is_none() => {
+                    output = Some(args.get(i + 1).ok_or("Informe o arquivo de saída")?)
+                }
+                "--grid-mm" => {
+                    config.grid_nm = parse_mm_nm(args.get(i + 1).ok_or("Informe a grade")?)?;
+                }
+                "--track-width-mm" => {
+                    config.track_width_nm =
+                        parse_mm_nm(args.get(i + 1).ok_or("Informe a largura")?)?;
+                }
+                "--max-expansions" => {
+                    let budget: usize = args.get(i + 1).ok_or("Informe o orçamento")?.parse()?;
+                    config.max_total_expansions = budget;
+                    config.max_expansions_per_connection =
+                        config.max_expansions_per_connection.min(budget.max(1));
+                }
+                "--no-optimize" => {
+                    config.optimize_routes = false;
+                    i += 1;
+                    continue;
+                }
+                _ => return Err("Opção desconhecida ou repetida em pcb-route".into()),
+            }
+            i += 2;
+        }
+        let output = output.ok_or("Informe --output novo.protocraft")?;
+        let destination = Path::new(output);
+        if destination
+            .extension()
+            .is_none_or(|extension| !extension.eq_ignore_ascii_case("protocraft"))
+        {
+            return Err("A saída do autorroteamento deve usar .protocraft".into());
+        }
+        if same_path(
+            &fs::canonicalize(input)?,
+            &resolved_destination(destination)?,
+        ) {
+            return Err("O autorroteamento exige saída diferente do projeto original".into());
+        }
+        if destination.exists() {
+            return Err("O arquivo de saída já existe; escolha outro nome.".into());
+        }
+        let plan = eda_pcb::autoroute(&project, &config)?;
+        let mut engine = Engine::new(project)?;
+        engine.execute(Command::Batch(plan.commands))?;
+        eda_storage::save(destination, engine.project())?;
+        return json(&serde_json::json!({
+            "output": destination,
+            "stats": plan.stats,
+            "failures": plan.failures,
+            "atomic": true,
+            "format_version": eda_core::FORMAT_VERSION
+        }));
+    }
     if cmd == "pcb-manufacture" {
         use eda_storage::fabrication::ManufacturingPreset;
         let mut output = None;
@@ -182,4 +243,12 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
     Err("Comando físico desconhecido".into())
+}
+
+fn parse_mm_nm(value: &str) -> Result<i64, Box<dyn Error>> {
+    let millimeters: f64 = value.parse()?;
+    if !millimeters.is_finite() || !(0.05..=10.0).contains(&millimeters) {
+        return Err("Use uma distância entre 0,05 e 10 mm".into());
+    }
+    Ok((millimeters * NM_PER_MM as f64).round() as i64)
 }

@@ -1,6 +1,6 @@
 # Simulação mista e componentes complexos — 0.4
 
-O motor **Misto** (`mixed`) sincroniza o solver analógico original com estados digitais e atrasos de propagação. A biblioteca tem **36 tipos selecionáveis** e **20 exemplos próprios**. Não depende de DLLs, instalação ou licença de outro simulador.
+O motor **Misto** (`mixed`) sincroniza o solver analógico original com estados digitais e atrasos de propagação. A biblioteca tem **36 tipos selecionáveis** e **21 exemplos próprios**, incluindo um oscilador 555 com LED calculado para aproximadamente 1 Hz. Não depende de DLLs, instalação ou licença de outro simulador.
 
 ## Usar na interface
 

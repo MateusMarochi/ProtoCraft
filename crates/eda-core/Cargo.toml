@@ -3,6 +3,7 @@ name = "eda-core"
 version.workspace = true
 edition.workspace = true
 publish.workspace = true
+license.workspace = true
 [dependencies]
 serde.workspace = true
 thiserror.workspace = true

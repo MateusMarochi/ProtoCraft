@@ -298,6 +298,51 @@ pub fn timer_astable() -> Project {
         ],
     )
 }
+/// 555 astable with a current-limited LED output, tuned for about 1 Hz.
+pub fn timer_led_1hz() -> Project {
+    let mut p = timer_astable();
+    p.name = "555 astable com LED — aproximadamente 1 Hz".into();
+
+    for component in p.components.values_mut() {
+        match component.reference.as_str() {
+            "U2" => component.reference = "U1".into(),
+            "R3" => {
+                component.reference = "RA".into();
+                component.value = 47_000.0;
+            }
+            "R4" => {
+                component.reference = "RB".into();
+                component.value = 47_000.0;
+            }
+            "C5" => {
+                component.reference = "C1".into();
+                component.value = 10e-6;
+            }
+            "R6" => {
+                component.reference = "D1".into();
+                component.kind = ComponentKind::Led;
+                component.value = ComponentKind::Led.default_value();
+            }
+            _ => {}
+        }
+    }
+
+    if let Some(cathode) = p
+        .labels
+        .values_mut()
+        .find(|label| label.position == Point::new(-16, 15))
+    {
+        cathode.name = "LED_K".into();
+    }
+    component(&mut p, ComponentKind::Resistor, "RLED", 680.0, -32, 12, 1);
+    label(&mut p, "LED_K", -32, 9);
+    label(&mut p, "0", -32, 15);
+
+    component(&mut p, ComponentKind::Capacitor, "C2", 10e-9, 4, 10, 1);
+    label(&mut p, "CTRL", 4, 7);
+    label(&mut p, "0", 4, 13);
+    p
+}
 pub fn timer_monostable() -> Project {
     let mut p = labeled(
         "555 genérico — pulso monoestável",
@@ -515,6 +560,11 @@ pub const CATALOG: &[ExampleFactory] = &[
     ("transistor", "Transistor NPN", transistor_bias),
     ("mosfet", "Chave NMOS", mosfet_switch),
     ("555-astavel", "555 astável", timer_astable),
+    (
+        "555-led-1hz",
+        "555 astável com LED — aproximadamente 1 Hz",
+        timer_led_1hz,
+    ),
     ("555-monoestavel", "555 monoestável", timer_monostable),
     ("flip-flop-d", "Flip-flop D", d_flip_flop),
     ("contador-binario", "Contador binário", binary_counter),

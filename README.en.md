@@ -4,9 +4,9 @@
 
 <p align="center"><a href="README.pt-BR.md">Português</a> · <a href="README.en.md">English</a></p>
 
-ProtoCraft is a Rust desktop application for electronic design. It brings together a schematic editor, original circuit simulation engines, two-layer PCB manual routing, physical STM32/ESP32 device data, a CLI, and an experimental Proteus project importer.
+ProtoCraft is a Rust desktop application for electronic design. It brings together a schematic editor, original circuit simulation engines, manual and initial automatic two-layer PCB routing, physical STM32/ESP32 device data, a CLI, and an experimental Proteus project importer.
 
-> **Project status:** under active development. The main distribution license has not been chosen yet. Review [NOTICE.md](NOTICE.md) before reusing or redistributing this project. The physical device catalog has its own attribution and license terms.
+> **Project status:** under active development. Original ProtoCraft source code, documentation, and bundled circuit examples are licensed under MIT or Apache-2.0, at your option. Third-party data and assets have separate terms; see [NOTICE.md](NOTICE.md), [LICENSE-MIT](LICENSE-MIT), and [LICENSE-APACHE](LICENSE-APACHE).
 
 ## Features
 
@@ -14,7 +14,7 @@ ProtoCraft is a Rust desktop application for electronic design. It brings togeth
 - Ctrl+C/Ctrl+X/Ctrl+V for schematic and PCB components, plus undo and redo.
 - 36 component types, including passive parts, semiconductor devices, logic, comparators, Schmitt triggers, 555 timers, flip-flops, counters, and controlled sources.
 - Three built-in engines: Stable (backward Euler), Dynamic (trapezoidal), and Mixed (analog with digital events). Supports DC and transient analysis, continuous runs, plots, and CSV/SPICE export.
-- Two-layer PCB editor with manual 45-degree, 90-degree, and free-angle tracks, vias, non-plated holes, geometry editing, and design-rule checks.
+- Two-layer PCB editor with manual 45-degree, 90-degree, and free-angle tracks, an initial A* autorouter, vias, non-plated holes, geometry editing, and design-rule checks.
 - Manufacturing Gerber/Excellon generation with RS-274X, Protel extensions, millimeters, absolute drill coordinates, 1:1 scale, and ZIP packaging through the JLCPCB preset. KiCad CLI is required for this optional workflow.
 - Offline physical catalog with 2,283 STM32 and 48 Espressif entries, including pins, packages, pads, and dimensions. This is physical design support; MCU firmware is not emulated.
 - Native JSON `.protocraft` format with migrations and recovery backups.
@@ -49,6 +49,10 @@ After packaging, `scripts/installer.ps1` builds the Windows x64 installer; Inno 
 Run CLI commands from the repository root with `cargo run -p eda-cli --`, or use the packaged `protocraft-cli.exe`:
 
 ```text
+templates
+new --output blink.protocraft --template 555-led-1hz --frequency-hz 1 --open
+simulate blink.protocraft --engine mixed --transient 0.00025 3 --csv blink.csv
+open blink.protocraft
 engines
 components
 info examples/divisor.protocraft
@@ -79,7 +83,7 @@ This import is partial and intended for editing and inspection. Unsupported comp
 
 ## Current limits
 
-The circuit models are generic and educational, without manufacturer characterization. Mixed simulation does not model setup/hold, metastability, or commercial device characterization. MCU firmware, memories, ADC/DAC, JFET, small-signal AC, parasitics, noise, advanced PCB features, automatic routing, and full compatibility with external simulators are outside the current implementation. PCB manufacturing output requires independent engineering review before fabrication.
+The circuit models are generic and educational, without manufacturer characterization. Mixed simulation does not model setup/hold, metastability, or commercial device characterization. MCU firmware, memories, ADC/DAC, JFET, small-signal AC, parasitics, noise, advanced PCB features, rip-up routing, zones, differential pairs, and full compatibility with external simulators are outside the current implementation. PCB manufacturing output requires independent engineering review before fabrication.
 
 Imported projects with partial connectivity remain blocked from simulation. Review the [simulation validation](docs/simulation-validation.md), [engine documentation](docs/simulation-engines.md), and [roadmap](docs/roadmap.md).
 
@@ -88,8 +92,9 @@ Imported projects with partial connectivity remain blocked from simulation. Revi
 - [Architecture](docs/architecture.md) and [contracts](docs/contracts.md)
 - [File format and recovery](docs/file-format.md)
 - [CLI actions and examples](docs/cli.md)
+- [555 LED blinker starter template](docs/555-led-1hz.md)
 - [Simulation engines](docs/simulation-engines.md), [mixed simulation](docs/mixed-simulation.md), and [validation](docs/simulation-validation.md)
 - [Manual PCB routing](docs/manual-routing.md), [MCU/PCB catalog](docs/mcu-pcb.md), and [JLCPCB preset](docs/manual-routing.md#gerber-and-excellon-manufacturing-export)
 - [Third-party notices and attribution](NOTICE.md)
 
-The design goal is a usable EDA built from independently implemented code and documented public data. ProtoCraft does not include Proteus code or binaries. Its distribution license is still undecided; creating a public repository does not grant reuse rights until a license is selected and added.
+The design goal is a usable EDA built from independently implemented code and documented public data. ProtoCraft does not include Proteus code or binaries. Original source code, documentation, and bundled circuit examples are available under MIT or Apache-2.0, at your option. See [NOTICE.md](NOTICE.md) for separate terms covering third-party data and assets.

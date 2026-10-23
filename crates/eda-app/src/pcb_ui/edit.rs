@@ -388,6 +388,20 @@ impl ProtoCraft {
         self.pcb_geometry_inspector(ui, board);
         ui.separator();
         ui.checkbox(&mut self.pcb.show_airwires, "Mostrar conexões pendentes");
+        if ui
+            .add_enabled(
+                self.pcb.autorouting.is_none() && self.pcb.fabrication.is_none(),
+                egui::Button::new("Autorrotear conexões pendentes"),
+            )
+            .clicked()
+        {
+            self.start_autorouting();
+        }
+        if self.pcb.autorouting.is_some() {
+            ui.small(
+                "A busca está em execução em segundo plano; edições novas descartam o resultado.",
+            );
+        }
         if ui.button("Verificar DRC e conexões").clicked() {
             match eda_pcb::check(self.engine.project()) {
                 Ok(r) => {

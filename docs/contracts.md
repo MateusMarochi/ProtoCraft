@@ -12,7 +12,7 @@ Implementação original; nenhuma dependência do executável ou bibliotecas do 
 
 `eda_storage`: `load(path:impl AsRef<Path>)->Result<Project,StorageError>`, `save(path:impl AsRef<Path>,&Project)->Result<(),StorageError>`, `export_csv(path:impl AsRef<Path>,&SimulationResult)->Result<(),StorageError>` (dep de simulation se necessário). JSON .protocraft v6 (lê/migra v1/v2/v3/v4/v5); limite 8 MiB, validação e gravação atômica com backup. Não sobrescrever versão desconhecida/inválida existente. CLI eda-cli gera exemplos, simula, valida, exporta SPICE/CSV. App `eda-app` bin `protocraft` com eframe 0.33 e rfd 0.15; textos em pt-BR, painel de biblioteca, canvas, propriedades, ERC/netlist/resultados e gráficos.
 
-Toolchain instalada e aprovada pela autorização de instalação do usuário: Rust 1.99.1 MSVC. Dependências serde/serde_json/thiserror/eframe: MIT OU Apache-2.0, rfd: MIT; tempfile: MIT OU Apache-2.0. Licença principal do produto permanece a decidir; não copiar implementações proprietárias.
+Toolchain instalada e aprovada pela autorização de instalação do usuário: Rust 1.99.1 MSVC. Dependências serde/serde_json/thiserror/eframe: MIT OU Apache-2.0, rfd: MIT; tempfile: MIT OU Apache-2.0. O código original do produto e a documentação são licenciados sob MIT ou Apache-2.0, à escolha de quem recebe; dados e assets de terceiros mantêm seus próprios termos, descritos em [NOTICE.md](../NOTICE.md). Não copiar implementações proprietárias.
 
 
 `Component.parameters: ModelParameters` é validado no núcleo e persistido em v6. `Command::SetModel {id,parameters}` substitui o conjunto de parâmetros de forma atômica e reversível. CLI `engines`/`components` lista os contratos disponíveis.

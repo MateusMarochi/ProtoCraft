@@ -64,6 +64,13 @@ Próxima prioridade de importação: geradores, outros terminais/probes, reconci
 - Recorte local mantém identidade; cópias recebem novo ID e referência; foco de texto e ferramentas PCB não conflitam com os atalhos.
 - Fluxos de esquema/PCB, preservação de snapshots e restauração do cobre cobertos por 14 testes egui adicionais; suíte completa reexecutada.
 
+## Autorroteador inicial no estado atual
+
+- Motor original em Rust com busca octilinear A* em duas camadas, índice espacial de obstáculos, custo de curvas/vias/congestionamento e refinamento limitado.
+- Planejamento validado por DRC e aplicado em lote atômico, com undo/redo no desktop e cópia de saída pela CLI.
+- A compilação e o Clippy foram verificados; o comportamento em placas reais ainda precisa de validação prática.
+- Rip-up de cobre manual, zonas, pares diferenciais, regras por classe de rede e roteamento multicamada seguem como trabalho futuro.
+
 ## Próxima fase: completar a bancada de circuitos
 
 1. Seleção múltipla, roteamento que acompanha componentes, split/merge de fios e hierarquia de folhas.
@@ -74,7 +81,7 @@ Próxima prioridade de importação: geradores, outros terminais/probes, reconci
 
 ## Fases posteriores ainda não implementadas
 
-- PCB avançada: contornos não retangulares, zonas de cobre, regras por netclass, pares diferenciais, tolerâncias, montagem, 3D e verificação fabril mais abrangente.
+- PCB avançada: contornos não retangulares, zonas de cobre, regras por netclass, pares diferenciais, rip-up e reroute, tolerâncias, montagem, 3D e verificação fabril mais abrangente.
 - Ampliação da simulação digital e primeira arquitetura MCU, com licença de emulador, tempo virtual, GPIO e testes determinísticos.
 - Interoperabilidade: ampliar os parsers ISIS 8 restritos para outros perfis, tipos de objetos e formatos abertos, com validação elétrica independente. Não há compatibilidade geral com Proteus.
 - 3D, autorroteamento, grandes bibliotecas, múltiplas folhas e integrações online conforme casos concretos.

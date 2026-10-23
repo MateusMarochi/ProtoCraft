@@ -3,6 +3,7 @@ name = "eda-storage"
 version.workspace = true
 edition.workspace = true
 publish.workspace = true
+license.workspace = true
 
 [dependencies]
 eda-pcb.workspace = true

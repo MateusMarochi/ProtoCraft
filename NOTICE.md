@@ -23,7 +23,9 @@ As dependências transitivas e versões exatas são registradas em `Cargo.lock`;
 
 Fontes primárias consultadas: https://rust-lang.org/tools/install/ ; https://docs.rs/eframe/0.33.3/eframe/ ; https://docs.rs/rfd/0.15.4/rfd/ ; https://docs.rs/tempfile/3.27.0/tempfile/ . O Cargo verifica os checksums dos pacotes publicados.
 
-A licença principal de distribuição do produto permanece a decidir. Esta nota não substitui os textos das licenças de terceiros; consulte os pacotes correspondentes antes de distribuir publicamente.
+Os materiais originais do ProtoCraft — incluindo código-fonte, documentação e exemplos de circuitos distribuídos com o projeto — são licenciados sob **MIT ou Apache-2.0, à escolha de quem recebe o material**. Consulte `LICENSE-MIT` e `LICENSE-APACHE`; o titular pode escolher qualquer uma dessas licenças para usar, modificar e redistribuir esses materiais. Copyright © 2026 Mateus Marochi e contribuidores do ProtoCraft.
+
+Essa concessão cobre os materiais originais do ProtoCraft descritos acima. Ela não altera os termos independentes dos dados em `assets/library/`, das dependências e outros materiais de terceiros, nem estabelece uma licença para a imagem de marca cuja autoria e licença original não foram informadas acima. Circuitos e arquivos de projeto criados pelos usuários permanecem sob os termos de seus autores. Este aviso acompanha a distribuição; os textos das licenças de terceiros estão em `docs/THIRD_PARTY_LICENSES.txt` e nos diretórios correspondentes.
 
 O estudo funcional da versão 0.3 consultou as instruções públicas e a interface documentada do CircuitJS. Os modelos e métodos Rust foram implementados neste projeto com equações públicas e exemplos próprios; nenhum código, asset ou runtime desse simulador foi incorporado. Referências e escopo estão em `docs/simulation-engines.md`.
 

@@ -3,9 +3,11 @@ use eda_core::*;
 use eda_netlist::{NetId, Netlist, build_netlist};
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
+mod autoroute;
 mod drilling;
 mod export;
 mod routing;
+pub use autoroute::{AutorouteConfig, AutorouteFailure, AutoroutePlan, AutorouteStats, autoroute};
 pub use export::{export_kicad, export_svg};
 pub use routing::{RouteMode, RoutingTarget, check_edit, manual_path, routing_target};
 

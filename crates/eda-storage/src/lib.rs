@@ -67,6 +67,34 @@ pub fn backup_path(path: impl AsRef<Path>) -> PathBuf {
 }
 
 pub fn save(path: impl AsRef<Path>, project: &Project) -> Result<(), StorageError> {
+    let bytes = encode(project)?;
+    let path = path.as_ref();
+    if path.exists() {
+        // NÃ£o substituÃ­mos arquivo corrompido ou de versÃ£o que este programa desconhece.
+        load(path)?;
+        let previous = fs::read(path)?;
+        atomic_write(&backup_path(path), &previous)?;
+    }
+    atomic_write(path, &bytes)
+}
+
+/// Cria um projeto sem substituir um destino que jÃ¡ exista.
+pub fn create_new(path: impl AsRef<Path>, project: &Project) -> Result<(), StorageError> {
+    let bytes = encode(project)?;
+    let path = path.as_ref();
+    let parent = path
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    let mut temp = tempfile::NamedTempFile::new_in(parent)?;
+    temp.write_all(&bytes)?;
+    temp.as_file().sync_all()?;
+    temp.persist_noclobber(path)
+        .map(|_| ())
+        .map_err(|error| StorageError::Io(error.error))
+}
+
+fn encode(project: &Project) -> Result<Vec<u8>, StorageError> {
     project
         .validate()
         .map_err(|e| StorageError::Invalid(e.to_string()))?;
@@ -78,14 +106,7 @@ pub fn save(path: impl AsRef<Path>, project: &Project) -> Result<(), StorageErro
     if bytes.len() as u64 > MAX_FILE_BYTES {
         return Err(StorageError::TooLarge);
     }
-    let path = path.as_ref();
-    if path.exists() {
-        // NÃ£o substituÃ­mos arquivo corrompido ou de versÃ£o que este programa desconhece.
-        load(path)?;
-        let previous = fs::read(path)?;
-        atomic_write(&backup_path(path), &previous)?;
-    }
-    atomic_write(path, &bytes)
+    Ok(bytes)
 }
 
 fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), StorageError> {

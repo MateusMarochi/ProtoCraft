@@ -49,6 +49,8 @@ pub(super) struct PcbUi {
     dimensions_revision: u64,
     show_airwires: bool,
     fabrication: Option<mpsc::Receiver<Result<PathBuf, String>>>,
+    autorouting: Option<mpsc::Receiver<Result<eda_pcb::AutoroutePlan, String>>>,
+    autorouting_revision: u64,
 }
 
 impl Default for PcbUi {
@@ -92,6 +94,8 @@ impl Default for PcbUi {
             dimensions_revision: u64::MAX,
             show_airwires: true,
             fabrication: None,
+            autorouting: None,
+            autorouting_revision: u64::MAX,
         }
     }
 }
@@ -266,6 +270,48 @@ impl ProtoCraft {
         }
     }
     pub(super) fn pcb_tools(&mut self, ctx: &egui::Context) {
+        let autoroute_result =
+            self.pcb
+                .autorouting
+                .as_ref()
+                .and_then(|receiver| match receiver.try_recv() {
+                    Ok(result) => Some(result),
+                    Err(mpsc::TryRecvError::Empty) => None,
+                    Err(mpsc::TryRecvError::Disconnected) => {
+                        Some(Err("A tarefa de autorroteamento foi encerrada.".into()))
+                    }
+                });
+        if let Some(result) = autoroute_result {
+            self.pcb.autorouting = None;
+            match result {
+                Ok(plan) if self.engine.revision() == self.pcb.autorouting_revision => {
+                    let stats = plan.stats.clone();
+                    match self.engine.execute(Command::Batch(plan.commands)) {
+                        Ok(()) => {
+                            self.pcb.report = None;
+                            self.pcb.finish_route();
+                            self.message(
+                                format!(
+                                    "Autorroteamento: {} conexões, {} trilhas, {} vias, {} pendentes, {} sem caminho.",
+                                    stats.routed_connections,
+                                    stats.track_count,
+                                    stats.via_count,
+                                    stats.remaining_airwires,
+                                    stats.unrouted_connections
+                                ),
+                                stats.unrouted_connections > 0,
+                            );
+                        }
+                        Err(error) => self.message(error.to_string(), true),
+                    }
+                }
+                Ok(_) => self.message(
+                    "A placa mudou durante a busca; o resultado antigo foi descartado.",
+                    true,
+                ),
+                Err(error) => self.message(error, true),
+            }
+        }
         let completed = self
             .pcb
             .fabrication
@@ -288,7 +334,7 @@ impl ProtoCraft {
                 Err(e) => self.message(e, true),
             }
         }
-        if self.pcb.fabrication.is_some() {
+        if self.pcb.fabrication.is_some() || self.pcb.autorouting.is_some() {
             ctx.request_repaint_after(Duration::from_millis(100));
         }
 
@@ -328,26 +374,56 @@ impl ProtoCraft {
             });
         });
     }
+    fn start_autorouting(&mut self) {
+        if self.pcb.autorouting.is_some() || self.pcb.fabrication.is_some() {
+            return;
+        }
+        let config = eda_pcb::AutorouteConfig {
+            track_width_nm: nm(self.pcb.width),
+            grid_nm: nm(self.pcb.grid_mm),
+            via_diameter_nm: nm(self.pcb.via_diameter_mm),
+            via_drill_nm: nm(self.pcb.via_drill_mm),
+            ..eda_pcb::AutorouteConfig::default()
+        };
+        let project = self.engine.project().clone();
+        let revision = self.engine.revision();
+        let (sender, receiver) = mpsc::channel();
+        match std::thread::Builder::new()
+            .name("protocraft-autoroute".into())
+            .spawn(move || {
+                let _ = sender.send(eda_pcb::autoroute(&project, &config));
+            }) {
+            Ok(_) => {
+                self.pcb.autorouting_revision = revision;
+                self.pcb.autorouting = Some(receiver);
+                self.message("Buscando rotas em segundo plano…", false);
+            }
+            Err(error) => self.message(error.to_string(), true),
+        }
+    }
     fn pcb_fabrication_controls(&mut self, ui: &mut egui::Ui) {
         ui.separator();
         ui.strong("Fabricação");
         let before = self.settings.fabrication_preset;
-        ui.add_enabled_ui(self.pcb.fabrication.is_none(), |ui| {
-            egui::ComboBox::from_id_salt("fabrication_preset")
-                .selected_text(self.settings.fabrication_preset.label())
-                .show_ui(ui, |ui| {
-                    for preset in [
-                        eda_storage::fabrication::ManufacturingPreset::Jlcpcb,
-                        eda_storage::fabrication::ManufacturingPreset::Standard,
-                    ] {
-                        ui.selectable_value(
-                            &mut self.settings.fabrication_preset,
-                            preset,
-                            preset.label(),
-                        );
-                    }
-                });
-        });
+        ui.add_enabled_ui(
+            self.pcb.fabrication.is_none() && self.pcb.autorouting.is_none(),
+            |ui| {
+                egui::ComboBox::from_id_salt("fabrication_preset")
+                    .selected_text(self.settings.fabrication_preset.label())
+                    .show_ui(ui, |ui| {
+                        for preset in [
+                            eda_storage::fabrication::ManufacturingPreset::Jlcpcb,
+                            eda_storage::fabrication::ManufacturingPreset::Standard,
+                        ] {
+                            ui.selectable_value(
+                                &mut self.settings.fabrication_preset,
+                                preset,
+                                preset.label(),
+                            );
+                        }
+                    });
+            },
+        );
         if before != self.settings.fabrication_preset
             && let Err(e) = self.settings.save()
         {
@@ -367,7 +443,7 @@ impl ProtoCraft {
         };
         if ui
             .add_enabled(
-                self.pcb.fabrication.is_none(),
+                self.pcb.fabrication.is_none() && self.pcb.autorouting.is_none(),
                 egui::Button::new(generate_label),
             )
             .clicked()
