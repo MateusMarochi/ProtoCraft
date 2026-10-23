@@ -51,22 +51,19 @@ fn run(tool: &Path, args: &[&std::ffi::OsStr], log: &Path) -> Result<(), String>
     }
     let mut child = command
         .spawn()
-        .map_err(|e| format!("Falha ao iniciar KiCad CLI: {e}"))?;
+        .map_err(|error| format!("Falha ao iniciar KiCad CLI: {error}"))?;
     let started = Instant::now();
     loop {
         if let Some(status) = child.try_wait().map_err(|e| e.to_string())? {
             if status.success() {
                 return Ok(());
             }
-            return Err(format!(
-                "KiCad CLI retornou {}: {}",
-                status,
-                fs::read_to_string(log)
-                    .unwrap_or_default()
-                    .chars()
-                    .take(2000)
-                    .collect::<String>()
-            ));
+            let output = fs::read_to_string(log)
+                .unwrap_or_default()
+                .chars()
+                .take(2000)
+                .collect::<String>();
+            return Err(format!("KiCad CLI retornou {status}: {output}"));
         }
         if started.elapsed() > Duration::from_secs(60) {
             let _ = child.kill();
@@ -94,9 +91,9 @@ pub fn generate_with_preset(
     let report = eda_pcb::check(project)?;
     if report.errors() != 0 {
         return Err(format!(
-            "Fabricação bloqueada: {} erros DRC e {} conexões pendentes. Corrija a PCB antes de gerar Gerber.",
-            report.errors(),
-            report.airwires.len()
+            "Fabricação bloqueada: {drc_errors} erros DRC e {pending_connections} conexões pendentes. Corrija a PCB antes de gerar Gerber.",
+            drc_errors = report.errors(),
+            pending_connections = report.airwires.len()
         ));
     }
     let parent = destination
@@ -135,11 +132,16 @@ pub fn generate_with_preset(
     );
     if let Err(e) = result {
         let path = stage.keep();
-        fs::rename(&path, destination)
-            .map_err(|err| format!("{e}; falha ao preservar diagnóstico: {err}"))?;
+        fs::rename(&path, destination).map_err(|preserve_error| {
+            format!(
+                "{error}; falha ao preservar diagnóstico: {preserve_error}",
+                error = e
+            )
+        })?;
         return Err(format!(
-            "{e}. Diagnósticos preservados em {}.",
-            destination.display()
+            "{error}. Diagnósticos preservados em {path}.",
+            error = e,
+            path = destination.display()
         ));
     }
     let output = stage.path().to_path_buf();

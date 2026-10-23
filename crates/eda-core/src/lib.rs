@@ -297,8 +297,8 @@ impl Project {
                     && c.parameters.initial_state > 1)
             {
                 return Err(CoreError::Invalid(format!(
-                    "valor inválido em {}.",
-                    c.reference
+                    "valor inválido em {reference}.",
+                    reference = c.reference
                 )));
             }
             physical::validate_component(c)?;
@@ -329,8 +329,8 @@ impl Project {
                     })
                 {
                     return Err(CoreError::Invalid(format!(
-                        "metadados ou pinos importados inválidos em {}.",
-                        c.reference
+                        "metadados ou pinos importados inválidos em {reference}.",
+                        reference = c.reference
                     )));
                 }
             }

@@ -71,8 +71,8 @@ pub fn import_proteus(path: impl AsRef<Path>) -> Result<ImportResult, ImportErro
     let mut result = convert_document(&name, &document, catalog.as_ref(), file_version)?;
     if !ignored.is_empty() {
         result.report.warnings.push(format!(
-            "Membros mantidos somente no original e não executados/importados: {}.",
-            ignored.join(", ")
+            "Membros mantidos somente no original e não executados/importados: {members}.",
+            members = ignored.join(", ")
         ));
     }
     if catalog.is_none() {
@@ -296,8 +296,9 @@ pub fn convert_document(
         let reference = sanitized_reference(&source.reference, index, &mut references);
         if reference != source.reference.trim() {
             warnings.push(format!(
-                "Referência original {:?} normalizada para {reference}.",
-                source.reference.trim()
+                "Referência original \"{original}\" normalizada para {reference}.",
+                original = source.reference.trim(),
+                reference = reference
             ));
         }
         let device = part
@@ -501,8 +502,8 @@ pub fn convert_document(
             .collect();
         if !missing.is_empty() {
             warnings.push(format!(
-                "Entradas CDB sem instância reconciliada no DSN: {}.",
-                missing.join(", ")
+                "Entradas CDB sem instância reconciliada no DSN: {entries}.",
+                entries = missing.join(", ")
             ));
             complete = false;
         }

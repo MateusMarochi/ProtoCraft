@@ -239,11 +239,17 @@ fn library_pins(libraries: &mut Libraries<'_>, name: &str) -> (Vec<DsnPin>, Vec<
             break;
         }
         let Some((template, after_template)) = cstring(blob, off) else {
-            warnings.push(format!("Template de pino truncado em {name}, 0x{off:X}."));
+            warnings.push(format!(
+                "Template de pino truncado em {name}, 0x{offset}.",
+                offset = format!("{off:X}")
+            ));
             continue;
         };
         if !printable(template) || template.len() > 64 {
-            warnings.push(format!("Template de pino inválido em {name}, 0x{off:X}."));
+            warnings.push(format!(
+                "Template de pino inválido em {name}, 0x{offset}.",
+                offset = format!("{off:X}")
+            ));
             continue;
         }
         let template_name = text(template);
@@ -284,7 +290,8 @@ fn library_pins(libraries: &mut Libraries<'_>, name: &str) -> (Vec<DsnPin>, Vec<
         match decoded {
             Some(pin) => pins.push(pin),
             None => warnings.push(format!(
-                "Pino {template_name} de {name} em 0x{off:X} não recuperado."
+                "Pino {template_name} de {name} em 0x{offset} não recuperado.",
+                offset = format!("{off:X}")
             )),
         }
     }
@@ -493,7 +500,8 @@ pub fn parse_dsn(data: &[u8]) -> Result<DsnDocument, DsnError> {
         });
         if !pins_complete {
             pin_warnings.push(format!(
-                "Geometria elétrica incompleta para {reference} ({symbol_name}) em 0x{off:X}."
+                "Geometria elétrica incompleta para {reference} ({symbol_name}) em 0x{offset}.",
+                offset = format!("{off:X}")
             ));
         }
         document.warnings.extend(pin_warnings);
@@ -544,9 +552,10 @@ pub fn parse_dsn(data: &[u8]) -> Result<DsnDocument, DsnError> {
                 is_ground: true,
             });
         } else {
-            document
-                .warnings
-                .push(format!("Terminal de terra em 0x{off:X} não recuperado."));
+            document.warnings.push(format!(
+                "Terminal de terra em 0x{offset} não recuperado.",
+                offset = format!("{off:X}")
+            ));
         }
     }
     // Junções são registros explícitos com três ou mais referências a fios.

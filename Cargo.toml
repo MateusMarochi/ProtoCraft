@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/eda-core", "crates/eda-netlist", "crates/eda-simulation", "crates/eda-storage", "crates/eda-import", "crates/eda-app", "crates/eda-cli", "crates/eda-library", "crates/eda-pcb"]
+members = ["crates/eda-core", "crates/eda-netlist", "crates/eda-simulation", "crates/eda-storage", "crates/eda-import", "crates/eda-app", "crates/eda-cli", "crates/eda-library", "crates/eda-pcb", "crates/eda-i18n"]
 resolver = "2"
 
 [workspace.package]
@@ -16,6 +16,7 @@ eda-storage = { path = "crates/eda-storage" }
 eda-import = { path = "crates/eda-import" }
 eda-library = { path = "crates/eda-library" }
 eda-pcb = { path = "crates/eda-pcb" }
+eda-i18n = { path = "crates/eda-i18n" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["float_roundtrip"] }
 thiserror = "2.0"

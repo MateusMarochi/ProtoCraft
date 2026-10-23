@@ -7,7 +7,10 @@ impl ProtoCraft {
     }
     pub(super) fn start_live(&mut self) {
         if !self.settings.validate() {
-            self.message("Confira o passo e a velocidade nas configurações.", true);
+            self.message(
+                tr!("Confira o passo e a velocidade nas configurações."),
+                true,
+            );
             return;
         }
         if let Some(control) = self.simulation_control.take() {
@@ -26,9 +29,9 @@ impl ProtoCraft {
                 self.live = Some(worker);
                 self.result = None;
                 self.tab = BottomTab::Results;
-                self.message("Simulação contínua iniciada. Dê dois cliques em chaves ou entradas lógicas para alternar.",false);
+                self.message(tr!("Simulação contínua iniciada. Dê dois cliques em chaves ou entradas lógicas para alternar."),false);
             }
-            Err(e) => self.message(format!("Não foi possível iniciar: {e}"), true),
+            Err(e) => self.message(trf!("Não foi possível iniciar: {error}", error = e), true),
         }
     }
     pub(super) fn poll_live(&mut self, ctx: &egui::Context) {
@@ -44,7 +47,7 @@ impl ProtoCraft {
                     ))
                     .is_err()
                 {
-                    error = Some("O motor contínuo encerrou.".to_owned());
+                    error = Some(tr!("O motor contínuo encerrou."));
                 } else {
                     worker.revision = self.engine.revision();
                 }
@@ -52,7 +55,7 @@ impl ProtoCraft {
             match worker.receiver.try_recv() {
                 Ok(result) => received = Some(result),
                 Err(mpsc::TryRecvError::Disconnected) => {
-                    error = Some("O motor contínuo encerrou.".to_owned())
+                    error = Some(tr!("O motor contínuo encerrou."))
                 }
                 Err(mpsc::TryRecvError::Empty) => {}
             }
@@ -71,7 +74,10 @@ impl ProtoCraft {
         }
         if let Some(error) = error {
             self.stop_live();
-            self.message(format!("Simulação contínua interrompida: {error}"), true);
+            self.message(
+                trf!("Simulação contínua interrompida: {error}", error = error),
+                true,
+            );
         }
     }
     pub(super) fn live_controls(&mut self, ui: &mut egui::Ui) {
@@ -82,37 +88,42 @@ impl ProtoCraft {
             .values()
             .any(|c| c.device.is_some())
         {
-            ui.label("Projeto físico STM32 / ESP32 · pinagem e PCB");
+            ui.label(tr!("Projeto físico STM32 / ESP32 · pinagem e PCB"));
             return;
         }
 
-        ui.label(format!("Motor: {}", self.settings.engine.label()));
+        let engine_label = eda_i18n::text(self.settings.engine.label());
+        ui.label(trf!("Motor: {engine}", engine = engine_label));
         if self.live.is_none() {
-            if ui.button("▶ Contínua").clicked() {
+            if ui.button(tr!("▶ Contínua")).clicked() {
                 self.start_live();
             }
         } else {
             let paused = self.live.as_ref().is_some_and(|w| w.paused);
             if ui
-                .button(if paused { "▶ Continuar" } else { "Pausar" })
+                .button(if paused {
+                    tr!("▶ Continuar")
+                } else {
+                    tr!("Pausar")
+                })
                 .clicked()
                 && let Some(worker) = &mut self.live
             {
                 match worker.sender.send(live::Message::Pause(!paused)) {
                     Ok(()) => worker.paused = !paused,
-                    Err(_) => self.message("O motor contínuo encerrou.", true),
+                    Err(_) => self.message(tr!("O motor contínuo encerrou."), true),
                 }
             }
             if paused
-                && ui.button("Um passo").clicked()
+                && ui.button(tr!("Um passo")).clicked()
                 && let Some(worker) = &self.live
                 && worker.sender.send(live::Message::Step).is_err()
             {
-                self.message("O motor contínuo encerrou.", true);
+                self.message(tr!("O motor contínuo encerrou."), true);
             }
-            if ui.button("■ Parar").clicked() {
+            if ui.button(tr!("■ Parar")).clicked() {
                 self.stop_live();
-                self.message("Simulação contínua parada. A próxima execução usa os estados iniciais do circuito.",false);
+                self.message(tr!("Simulação contínua parada. A próxima execução usa os estados iniciais do circuito."),false);
             }
             if let Some(time) = self
                 .result
@@ -120,35 +131,49 @@ impl ProtoCraft {
                 .and_then(|r| r.traces.first())
                 .and_then(|t| t.samples.last())
             {
-                ui.monospace(format!("t = {:.6} s", time[0]));
+                ui.monospace(trf!("t = {time} s", time = format!("{:.6}", time[0])));
             }
         }
-        if ui.button("Configurações…").clicked() {
+        if ui.button(tr!("Configurações…")).clicked() {
             self.show_settings = true;
         }
     }
     pub(super) fn settings_window(&mut self, ctx: &egui::Context) {
         let mut open = self.show_settings;
         let previous = self.settings.engine;
-        egui::Window::new("Configurações").open(&mut open).default_width(460.0).show(ctx,|ui| {
-            ui.heading("Motor de simulação");
-            egui::ComboBox::from_id_salt("simulation_engine").selected_text(self.settings.engine.label()).show_ui(ui,|ui| {
-                for engine in SimulationEngine::all() {ui.selectable_value(&mut self.settings.engine,*engine,engine.label());}
+        let previous_language = self.settings.language;
+        egui::Window::new(tr!("Configurações")).open(&mut open).default_width(460.0).show(ctx,|ui| {
+            ui.heading(tr!("Idioma da interface"));
+            egui::ComboBox::from_id_salt("ui_language")
+                .selected_text(eda_i18n::text(eda_i18n::preference_name(self.settings.language)))
+                .show_ui(ui, |ui| {
+                    ui.selectable_value(&mut self.settings.language, eda_i18n::LanguagePreference::System, eda_i18n::text("language.system"));
+                    ui.selectable_value(&mut self.settings.language, eda_i18n::LanguagePreference::English, eda_i18n::text("language.english"));
+                    ui.selectable_value(&mut self.settings.language, eda_i18n::LanguagePreference::PortugueseBr, eda_i18n::text("language.portuguese_br"));
+                });
+            ui.label(tr!("A seleção é aplicada imediatamente e fica salva ao escolher Salvar configurações."));
+            ui.separator();
+            ui.heading(tr!("Motor de simulação"));
+            egui::ComboBox::from_id_salt("simulation_engine").selected_text(eda_i18n::text(self.settings.engine.label())).show_ui(ui,|ui| {
+                for engine in SimulationEngine::all() {ui.selectable_value(&mut self.settings.engine,*engine,eda_i18n::text(engine.label()));}
             });
-            ui.label(self.settings.engine.description());
-            ui.label("Os motores usam modelos genéricos em Rust. Misto inclui eventos digitais; Estável e Dinâmico diferem na integração analógica.");
-            ui.separator();ui.strong("Execução contínua");
-            ui.horizontal(|ui|{ui.label("Passo (s)");ui.add(egui::DragValue::new(&mut self.settings.live_step).speed(1e-6).range(1e-12..=1.0).max_decimals(12));});
-            ui.horizontal(|ui|{ui.label("Passos por atualização");ui.add(egui::DragValue::new(&mut self.settings.steps_per_frame).range(1..=256));});
-            ui.label("A velocidade visual depende da complexidade do circuito. Passo e velocidade passam a valer ao iniciar uma nova execução.");
-            ui.separator();ui.strong("Visualização elétrica");
-            ui.checkbox(&mut self.settings.voltage_colors,"Colorir fios pela tensão");
-            ui.checkbox(&mut self.settings.current_dots,"Animar corrente nos componentes de dois pinos");
-            ui.horizontal(|ui|{ui.label("Escala de cor (±V)");ui.add(egui::DragValue::new(&mut self.settings.voltage_scale).range(0.001..=1e6));});
-            ui.label("Verde: tensão positiva · vermelho: negativa · cinza: zero. Pontos mostram o sentido da corrente convencional no componente.");
-            if ui.button("Salvar configurações").clicked() {match self.settings.save() {Ok(())=>self.message("Configurações salvas para a próxima abertura.",false),Err(e)=>self.message(format!("Falha ao salvar configurações: {e}"),true)}}
+            ui.label(eda_i18n::text(self.settings.engine.description()));
+            ui.label(tr!("Os motores usam modelos genéricos em Rust. Misto inclui eventos digitais; Estável e Dinâmico diferem na integração analógica."));
+            ui.separator();ui.strong(tr!("Execução contínua"));
+            ui.horizontal(|ui|{ui.label(tr!("Passo (s)"));ui.add(egui::DragValue::new(&mut self.settings.live_step).speed(1e-6).range(1e-12..=1.0).max_decimals(12));});
+            ui.horizontal(|ui|{ui.label(tr!("Passos por atualização"));ui.add(egui::DragValue::new(&mut self.settings.steps_per_frame).range(1..=256));});
+            ui.label(tr!("A velocidade visual depende da complexidade do circuito. Passo e velocidade passam a valer ao iniciar uma nova execução."));
+            ui.separator();ui.strong(tr!("Visualização elétrica"));
+            ui.checkbox(&mut self.settings.voltage_colors,tr!("Colorir fios pela tensão"));
+            ui.checkbox(&mut self.settings.current_dots,tr!("Animar corrente nos componentes de dois pinos"));
+            ui.horizontal(|ui|{ui.label(tr!("Escala de cor (±V)"));ui.add(egui::DragValue::new(&mut self.settings.voltage_scale).range(0.001..=1e6));});
+            ui.label(tr!("Verde: tensão positiva · vermelho: negativa · cinza: zero. Pontos mostram o sentido da corrente convencional no componente."));
+            if ui.button(tr!("Salvar configurações")).clicked() {match self.settings.save() {Ok(())=>self.message(tr!("Configurações salvas para a próxima abertura."),false),Err(e)=>self.message(trf!("Falha ao salvar configurações: {error}", error = e),true)}}
         });
         self.show_settings = open;
+        if previous_language != self.settings.language {
+            eda_i18n::set_preference(self.settings.language);
+        }
         if previous != self.settings.engine {
             self.stop_live();
             if let Some(control) = self.simulation_control.take() {
@@ -157,9 +182,9 @@ impl ProtoCraft {
             self.simulation = None;
             self.result = None;
             self.message(
-                format!(
-                    "Motor {} selecionado. Inicie uma nova análise.",
-                    self.settings.engine.label()
+                trf!(
+                    "Motor {engine} selecionado. Inicie uma nova análise.",
+                    engine = eda_i18n::text(self.settings.engine.label())
                 ),
                 false,
             );
@@ -178,7 +203,7 @@ impl ProtoCraft {
     pub(super) fn model_properties(&mut self, ui: &mut egui::Ui, c: &Component) {
         let p = &mut self.property_parameters;
         if c.kind.is_waveform() {
-            ui.strong("Forma de onda");
+            ui.strong(tr!("Forma de onda"));
             field(ui, "Frequência (Hz)", &mut p.frequency_hz, 10.0, 1e-6..=1e9);
             field(ui, "Offset (V)", &mut p.offset_v, 0.1, -1e6..=1e6);
             field(ui, "Fase (°)", &mut p.phase_deg, 1.0, -360000.0..=360000.0);
@@ -196,14 +221,14 @@ impl ProtoCraft {
             ui.checkbox(
                 &mut p.closed,
                 if c.kind == ComponentKind::Switch {
-                    "Chave fechada"
+                    tr!("Chave fechada")
                 } else {
-                    "Nível alto"
+                    tr!("Nível alto")
                 },
             );
         }
         if c.kind == ComponentKind::Potentiometer {
-            ui.add(egui::Slider::new(&mut p.wiper, 0.0..=1.0).text("Cursor A → B"));
+            ui.add(egui::Slider::new(&mut p.wiper, 0.0..=1.0).text(tr!("Cursor A → B")));
         }
         if c.kind == ComponentKind::Switch {
             field(
@@ -271,7 +296,7 @@ impl ProtoCraft {
             );
         }
         if c.kind.requires_mixed() || c.kind.is_gate() {
-            ui.label("Motor Misto: atraso genérico de propagação");
+            ui.label(tr!("Motor Misto: atraso genérico de propagação"));
             field(
                 ui,
                 "Atraso (s)",
@@ -287,7 +312,7 @@ impl ProtoCraft {
                 1
             };
             ui.horizontal(|ui| {
-                ui.label("Estado na inicialização");
+                ui.label(tr!("Estado na inicialização"));
                 ui.add(egui::DragValue::new(&mut p.initial_state).range(0..=max));
             });
         }
@@ -309,20 +334,22 @@ impl ProtoCraft {
         {
             ui.separator();
             if let Some(state) = point.digital_state {
-                ui.strong(format!("Estado digital: {state}"));
+                ui.strong(trf!("Estado digital: {state}", state = state));
             }
             for (index, current) in point.pin_currents.iter().enumerate() {
-                ui.monospace(format!(
-                    "{}: {:.6} V / {:.6} A",
-                    c.kind.pin_name(index as u8),
-                    point.pin_voltages[index],
-                    current
+                ui.monospace(trf!(
+                    "{pin}: {voltage} V / {current} A",
+                    pin = c.kind.pin_name(index as u8),
+                    voltage = format!("{:.6}", point.pin_voltages[index]),
+                    current = format!("{:.6}", current)
                 ));
             }
-            ui.strong("Último estado elétrico");
-            ui.monospace(format!(
-                "U = {:.6} V\nI = {:.6} A\nP = {:.6} W",
-                point.voltage, point.current, point.power
+            ui.strong(tr!("Último estado elétrico"));
+            ui.monospace(trf!(
+                "U = {voltage} V\nI = {current} A\nP = {power} W",
+                voltage = format!("{:.6}", point.voltage),
+                current = format!("{:.6}", point.current),
+                power = format!("{:.6}", point.power)
             ));
         }
     }
@@ -335,7 +362,7 @@ fn field(
     range: std::ops::RangeInclusive<f64>,
 ) {
     ui.horizontal(|ui| {
-        ui.label(label);
+        ui.label(eda_i18n::text(label));
         ui.add(
             egui::DragValue::new(value)
                 .speed(speed)

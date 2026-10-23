@@ -16,6 +16,7 @@ Editor de circuitos eletrônicos para desktop, feito em Rust. Reúne editor de e
 - Exportação Gerber/Excellon com preset JLCPCB e validação pelo KiCad CLI externo.
 - Catálogo físico offline com 2.283 entradas STM32 e 48 Espressif.
 - CLI para validação, netlists, simulação, exportação SPICE, autorroteamento, ações de projeto e importação Proteus.
+- Interface e CLI em português do Brasil e inglês, com seleção pelo idioma do sistema e fallback para inglês; os catálogos JSON podem ser substituídos sem recompilar.
 - Formato nativo de projeto `.protocraft`.
 
 ## Início rápido
@@ -27,6 +28,27 @@ cargo run -p eda-app
 ```
 
 Consulte o [README em português](README.pt-BR.md) para instruções completas ou o [README em inglês](README.en.md).
+
+## CLI
+
+Execute os comandos a partir da raiz do repositório com `cargo run -p eda-cli --`, ou use `ProtoCraft-CLI.cmd` no Windows:
+
+```powershell
+cargo run -p eda-cli -- --help
+cargo run -p eda-cli -- templates
+cargo run -p eda-cli -- new --output pisca.protocraft --template 555-led-1hz --frequency-hz 1
+cargo run -p eda-cli -- simulate pisca.protocraft --engine mixed --transient 0.00025 3 --csv pisca.csv
+```
+
+Consulte o [guia da CLI](docs/cli.md) para os comandos de inspeção, validação, autorroteamento, fabricação e importação.
+
+## Escopo e limitações
+
+O ProtoCraft implementa seus próprios motores e não incorpora código nem binários do Proteus. A importação `.pdsprj`/`.dsn` é experimental e parcial; não há garantia de compatibilidade com todos os projetos Proteus. Os dados de STM32/ESP32 servem ao projeto físico: firmware e periféricos internos não são emulados. Os modelos de simulação são genéricos e educacionais. A exportação para fabricação exige KiCad CLI e revisão independente da placa antes da produção.
+
+## Termos de busca
+
+EDA em Rust, automação de projetos eletrônicos, software EDA, captura de esquemáticos, simulador de circuitos, análise DC, análise transiente, projeto e roteamento de PCB, autorroteador, Gerber RS-274X, Excellon, netlist SPICE, STM32, ESP32, importação de projetos Proteus, formato `.protocraft`, CLI headless.
 
 ## Criar e simular o exemplo 555 de 1 Hz
 

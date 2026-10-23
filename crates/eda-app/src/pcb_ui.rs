@@ -250,7 +250,7 @@ impl ProtoCraft {
     fn export_pcb_dialog(&mut self, svg: bool) {
         let ext = if svg { "svg" } else { "kicad_pcb" };
         if let Some(path) = rfd::FileDialog::new()
-            .add_filter("PCB", &[ext])
+            .add_filter(tr!("PCB"), &[ext])
             .set_file_name(format!("projeto.{ext}"))
             .save_file()
         {
@@ -264,7 +264,7 @@ impl ProtoCraft {
                 eda_pcb::export_kicad(self.engine.project())
             };
             match result.and_then(|text| std::fs::write(&path, text).map_err(|e| e.to_string())) {
-                Ok(()) => self.message(format!("PCB exportada: {}", path.display()), false),
+                Ok(()) => self.message(trf!("PCB exportada: {path}", path = path.display()), false),
                 Err(e) => self.message(e, true),
             }
         }
@@ -291,14 +291,7 @@ impl ProtoCraft {
                             self.pcb.report = None;
                             self.pcb.finish_route();
                             self.message(
-                                format!(
-                                    "Autorroteamento: {} conexões, {} trilhas, {} vias, {} pendentes, {} sem caminho.",
-                                    stats.routed_connections,
-                                    stats.track_count,
-                                    stats.via_count,
-                                    stats.remaining_airwires,
-                                    stats.unrouted_connections
-                                ),
+                                trf!("Autorroteamento: {routed} conexões, {tracks} trilhas, {vias} vias, {pending} pendentes, {failed} sem caminho.", routed=stats.routed_connections, tracks=stats.track_count, vias=stats.via_count, pending=stats.remaining_airwires, failed=stats.unrouted_connections),
                                 stats.unrouted_connections > 0,
                             );
                         }
@@ -306,7 +299,7 @@ impl ProtoCraft {
                     }
                 }
                 Ok(_) => self.message(
-                    "A placa mudou durante a busca; o resultado antigo foi descartado.",
+                    tr!("A placa mudou durante a busca; o resultado antigo foi descartado."),
                     true,
                 ),
                 Err(error) => self.message(error, true),
@@ -324,9 +317,9 @@ impl ProtoCraft {
                     let zip = path.join("JLCPCB.zip");
                     self.message(
                         if zip.is_file() {
-                            format!("ZIP para JLCPCB gerado: {}", zip.display())
+                            trf!("ZIP para JLCPCB gerado: {path}", path = zip.display())
                         } else {
-                            format!("Gerber e Excellon gerados: {}", path.display())
+                            trf!("Gerber e Excellon gerados: {path}", path = path.display())
                         },
                         false,
                     );
@@ -340,37 +333,37 @@ impl ProtoCraft {
 
         egui::SidePanel::left("pcb_tools").default_width(310.0).width_range(285.0..=440.0).show(ctx,|ui| {
             egui::ScrollArea::vertical().show(ui,|ui| {
-                ui.heading("PCB · duas camadas");ui.small("Dimensões e furação em milímetros.");
-                if ui.button("Voltar ao esquemático").clicked() {self.pcb.active=false;return;}
-                if ui.button("Criar / sincronizar footprints").clicked() {self.sync_board();}
-                let Some(board)=self.engine.project().board.as_deref().cloned() else {ui.label("Crie a PCB para adicionar trilhas e furos.");return;};
+                ui.heading(tr!("PCB · duas camadas"));ui.small(tr!("Dimensões e furação em milímetros."));
+                if ui.button(tr!("Voltar ao esquemático")).clicked() {self.pcb.active=false;return;}
+                if ui.button(tr!("Criar / sincronizar footprints")).clicked() {self.sync_board();}
+                let Some(board)=self.engine.project().board.as_deref().cloned() else {ui.label(tr!("Crie a PCB para adicionar trilhas e furos."));return;};
                 ui.separator();self.pcb_edit_controls(ui,&board);
-                egui::CollapsingHeader::new("Dimensões e regras da placa").show(ui,|ui| {
+                egui::CollapsingHeader::new(tr!("Dimensões e regras da placa")).show(ui,|ui| {
                     if self.pcb.dimensions_revision!=self.engine.revision() {self.pcb.width_mm=board.width_nm as f64/1e6;self.pcb.height_mm=board.height_nm as f64/1e6;self.pcb.clearance_mm=board.clearance_nm as f64/1e6;self.pcb.dimensions_revision=self.engine.revision();}
-                    ui.horizontal(|ui|{ui.label("Largura");ui.add(egui::DragValue::new(&mut self.pcb.width_mm).speed(1.0).range(1.0..=2000.0));});
-                    ui.horizontal(|ui|{ui.label("Altura");ui.add(egui::DragValue::new(&mut self.pcb.height_mm).speed(1.0).range(1.0..=2000.0));});
-                    ui.horizontal(|ui|{ui.label("Folga de cobre");ui.add(egui::DragValue::new(&mut self.pcb.clearance_mm).speed(0.025).range(0.0..=10.0));});
-                    if ui.button("Aplicar dimensões e folga").clicked() {let mut b=board.clone();b.width_nm=nm(self.pcb.width_mm);b.height_nm=nm(self.pcb.height_mm);b.clearance_nm=nm(self.pcb.clearance_mm);self.command(Command::SetBoard{board:b});self.pcb.finish_route();self.pcb.fit=true;self.pcb.report=None;}
+                    ui.horizontal(|ui|{ui.label(tr!("Largura"));ui.add(egui::DragValue::new(&mut self.pcb.width_mm).speed(1.0).range(1.0..=2000.0));});
+                    ui.horizontal(|ui|{ui.label(tr!("Altura"));ui.add(egui::DragValue::new(&mut self.pcb.height_mm).speed(1.0).range(1.0..=2000.0));});
+                    ui.horizontal(|ui|{ui.label(tr!("Folga de cobre"));ui.add(egui::DragValue::new(&mut self.pcb.clearance_mm).speed(0.025).range(0.0..=10.0));});
+                    if ui.button(tr!("Aplicar dimensões e folga")).clicked() {let mut b=board.clone();b.width_nm=nm(self.pcb.width_mm);b.height_nm=nm(self.pcb.height_mm);b.clearance_nm=nm(self.pcb.clearance_mm);self.command(Command::SetBoard{board:b});self.pcb.finish_route();self.pcb.fit=true;self.pcb.report=None;}
                 });
-                if ui.button("Enquadrar · F").clicked() {self.pcb.fit=true;}
-                egui::CollapsingHeader::new("Fabricação e exportação").show(ui,|ui| {
+                if ui.button(tr!("Enquadrar · F")).clicked() {self.pcb.fit=true;}
+                egui::CollapsingHeader::new(tr!("Fabricação e exportação")).show(ui,|ui| {
                     self.pcb_fabrication_controls(ui);
-                    if ui.button("Exportar PCB KiCad…").clicked(){self.export_pcb_dialog(false);}
-                    if ui.button("Exportar desenho SVG em escala…").clicked(){self.export_pcb_dialog(true);}
+                    if ui.button(tr!("Exportar PCB KiCad…")).clicked(){self.export_pcb_dialog(false);}
+                    if ui.button(tr!("Exportar desenho SVG em escala…")).clicked(){self.export_pcb_dialog(true);}
                 });
-                egui::CollapsingHeader::new("Componentes e posicionamento").show(ui,|ui| {
-                    let rows:Vec<_>=self.engine.project().components.values().filter(|c|c.footprint.is_some()).map(|c|(c.id,c.reference.clone(),c.device.as_ref().map_or(c.kind.label(),|d|d.id.as_str()).to_owned())).collect();
-                    for (id,reference,name) in rows {if ui.selectable_label(self.pcb.selected==Some(id),format!("{reference} · {name}")).clicked() {self.pcb.clear_geometry_selection();self.pcb.selected=Some(id);self.pcb.finish_route();self.pcb.routing=false;self.pcb.hole_tool=false;}}
+                egui::CollapsingHeader::new(tr!("Componentes e posicionamento")).show(ui,|ui| {
+                    let rows:Vec<_>=self.engine.project().components.values().filter(|c|c.footprint.is_some()).map(|c|(c.id,c.reference.clone(),c.device.as_ref().map_or_else(|| localized_component_label(c.kind),|d|d.id.clone()))).collect();
+                    for (id,reference,name) in rows {if ui.selectable_label(self.pcb.selected==Some(id),trf!("{reference} · {name}", reference=reference, name=name)).clicked() {self.pcb.clear_geometry_selection();self.pcb.selected=Some(id);self.pcb.finish_route();self.pcb.routing=false;self.pcb.hole_tool=false;}}
                     if let Some(id)=self.pcb.selected && let Some(c)=self.engine.project().components.get(&id).cloned() {
-                        if let Some(f)=&c.footprint {ui.small(&f.id);ui.label(format!("Corpo {:.3} × {:.3} mm",f.body_bounds.width() as f64/1e6,f.body_bounds.height() as f64/1e6));}
-                        if let Some(p)=board.placements.get(&id) {ui.label(format!("X {:.3} · Y {:.3} mm · {}°",p.position.x as f64/1e6,p.position.y as f64/1e6,u16::from(p.rotation)*90));
-                            if ui.button("Girar 90° · R").clicked(){self.rotate_board_selection();}
-                            if ui.button("Trocar face").clicked(){let mut p=*p;p.side=if p.side==BoardSide::Top{BoardSide::Bottom}else{BoardSide::Top};self.command(Command::PlaceOnBoard{id,placement:p});self.pcb.report=None;}
-                        } else {ui.label("Clique no canvas para posicionar.");}
+                        if let Some(f)=&c.footprint {ui.small(&f.id);ui.label(trf!("Corpo {width} × {height} mm", width=format!("{:.3}", f.body_bounds.width() as f64/1e6), height=format!("{:.3}", f.body_bounds.height() as f64/1e6)));}
+                        if let Some(p)=board.placements.get(&id) {ui.label(trf!("X {x} · Y {y} mm · {rotation}°",x=format!("{:.3}",p.position.x as f64/1e6),y=format!("{:.3}",p.position.y as f64/1e6),rotation=u16::from(p.rotation)*90));
+                            if ui.button(tr!("Girar 90° · R")).clicked(){self.rotate_board_selection();}
+                            if ui.button(tr!("Trocar face")).clicked(){let mut p=*p;p.side=if p.side==BoardSide::Top{BoardSide::Bottom}else{BoardSide::Top};self.command(Command::PlaceOnBoard{id,placement:p});self.pcb.report=None;}
+                        } else {ui.label(tr!("Clique no canvas para posicionar."));}
                     }
                 });
-                if let Some(report)=&self.pcb.report {egui::CollapsingHeader::new("Diagnósticos DRC").show(ui,|ui| {for d in report.diagnostics.iter().take(80) {ui.colored_label(if d.severity=="error" {egui::Color32::from_rgb(221,92,87)} else {Palette::new(ctx).muted},format!("{}: {}",d.code,d.message));}});}
-                ui.small("As trilhas usam as redes do esquemático. DRC é conferido antes de confirmar cobre e furos.");
+                if let Some(report)=&self.pcb.report {egui::CollapsingHeader::new(tr!("Diagnósticos DRC")).show(ui,|ui| {for d in report.diagnostics.iter().take(80) {ui.colored_label(if d.severity=="error" {egui::Color32::from_rgb(221,92,87)} else {Palette::new(ctx).muted},trf!("{code}: {message}", code=&d.code, message=eda_i18n::text(&d.message)));}});}
+                ui.small(tr!("As trilhas usam as redes do esquemático. DRC é conferido antes de confirmar cobre e furos."));
             });
         });
     }
@@ -396,20 +389,20 @@ impl ProtoCraft {
             Ok(_) => {
                 self.pcb.autorouting_revision = revision;
                 self.pcb.autorouting = Some(receiver);
-                self.message("Buscando rotas em segundo plano…", false);
+                self.message(tr!("Buscando rotas em segundo plano…"), false);
             }
             Err(error) => self.message(error.to_string(), true),
         }
     }
     fn pcb_fabrication_controls(&mut self, ui: &mut egui::Ui) {
         ui.separator();
-        ui.strong("Fabricação");
+        ui.strong(tr!("Fabricação"));
         let before = self.settings.fabrication_preset;
         ui.add_enabled_ui(
             self.pcb.fabrication.is_none() && self.pcb.autorouting.is_none(),
             |ui| {
                 egui::ComboBox::from_id_salt("fabrication_preset")
-                    .selected_text(self.settings.fabrication_preset.label())
+                    .selected_text(eda_i18n::text(self.settings.fabrication_preset.label()))
                     .show_ui(ui, |ui| {
                         for preset in [
                             eda_storage::fabrication::ManufacturingPreset::Jlcpcb,
@@ -418,7 +411,7 @@ impl ProtoCraft {
                             ui.selectable_value(
                                 &mut self.settings.fabrication_preset,
                                 preset,
-                                preset.label(),
+                                eda_i18n::text(preset.label()),
                             );
                         }
                     });
@@ -431,15 +424,15 @@ impl ProtoCraft {
         }
         if self.settings.fabrication_preset == eda_storage::fabrication::ManufacturingPreset::Jlcpcb
         {
-            ui.small("RS-274X · Protel · mm · 1:1 · origem absoluta");
-            ui.small("ZIP com Gerbers e furos Excellon PTH/NPTH.");
+            ui.small(tr!("RS-274X · Protel · mm · 1:1 · origem absoluta"));
+            ui.small(tr!("ZIP com Gerbers e furos Excellon PTH/NPTH."));
         }
         let generate_label = if self.settings.fabrication_preset
             == eda_storage::fabrication::ManufacturingPreset::Jlcpcb
         {
-            "Gerar ZIP JLCPCB…"
+            tr!("Gerar ZIP JLCPCB…")
         } else {
-            "Gerar Gerber / Excellon…"
+            tr!("Gerar Gerber / Excellon…")
         };
         if ui
             .add_enabled(
@@ -451,7 +444,7 @@ impl ProtoCraft {
             self.start_fabrication_dialog();
         }
         if self.pcb.fabrication.is_some() {
-            ui.label("Validando e gerando arquivos em segundo plano…");
+            ui.label(tr!("Validando e gerando arquivos em segundo plano…"));
         }
         ui.separator();
     }
@@ -461,7 +454,10 @@ impl ProtoCraft {
                 let count = r.errors();
                 self.pcb.report = Some(r);
                 self.message(
-                    format!("Corrija os {count} erros DRC antes de fabricar."),
+                    trf!(
+                        "Corrija os {count} erros DRC antes de fabricar.",
+                        count = count
+                    ),
                     true,
                 );
                 return;
@@ -476,8 +472,8 @@ impl ProtoCraft {
             Some(p) => p,
             None => {
                 let Some(path) = rfd::FileDialog::new()
-                    .set_title("Selecione kicad-cli.exe oficial")
-                    .add_filter("KiCad CLI", &["exe"])
+                    .set_title(tr!("Selecione kicad-cli.exe oficial"))
+                    .add_filter(tr!("KiCad CLI"), &["exe"])
                     .pick_file()
                 else {
                     return;
@@ -490,7 +486,7 @@ impl ProtoCraft {
             }
         };
         let Some(parent) = rfd::FileDialog::new()
-            .set_title("Pasta onde criar o pacote de fabricação")
+            .set_title(tr!("Pasta onde criar o pacote de fabricação"))
             .pick_folder()
         else {
             return;
@@ -514,7 +510,7 @@ impl ProtoCraft {
             }) {
             Ok(_) => {
                 self.pcb.fabrication = Some(receiver);
-                self.message("Validando DRC e gerando Gerber/Excellon…", false);
+                self.message(tr!("Validando DRC e gerando Gerber/Excellon…"), false);
             }
             Err(e) => self.message(e.to_string(), true),
         }
@@ -540,7 +536,7 @@ impl ProtoCraft {
                     painter.text(
                         rect.center(),
                         egui::Align2::CENTER_CENTER,
-                        "Crie ou sincronize a PCB na lateral.",
+                        tr!("Crie ou sincronize a PCB na lateral."),
                         egui::FontId::proportional(18.0),
                         Palette::new(ctx).muted,
                     );
@@ -715,7 +711,7 @@ impl ProtoCraft {
                         format!(
                             "{} · {}",
                             c.reference,
-                            c.device.as_ref().map_or(c.kind.label(), |d| d.id.as_str())
+                            c.device.as_ref().map_or_else(|| localized_component_label(c.kind), |d| d.id.clone())
                         ),
                         egui::FontId::monospace(11.0),
                         Color32::WHITE,
@@ -813,7 +809,7 @@ impl ProtoCraft {
                         painter.text(
                             pos + Vec2::new(0.0, radius + 4.0),
                             egui::Align2::CENTER_TOP,
-                            format!("H{} · Ø{:.2}", h.id, h.drill_nm as f64 / 1e6),
+                            trf!("Furo {id} · Ø{drill}", id=h.id, drill=format!("{:.2}",h.drill_nm as f64 / 1e6)),
                             egui::FontId::monospace(10.0),
                             Color32::from_gray(210),
                         );
@@ -866,30 +862,20 @@ impl ProtoCraft {
                 if let Some(pos) = hover {
                     if let Some(pad) = pad_at(pos) {
                         let c = &self.engine.project().components[&pad.component];
-                        response.clone().on_hover_text(format!(
-                            "{} · pad {}\n{}\nX {:.3} · Y {:.3} mm",
-                            c.reference,
-                            pad.number,
-                            pad.pin.map_or("", |p| c.pin_name(p.pin)),
-                            pad.position.x as f64 / 1e6,
-                            pad.position.y as f64 / 1e6
+                        response.clone().on_hover_text(trf!(
+                            "Referência {reference} · pad {pad}\nPino: {pin_name}\nX {x} · Y {y} mm",
+                            reference = &c.reference,
+                            pad = pad.number,
+                            pin_name = pad.pin.map_or("", |p| c.pin_name(p.pin)),
+                            x = format!("{:.3}", pad.position.x as f64 / 1e6),
+                            y = format!("{:.3}", pad.position.y as f64 / 1e6)
                         ));
                     }
                     let point = hover_target.map_or_else(|| world(pos), |t| t.position);
                     painter.text(
                         rect.right_bottom() - Vec2::splat(12.0),
                         egui::Align2::RIGHT_BOTTOM,
-                        format!(
-                            "X {:.3} · Y {:.3} mm · grade {} mm · {}",
-                            point.x as f64 / 1e6,
-                            point.y as f64 / 1e6,
-                            self.pcb.grid_mm,
-                            if self.pcb.layer == BoardSide::Top {
-                                "Superior"
-                            } else {
-                                "Inferior"
-                            }
-                        ),
+                        trf!("X {x} · Y {y} mm · grade {grid} mm · {layer}", x=format!("{:.3}", point.x as f64 / 1e6), y=format!("{:.3}", point.y as f64 / 1e6), grid=self.pcb.grid_mm, layer=eda_i18n::text(if self.pcb.layer == BoardSide::Top { "Superior" } else { "Inferior" })),
                         egui::FontId::monospace(12.0),
                         Palette::new(ctx).muted,
                     );
@@ -971,7 +957,7 @@ impl ProtoCraft {
                         let point = hover_target.map_or_else(|| world(pos), |t| t.position);
                         self.pcb_route_to(point, hover_target, true);
                     } else {
-                        self.message("Posicione o cursor sobre a PCB para inserir a via.", false);
+                        self.message(tr!("Posicione o cursor sobre a PCB para inserir a via."), false);
                     }
                 }
                 if response.clicked()
@@ -1000,7 +986,7 @@ impl ProtoCraft {
                             self.pcb.selected = None;
                             self.pcb.clear_geometry_selection();
                         } else {
-                            self.message("Inicie em pad, via ou trilha da camada ativa.", false);
+                            self.message(tr!("Inicie em pad, via ou trilha da camada ativa."), false);
                         }
                     } else if let Some(selection) =
                         self.pcb
@@ -1077,15 +1063,7 @@ impl ProtoCraft {
                 painter.text(
                     rect.left_top() + Vec2::splat(15.0),
                     egui::Align2::LEFT_TOP,
-                    format!(
-                        "PCB · {:.2} × {:.2} mm · {} footprints · {} trilhas · {} vias · {} furos",
-                        board.width_nm as f64 / 1e6,
-                        board.height_nm as f64 / 1e6,
-                        board.placements.len(),
-                        board.tracks.len(),
-                        board.vias.len(),
-                        board.holes.len()
-                    ),
+                    trf!("PCB · {width} × {height} mm · {footprints} footprints · {tracks} trilhas · {vias} vias · {holes} furos", width=format!("{:.2}", board.width_nm as f64 / 1e6), height=format!("{:.2}", board.height_nm as f64 / 1e6), footprints=board.placements.len(), tracks=board.tracks.len(), vias=board.vias.len(), holes=board.holes.len()),
                     egui::FontId::proportional(14.0),
                     Palette::new(ctx).muted,
                 );

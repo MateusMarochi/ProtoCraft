@@ -382,7 +382,7 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
         if c.footprint.is_none() {
             add(
                 "MISSING_FOOTPRINT",
-                format!("{} não tem footprint.", c.reference),
+                format!("{reference} não tem footprint.", reference = c.reference),
                 vec![c.id],
                 None,
                 true,
@@ -390,7 +390,10 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
         } else if !board.placements.contains_key(&c.id) {
             add(
                 "UNPLACED",
-                format!("{} ainda não foi posicionado.", c.reference),
+                format!(
+                    "{reference} ainda não foi posicionado.",
+                    reference = c.reference
+                ),
                 vec![c.id],
                 None,
                 true,
@@ -403,7 +406,7 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
         if a - r < 0 || b - r < 0 || c + r > board.width_nm || d + r > board.height_nm {
             add(
                 "BOARD_EDGE",
-                format!("{} viola a distância à borda.", atom.label),
+                format!("{item} viola a distância à borda.", item = atom.label),
                 atom.component.into_iter().collect(),
                 atom.points.first().copied(),
                 true,
@@ -414,7 +417,7 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
         if (v.diameter_nm - v.drill_nm) / 2 < 100000 {
             add(
                 "ANNULAR_RING",
-                format!("Via {} tem anel menor que 0,1 mm.", v.id),
+                format!("Via {id} tem anel menor que 0,1 mm.", id = v.id),
                 vec![],
                 Some(v.position),
                 true,
@@ -473,11 +476,11 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
                         "CLEARANCE"
                     },
                     format!(
-                        "{} e {}: separação {:.4} mm; mínimo {:.4} mm.",
-                        a.label,
-                        b.label,
-                        gap / NM_PER_MM as f64,
-                        mm(board.clearance_nm)
+                        "{first} e {second}: separação {gap:.4} mm; mínimo {minimum:.4} mm.",
+                        first = a.label,
+                        second = b.label,
+                        gap = gap / NM_PER_MM as f64,
+                        minimum = mm(board.clearance_nm)
                     ),
                     a.component.into_iter().chain(b.component).collect(),
                     a.points.first().copied(),
@@ -533,8 +536,9 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
                 add(
                     "COURTYARD_OVERLAP",
                     format!(
-                        "Áreas de montagem de {} e {} se sobrepõem.",
-                        project.components[id].reference, project.components[other].reference
+                        "Áreas de montagem de {first} e {second} se sobrepõem.",
+                        first = project.components[id].reference,
+                        second = project.components[other].reference
                     ),
                     vec![*id, *other],
                     a.points.first().copied(),
@@ -572,8 +576,9 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
                     add(
                         "KEEPOUT",
                         format!(
-                            "{} invade a área de exclusão/antena de {}.",
-                            atom.label, c.reference
+                            "{item} invade a área de exclusão/antena de {reference}.",
+                            item = atom.label,
+                            reference = c.reference
                         ),
                         vec![*id],
                         atom.points.first().copied(),
@@ -632,13 +637,13 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
             add(
                 "UNROUTED",
                 format!(
-                    "Rede {} contém {} ilhas de cobre desconectadas.",
-                    netlist
+                    "Rede {net} contém {islands} ilhas de cobre desconectadas.",
+                    net = netlist
                         .nets
                         .iter()
                         .find(|n| n.id == net)
                         .map_or("?", |n| n.name.as_str()),
-                    groups.len()
+                    islands = groups.len()
                 ),
                 vec![],
                 None,

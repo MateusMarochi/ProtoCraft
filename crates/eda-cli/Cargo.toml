@@ -10,6 +10,7 @@ name = "protocraft-cli"
 path = "src/main.rs"
 
 [dependencies]
+eda-i18n.workspace = true
 eda-library.workspace = true
 eda-pcb.workspace = true
 eda-core.workspace = true

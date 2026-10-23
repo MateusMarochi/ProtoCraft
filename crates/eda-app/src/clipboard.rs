@@ -55,8 +55,8 @@ fn decode(text: &str) -> Result<Payload, String> {
     let json = text
         .strip_prefix(PREFIX)
         .ok_or("A área de transferência não contém um componente do ProtoCraft.")?;
-    let payload: Payload =
-        serde_json::from_str(json).map_err(|e| format!("Componente inválido no clipboard: {e}"))?;
+    let payload: Payload = serde_json::from_str(json)
+        .map_err(|error| trf!("Componente inválido no clipboard: {error}", error = error))?;
     if payload.token.is_empty() || payload.token.len() > 128 {
         return Err("Identificador do clipboard inválido.".into());
     }
@@ -406,7 +406,7 @@ impl ProtoCraft {
             .ok_or("Copie um componente antes de colar.".to_owned())
             .and_then(|p| self.paste_payload(ctx, p));
         if let Err(e) = result {
-            self.message(format!("Não foi possível colar: {e}"), true);
+            self.message(trf!("Não foi possível colar: {error}", error = e), true);
         }
     }
     pub(crate) fn clipboard_shortcuts(&mut self, ctx: &egui::Context) -> bool {
@@ -468,7 +468,7 @@ impl ProtoCraft {
                 Action::Paste(None) => self.paste_component(ctx),
                 Action::Paste(Some(text)) => {
                     if let Err(e) = decode(&text).and_then(|p| self.paste_payload(ctx, p)) {
-                        self.message(format!("Não foi possível colar: {e}"), true);
+                        self.message(trf!("Não foi possível colar: {error}", error = e), true);
                     }
                 }
             }

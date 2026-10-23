@@ -23,7 +23,10 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
     let cmd = &args[0];
     if args.get(1).is_some_and(|a| a == "--help") {
         println!(
-            "devices [--filter texto] [--limit N] [--offset N]\ndevice <modelo>\ndevice-project <modelo> --output arquivo.protocraft\npcb-info <projeto>\npcb-check <projeto>\npcb-route <projeto> --output novo.protocraft [--grid-mm 0.25] [--track-width-mm 0.25] [--max-expansions 600000] [--no-optimize]\npcb-export <projeto> --format kicad|svg --output arquivo\npcb-manufacture <projeto> --output pasta-nova --kicad caminho/kicad-cli.exe [--preset jlcpcb|standard]\nPreset padrão: jlcpcb. Produz JLCPCB.zip, RS-274X/Protel, mm, 1:1, furação absoluta Excellon.\nCoordenadas físicas em nanômetros; 1 mm = 1.000.000 nm. Catálogo físico, sem emulação de firmware."
+            "{}",
+            tr!(
+                "devices [--filter texto] [--limit N] [--offset N]\ndevice <modelo>\ndevice-project <modelo> --output arquivo.protocraft\npcb-info <projeto>\npcb-check <projeto>\npcb-route <projeto> --output novo.protocraft [--grid-mm 0.25] [--track-width-mm 0.25] [--max-expansions 600000] [--no-optimize]\npcb-export <projeto> --format kicad|svg --output arquivo\npcb-manufacture <projeto> --output pasta-nova --kicad caminho/kicad-cli.exe [--preset jlcpcb|standard]\nPreset padrão: jlcpcb. Produz JLCPCB.zip, RS-274X/Protel, mm, 1:1, furação absoluta Excellon.\nCoordenadas físicas em nanômetros; 1 mm = 1.000.000 nm. Catálogo físico, sem emulação de firmware."
+            )
         );
         return Ok(());
     }
@@ -239,7 +242,7 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
             _ => return Err("Formato deve ser kicad ou svg".into()),
         };
         fs::write(output, text)?;
-        println!("PCB exportada: {output}");
+        println!("{}", trf!("PCB exportada: {path}", path = output));
         return Ok(());
     }
     Err("Comando físico desconhecido".into())

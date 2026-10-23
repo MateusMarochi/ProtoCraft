@@ -295,8 +295,8 @@ impl<'a> Circuit<'a> {
                 || (c.kind.positive_value() && c.value <= 0.0)
             {
                 return Err(SimulationError::InvalidValue(format!(
-                    "{}: valor fora do intervalo permitido",
-                    c.reference
+                    "{reference}: valor fora do intervalo permitido",
+                    reference = c.reference
                 )));
             }
             if c.kind.is_voltage_source()
@@ -940,7 +940,7 @@ fn empty_result(
         warnings.push("Modelos genéricos educacionais: sem parâmetros de fabricante, capacitâncias parasitas ou temperatura. O motor Misto usa atrasos genéricos configuráveis.".into());
     }
     if matches!(analysis, Analysis::Transient { .. }) {
-        warnings.push(format!("{} C/L iniciam em zero; estados digitais usam os parâmetros do circuito. A primeira amostra precede a energização. Primeiro passo e alterações de parâmetros usam backward Euler.",engine.description()));
+        warnings.push("C/L iniciam em zero; estados digitais usam os parâmetros do circuito. A primeira amostra precede a energização. Primeiro passo e alterações de parâmetros usam backward Euler.".into());
     }
     if let Analysis::Transient { step, .. } = analysis
         && circuit

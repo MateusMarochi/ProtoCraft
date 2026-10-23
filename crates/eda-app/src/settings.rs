@@ -1,3 +1,4 @@
+use eda_i18n::LanguagePreference;
 use eda_simulation::SimulationEngine;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -8,6 +9,7 @@ use std::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct Settings {
+    pub language: LanguagePreference,
     pub engine: SimulationEngine,
     pub voltage_colors: bool,
     pub current_dots: bool,
@@ -20,6 +22,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            language: LanguagePreference::System,
             engine: SimulationEngine::Mixed,
             voltage_colors: true,
             current_dots: true,

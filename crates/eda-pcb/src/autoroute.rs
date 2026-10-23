@@ -688,9 +688,9 @@ pub fn autoroute(project: &Project, config: &AutorouteConfig) -> Result<Autorout
         let expected_remaining = before.airwires.len().saturating_sub(routes.len());
         if after.airwires.len() > expected_remaining {
             return Err(format!(
-                "Autorroteamento cancelado: o DRC ainda encontrou {} conexão(ões) das {} rotas planejadas.",
-                after.airwires.len(),
-                routes.len()
+                "Autorroteamento cancelado: o DRC ainda detectou {remaining} conexões pendentes de {planned} rotas planejadas.",
+                remaining = after.airwires.len(),
+                planned = routes.len()
             ));
         }
         stats.remaining_airwires = after.airwires.len();
@@ -1629,8 +1629,9 @@ fn validate_physical_delta(
             *count -= 1;
         } else {
             return Err(format!(
-                "Autorroteamento cancelado: o DRC detectou nova violação {}: {}",
-                diagnostic.code, diagnostic.message
+                "Autorroteamento cancelado: o DRC detectou nova violação {code}: {message}",
+                code = diagnostic.code,
+                message = diagnostic.message
             ));
         }
     }

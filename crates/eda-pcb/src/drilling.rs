@@ -72,7 +72,10 @@ pub(super) fn check_drills(
         {
             add(
                 "HOLE_EDGE",
-                format!("{} viola a distância de furação à borda.", d.owner),
+                format!(
+                    "{owner} viola a distância de furação à borda.",
+                    owner = d.owner
+                ),
                 d.position,
             );
         }
@@ -96,7 +99,11 @@ pub(super) fn check_drills(
             if distance(&circle, atom) < board.clearance_nm as f64 - 1.0 {
                 add(
                     "HOLE_COPPER",
-                    format!("{} invade a folga de cobre de {}.", d.owner, atom.label),
+                    format!(
+                        "{owner} invade a folga de cobre de {item}.",
+                        owner = d.owner,
+                        item = atom.label
+                    ),
                     d.position,
                 );
             }
@@ -113,7 +120,11 @@ pub(super) fn check_drills(
             if gap < board.clearance_nm as f64 - 1.0 {
                 add(
                     "HOLE_CLEARANCE",
-                    format!("{} e {} violam a folga entre furos.", d.owner, other.owner),
+                    format!(
+                        "{owner} e {other} violam a folga entre furos.",
+                        owner = d.owner,
+                        other = other.owner
+                    ),
                     d.position,
                 );
             }
@@ -153,8 +164,9 @@ pub(super) fn check_drills(
                     add(
                         "HOLE_KEEPOUT",
                         format!(
-                            "Furo {} invade área de exclusão de {}.",
-                            h.id, project.components[id].reference
+                            "Furo {id} invade área de exclusão de {reference}.",
+                            id = h.id,
+                            reference = project.components[id].reference
                         ),
                         h.position,
                     );

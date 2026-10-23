@@ -106,8 +106,8 @@ pub(super) fn package(directory: &Path, project: &Project) -> Result<(), String>
                 || !text.trim_end().ends_with("M02*")
             {
                 return Err(format!(
-                    "Gerber fora do preset RS-274X/mm/4.6: {}",
-                    file.display()
+                    "Gerber fora do preset RS-274X/mm/4.6: {file}",
+                    file = file.display()
                 ));
             }
             if ext == "gm1" {

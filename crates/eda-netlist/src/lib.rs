@@ -256,8 +256,8 @@ pub fn erc(project: &Project, netlist: &Netlist) -> Vec<Diagnostic> {
             Severity::Warning,
             "UNSUPPORTED_MODEL",
             format!(
-                "{} foi preservado com seus pinos, mas seu modelo ainda não é suportado.",
-                component.reference
+                "{reference} foi preservado com seus pinos, mas seu modelo ainda não é suportado.",
+                reference = component.reference
             ),
             vec![ObjectId::Component(component.id)],
         );
@@ -320,7 +320,10 @@ pub fn erc(project: &Project, netlist: &Netlist) -> Vec<Diagnostic> {
                         Severity::Warning
                     },
                     "SHORTED_COMPONENT",
-                    format!("{} está com os dois pinos na mesma rede.", c.reference),
+                    format!(
+                        "{reference} está com os dois pinos na mesma rede.",
+                        reference = c.reference
+                    ),
                     vec![ObjectId::Component(c.id)],
                 );
             }
@@ -359,9 +362,9 @@ pub fn erc(project: &Project, netlist: &Netlist) -> Vec<Diagnostic> {
                         Severity::Error,
                         "NC_CONNECTED",
                         format!(
-                            "{}: pino {} é NC e não deve receber conexão.",
-                            c.reference,
-                            c.pin_number(p.reference.pin)
+                            "{reference}: pino {pin} é NC e não deve receber conexão.",
+                            reference = c.reference,
+                            pin = c.pin_number(p.reference.pin)
                         ),
                         vec![ObjectId::Component(c.id)],
                     );
@@ -376,9 +379,9 @@ pub fn erc(project: &Project, netlist: &Netlist) -> Vec<Diagnostic> {
                     Severity::Warning,
                     "UNCONNECTED_PIN",
                     format!(
-                        "{}: pino {} sem outro terminal conectado.",
-                        c.reference,
-                        c.pin_number(p.reference.pin)
+                        "{reference}: pino {pin} sem outro terminal conectado.",
+                        reference = c.reference,
+                        pin = c.pin_number(p.reference.pin)
                     ),
                     vec![ObjectId::Component(c.id)],
                 );
@@ -394,7 +397,10 @@ pub fn erc(project: &Project, netlist: &Netlist) -> Vec<Diagnostic> {
             push(
                 Severity::Error,
                 "FLOATING_CIRCUIT",
-                format!("{} pertence a uma ilha sem ligação ao terra.", c.reference),
+                format!(
+                    "{reference} pertence a uma ilha sem ligação ao terra.",
+                    reference = c.reference
+                ),
                 vec![ObjectId::Component(c.id)],
             );
         }
@@ -406,9 +412,9 @@ pub fn erc(project: &Project, netlist: &Netlist) -> Vec<Diagnostic> {
                 Severity::Warning,
                 "NET_ALIASES",
                 format!(
-                    "A rede {} reúne nomes diferentes: {}.",
-                    net.name,
-                    names.into_iter().collect::<Vec<_>>().join(", ")
+                    "A rede {net} reúne nomes diferentes: {names}.",
+                    net = net.name,
+                    names = names.into_iter().collect::<Vec<_>>().join(", ")
                 ),
                 Vec::new(),
             );
@@ -418,8 +424,8 @@ pub fn erc(project: &Project, netlist: &Netlist) -> Vec<Diagnostic> {
                 Severity::Warning,
                 "EMPTY_NET",
                 format!(
-                    "A rede {} contém fios ou rótulos sem componentes.",
-                    net.name
+                    "A rede {net} contém fios ou rótulos sem componentes.",
+                    net = net.name
                 ),
                 Vec::new(),
             );

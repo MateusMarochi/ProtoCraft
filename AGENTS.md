@@ -10,7 +10,7 @@
 
 1. **Toda comunicação com o responsável pelo projeto será em português do Brasil (pt-BR)**: respostas, explicações, planejamento, relatórios, sugestões, mensagens de erro apresentadas ao usuário e resumos de tarefas.
 2. Escreva documentação voltada à equipe e ao usuário em pt-BR, salvo exigência explícita de integração externa.
-3. Textos visíveis na interface devem ser em pt-BR desde o início; prepare o sistema para internacionalização futura, evitando textos espalhados pelo código.
+3. **Todo texto visível ao usuário deve passar pelo sistema de idiomas**: interface desktop, diálogos, tooltips, mensagens de estado/erro, acessibilidade e texto humano da CLI. Não adicione strings visíveis diretamente ao código Rust. Cadastre chaves estáveis em `assets/i18n/en.json` e `assets/i18n/pt-BR.json`; tradutores editam apenas os valores dos arquivos de idioma. Em saída estruturada para automação, preserve chaves, IDs, códigos e valores de domínio; rótulos e descrições humanas continuam traduzíveis. Inglês é o fallback obrigatório; o padrão é o idioma do sistema quando houver pacote correspondente.
 4. **Identificadores Rust** (nomes de crates, módulos, estruturas, funções, variáveis, traits e APIs) devem usar inglês técnico idiomático, seguindo as convenções de Rust. Ex.: `Schematic`, `NetId`, `build_netlist`, `SimulationBackend`.
 5. Termos técnicos consagrados, como `netlist`, `SPICE`, `ERC`, `DRC`, `PCB`, `footprint`, `commit` e `crate`, podem continuar em inglês, com explicação em português quando necessário.
 6. Comentários de código devem explicar o *porquê*, não repetir o *como*; prefira pt-BR em comentários explicativos, preservando nomenclatura de APIs e protocolos.

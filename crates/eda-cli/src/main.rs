@@ -1,3 +1,18 @@
+macro_rules! tr {
+    ($source:literal) => {
+        eda_i18n::text($source)
+    };
+}
+
+macro_rules! trf {
+    ($source:literal, $($name:ident = $value:expr),+ $(,)?) => {
+        eda_i18n::format(
+            $source,
+            &[$((stringify!($name), format!("{}", $value))),+],
+        )
+    };
+}
+
 mod automation;
 mod physical_cli;
 
@@ -14,13 +29,16 @@ use std::{
 
 fn main() {
     if let Err(error) = run() {
-        eprintln!("Erro: {error}");
+        eprintln!("{}: {}", tr!("Erro"), eda_i18n::text(&error.to_string()));
         std::process::exit(1);
     }
 }
 fn help() {
     println!(
-        "ProtoCraft — automação de circuitos\n\nUso:\n  protocraft-cli templates\n  protocraft-cli new --output projeto.protocraft [--template 555-led-1hz] [--name 'Meu circuito'] [--open]\n  protocraft-cli open <projeto.protocraft>\n  protocraft-cli devices [--filter termo] [--limit N] [--offset N]\n  protocraft-cli device <modelo>\n  protocraft-cli device-project <modelo> --output projeto.protocraft\n  protocraft-cli pcb-check <projeto>\n  protocraft-cli pcb-route <projeto> --output roteado.protocraft [--grid-mm 0.25] [--track-width-mm 0.25] [--max-expansions 600000] [--no-optimize]\n  protocraft-cli pcb-info <projeto>\n  protocraft-cli pcb-export <projeto> --format kicad|svg --output arquivo\n  protocraft-cli pcb-manufacture <projeto> --preset jlcpcb|standard --output pasta-nova --kicad caminho/kicad-cli.exe\n  protocraft-cli engines\n  protocraft-cli components\n  protocraft-cli examples <pasta>\n  protocraft-cli import-proteus <arquivo.pdsprj|arquivo.dsn> --output <arquivo.protocraft> [--report <relatorio.json>]\n  protocraft-cli info <arquivo.protocraft>\n  protocraft-cli commands [--filter <termo>]\n  protocraft-cli run <arquivo.protocraft> (--actions <acoes.json> | --cmd <id> --params '<json>' [...]) [--output <novo.protocraft>]\n  protocraft-cli validate <arquivo.protocraft>\n  protocraft-cli netlist <arquivo.protocraft>\n  protocraft-cli simulate <arquivo.protocraft> [--engine stable|dynamic|mixed] [--transient passo_s fim_s] [--csv arquivo.csv]\n  protocraft-cli spice <arquivo.protocraft> [--transient passo_s fim_s] [--output arquivo.cir]\n\nnew cria um projeto novo; --open inicia o editor desktop se estiver junto da CLI.\nrun aplica todos os comandos como uma edição atômica do Engine; use --output para salvar.\ninfo, commands e run escrevem JSON em stdout. Pontos usam coordenadas inteiras da grade.\nImportação Proteus experimental: consulte os avisos e o relatório de limitações.\nSimulação nativa em Rust: motores stable, dynamic e mixed, DC e transiente, modelos genéricos.\nUse engines e components para consultar as opções. C/L iniciam em zero; estados digitais são configuráveis no motor Misto."
+        "{}",
+        tr!(
+            "ProtoCraft — automação de circuitos\n\nUso:\n  protocraft-cli templates\n  protocraft-cli new --output projeto.protocraft [--template 555-led-1hz] [--name 'Meu circuito'] [--open]\n  protocraft-cli open <projeto.protocraft>\n  protocraft-cli devices [--filter termo] [--limit N] [--offset N]\n  protocraft-cli device <modelo>\n  protocraft-cli device-project <modelo> --output projeto.protocraft\n  protocraft-cli pcb-check <projeto>\n  protocraft-cli pcb-route <projeto> --output roteado.protocraft [--grid-mm 0.25] [--track-width-mm 0.25] [--max-expansions 600000] [--no-optimize]\n  protocraft-cli pcb-info <projeto>\n  protocraft-cli pcb-export <projeto> --format kicad|svg --output arquivo\n  protocraft-cli pcb-manufacture <projeto> --preset jlcpcb|standard --output pasta-nova --kicad caminho/kicad-cli.exe\n  protocraft-cli engines\n  protocraft-cli components\n  protocraft-cli examples <pasta>\n  protocraft-cli import-proteus <arquivo.pdsprj|arquivo.dsn> --output <arquivo.protocraft> [--report <relatorio.json>]\n  protocraft-cli info <arquivo.protocraft>\n  protocraft-cli commands [--filter <termo>]\n  protocraft-cli run <arquivo.protocraft> (--actions <acoes.json> | --cmd <id> --params '<json>' [...]) [--output <novo.protocraft>]\n  protocraft-cli validate <arquivo.protocraft>\n  protocraft-cli netlist <arquivo.protocraft>\n  protocraft-cli simulate <arquivo.protocraft> [--engine stable|dynamic|mixed] [--transient passo_s fim_s] [--csv arquivo.csv]\n  protocraft-cli spice <arquivo.protocraft> [--transient passo_s fim_s] [--output arquivo.cir]\n\nnew cria um projeto novo; --open inicia o editor desktop se estiver junto da CLI.\nrun aplica todos os comandos como uma edição atômica do Engine; use --output para salvar.\ninfo, commands e run escrevem JSON em stdout. Pontos usam coordenadas inteiras da grade.\nImportação Proteus experimental: consulte os avisos e o relatório de limitações.\nSimulação nativa em Rust: motores stable, dynamic e mixed, DC e transiente, modelos genéricos.\nUse engines e components para consultar as opções. C/L iniciam em zero; estados digitais são configuráveis no motor Misto."
+        )
     );
 }
 fn run() -> Result<(), Box<dyn Error>> {
@@ -69,9 +87,9 @@ fn run() -> Result<(), Box<dyn Error>> {
             return Err("Este comando não recebe argumentos".into());
         }
         let values: Vec<_> = if command == "engines" {
-            SimulationEngine::all().iter().map(|e|serde_json::json!({"id":e.id(),"name":e.label(),"description":e.description()})).collect()
+            SimulationEngine::all().iter().map(|e|serde_json::json!({"id":e.id(),"name":eda_i18n::text(e.label()),"description":eda_i18n::text(e.description())})).collect()
         } else {
-            eda_core::ComponentKind::all().iter().map(|k|serde_json::json!({"kind":k,"name":k.label(),"pins":k.pin_count(),"unit":k.unit(),"value":k.default_value(),"parameters":eda_core::ModelParameters::default()})).collect()
+            eda_core::ComponentKind::all().iter().map(|k|serde_json::json!({"kind":k,"name":eda_i18n::text(k.label()),"pins":k.pin_count(),"unit":k.unit(),"value":k.default_value(),"parameters":eda_core::ModelParameters::default()})).collect()
         };
         println!("{}", serde_json::to_string_pretty(&values)?);
         return Ok(());
@@ -104,14 +122,14 @@ fn run() -> Result<(), Box<dyn Error>> {
         ));
         if let Some((path, _)) = projects.iter().find(|(path, _)| path.exists()) {
             return Err(format!(
-                "O destino já contém {}; nenhum exemplo foi sobrescrito",
-                path.display()
+                "O destino já contém {path}; nenhum exemplo foi sobrescrito",
+                path = path.display()
             )
             .into());
         }
         for (path, project) in projects {
             eda_storage::create_new(&path, &project)?;
-            println!("Exemplo criado: {}", path.display());
+            println!("{}", trf!("Exemplo criado: {path}", path = path.display()));
         }
         return Ok(());
     }
@@ -172,22 +190,28 @@ fn run() -> Result<(), Box<dyn Error>> {
     match command {
         "validate" => {
             println!(
-                "Projeto válido: {} ({} componentes, {} fios)",
-                project.name,
-                project.components.len(),
-                project.wires.len()
+                "{}",
+                trf!(
+                    "Projeto válido: {name} ({components} componentes, {wires} fios)",
+                    name = &project.name,
+                    components = project.components.len(),
+                    wires = project.wires.len()
+                )
             );
             let netlist = eda_netlist::build_netlist(&project);
             let diagnostics = eda_netlist::erc(&project, &netlist);
             for diagnostic in &diagnostics {
                 println!(
-                    "{} [{}]: {}",
-                    match diagnostic.severity {
-                        eda_netlist::Severity::Error => "Erro",
-                        eda_netlist::Severity::Warning => "Aviso",
-                    },
-                    diagnostic.code,
-                    diagnostic.message
+                    "{}",
+                    trf!(
+                        "{severity} [{code}]: {message}",
+                        severity = eda_i18n::text(match diagnostic.severity {
+                            eda_netlist::Severity::Error => "Erro",
+                            eda_netlist::Severity::Warning => "Aviso",
+                        }),
+                        code = &diagnostic.code,
+                        message = eda_i18n::text(&diagnostic.message)
+                    )
                 );
             }
             if diagnostics
@@ -200,7 +224,15 @@ fn run() -> Result<(), Box<dyn Error>> {
         "netlist" => {
             let netlist = eda_netlist::build_netlist(&project);
             for net in &netlist.nets {
-                println!("Nó {} — {} ({} pinos)", net.id.0, net.name, net.pins.len());
+                println!(
+                    "{}",
+                    trf!(
+                        "Nó {id} — {name} ({pins} pinos)",
+                        id = net.id.0,
+                        name = &net.name,
+                        pins = net.pins.len()
+                    )
+                );
                 for pin in &net.pins {
                     let reference = project
                         .components
@@ -208,9 +240,13 @@ fn run() -> Result<(), Box<dyn Error>> {
                         .map(|c| c.reference.as_str())
                         .ok_or("Netlist contém componente ausente")?;
                     println!(
-                        "  {reference} (ID {}) / pino {}",
-                        pin.component.0,
-                        project.components[&pin.component].pin_number(pin.pin)
+                        "{}",
+                        trf!(
+                            "{reference} (ID {id}) / pino {pin}",
+                            reference = reference,
+                            id = pin.component.0,
+                            pin = project.components[&pin.component].pin_number(pin.pin)
+                        )
                     );
                 }
             }
@@ -225,32 +261,44 @@ fn run() -> Result<(), Box<dyn Error>> {
                 engine,
                 &SimulationControl::default(),
             )?;
-            println!("Simulação concluída: {}", result.backend);
+            println!(
+                "{}",
+                trf!(
+                    "Simulação concluída: {engine}",
+                    engine = eda_i18n::text(&result.backend)
+                )
+            );
             for warning in &result.warnings {
-                println!("Aviso: {warning}");
+                println!(
+                    "{}",
+                    trf!("Aviso: {warning}", warning = eda_i18n::text(warning))
+                );
             }
             for trace in &result.traces {
                 if let Some(sample) = trace.samples.last() {
                     println!(
-                        "{} = {:.9} {} (t={:.9} s, {} amostras)",
-                        trace.name,
-                        sample[1],
-                        trace.unit,
-                        sample[0],
-                        trace.samples.len()
+                        "{}",
+                        trf!(
+                            "{name} = {value} {unit} (t={time} s, {samples} amostras)",
+                            name = &trace.name,
+                            value = format!("{:.9}", sample[1]),
+                            unit = &trace.unit,
+                            time = format!("{:.9}", sample[0]),
+                            samples = trace.samples.len()
+                        )
                     );
                 }
             }
             if let Some(path) = csv {
                 eda_storage::export_csv(path, &result)?;
-                println!("CSV salvo: {path}");
+                println!("{}", trf!("CSV salvo: {path}", path = path));
             }
         }
         "spice" => {
             let text = eda_simulation::export_spice(&project, analysis)?;
             if let Some(path) = output {
                 fs::write(path, text)?;
-                println!("SPICE salvo: {path}");
+                println!("{}", trf!("SPICE salvo: {path}", path = path));
             } else {
                 print!("{text}");
             }
@@ -263,18 +311,18 @@ fn run() -> Result<(), Box<dyn Error>> {
 fn list_templates() -> Result<(), Box<dyn Error>> {
     let mut templates = vec![serde_json::json!({
         "id": "empty",
-        "name": "Projeto vazio",
-        "description": "Folha esquemática em branco, pronta para edição."
+        "name": tr!("Projeto vazio"),
+        "description": tr!("Folha esquemática em branco, pronta para edição.")
     })];
     templates.extend(
         eda_core::examples::CATALOG
             .iter()
-            .map(|(id, name, _)| serde_json::json!({"id": id, "name": name})),
+            .map(|(id, name, _)| serde_json::json!({"id": id, "name": eda_i18n::text(name)})),
     );
     templates.push(serde_json::json!({
         "id": "stm32-esp32",
-        "name": "Demonstração STM32 + ESP32-S3",
-        "description": "Esquema e footprints para estudo físico; não executa firmware."
+        "name": tr!("Demonstração STM32 + ESP32-S3"),
+        "description": tr!("Esquema e footprints para estudo físico; não executa firmware.")
     }));
     println!("{}", serde_json::to_string_pretty(&templates)?);
     Ok(())
@@ -367,8 +415,8 @@ fn run_new_project(args: &[String]) -> Result<(), Box<dyn Error>> {
     }
     if output.exists() {
         return Err(format!(
-            "O arquivo já existe; escolha outro caminho para preservar os dados: {}",
-            output.display()
+            "O arquivo já existe; escolha outro caminho para preservar os dados: {path}",
+            path = output.display()
         )
         .into());
     }
@@ -503,7 +551,10 @@ fn run_open_project(args: &[String]) -> Result<(), Box<dyn Error>> {
     ProcessCommand::new(gui_executable()?)
         .arg(fs::canonicalize(path)?)
         .spawn()?;
-    println!("Editor iniciado para {}", path.display());
+    println!(
+        "{}",
+        trf!("Editor iniciado para {path}", path = path.display())
+    );
     Ok(())
 }
 
@@ -516,56 +567,58 @@ fn gui_executable() -> Result<PathBuf, Box<dyn Error>> {
     let gui = env::current_exe()?.with_file_name(executable_name);
     if !gui.is_file() {
         return Err(format!(
-            "Aplicativo desktop não encontrado ao lado da CLI: {}. Compile/instale os dois executáveis juntos.",
-            gui.display()
+            "Aplicativo desktop não encontrado ao lado da CLI: {path}. Compile/instale os dois executáveis juntos.",
+            path = gui.display()
         )
         .into());
     }
     Ok(gui)
 }
 
-fn command_help(command: &str) -> Option<&'static str> {
+fn command_help(command: &str) -> Option<String> {
     match command {
-        "templates" => Some("Uso: protocraft-cli templates\nLista os modelos disponíveis em JSON."),
-        "new" | "create" => Some(
-            "Uso: protocraft-cli new --output <arquivo.protocraft> [--template <id>] [--name <nome>] [--open]\nPara 555-led-1hz: [--ra-ohms R] [--rb-ohms R] [--c-farads F | --frequency-hz Hz] [--led-resistor-ohms R]. Não substitui arquivos existentes; valores em unidades SI.",
-        ),
-        "open" => Some(
-            "Uso: protocraft-cli open <arquivo.protocraft>\nAbre o projeto no aplicativo desktop distribuído ao lado da CLI.",
-        ),
-        "engines" => {
-            Some("Uso: protocraft-cli engines\nLista os motores próprios de simulação em JSON.")
-        }
-        "components" => {
-            Some("Uso: protocraft-cli components\nLista componentes e parâmetros padrão em JSON.")
-        }
-        "info" => Some(
-            "Uso: protocraft-cli info <arquivo.protocraft>\nImprime um resumo JSON do projeto, redes, ERC e estado de importação.",
-        ),
-        "commands" => Some(
-            "Uso: protocraft-cli commands [--filter <termo>]\nLista os comandos de edição disponíveis para run.",
-        ),
-        "run" => Some(
-            "Uso: protocraft-cli run <arquivo.protocraft> (--actions <acoes.json> | --cmd <id> --params '<json>' [...]) [--output <novo.protocraft>]\nAplica um lote atômico pelo Engine compartilhado com a interface. Sem --output, apenas informa o resultado em JSON.",
-        ),
-        "validate" => Some(
-            "Uso: protocraft-cli validate <arquivo.protocraft>\nValida o formato e executa o ERC básico; códigos de saída diferentes de zero indicam erro.",
-        ),
-        "netlist" => Some(
-            "Uso: protocraft-cli netlist <arquivo.protocraft>\nExibe redes e pinos conectados.",
-        ),
-        "simulate" => Some(
-            "Uso: protocraft-cli simulate <arquivo.protocraft> [--engine stable|dynamic|mixed] [--transient passo_s fim_s] [--csv arquivo.csv]\nSem --transient executa análise DC.",
-        ),
-        "spice" => Some(
-            "Uso: protocraft-cli spice <arquivo.protocraft> [--transient passo_s fim_s] [--output arquivo.cir]\nExporta uma netlist SPICE; não executa um simulador externo.",
-        ),
-        "examples" => Some(
-            "Uso: protocraft-cli examples <pasta>\nGrava os exemplos originais do ProtoCraft na pasta indicada.",
-        ),
-        "import-proteus" => Some(
-            "Uso: protocraft-cli import-proteus <arquivo.pdsprj|arquivo.dsn> --output <arquivo.protocraft> [--report <relatorio.json>]\nImportação experimental e parcial; confira sempre os avisos.",
-        ),
+        "templates" => Some(tr!(
+            "Uso: protocraft-cli templates\nLista os modelos disponíveis em JSON."
+        )),
+        "new" | "create" => Some(tr!(
+            "Uso: protocraft-cli new --output <arquivo.protocraft> [--template <id>] [--name <nome>] [--open]\nPara 555-led-1hz: [--ra-ohms R] [--rb-ohms R] [--c-farads F | --frequency-hz Hz] [--led-resistor-ohms R]. Não substitui arquivos existentes; valores em unidades SI."
+        )),
+        "open" => Some(tr!(
+            "Uso: protocraft-cli open <arquivo.protocraft>\nAbre o projeto no aplicativo desktop distribuído ao lado da CLI."
+        )),
+        "engines" => Some(tr!(
+            "Uso: protocraft-cli engines\nLista os motores próprios de simulação em JSON."
+        )),
+        "components" => Some(tr!(
+            "Uso: protocraft-cli components\nLista componentes e parâmetros padrão em JSON."
+        )),
+        "info" => Some(tr!(
+            "Uso: protocraft-cli info <arquivo.protocraft>\nImprime um resumo JSON do projeto, redes, ERC e estado de importação."
+        )),
+        "commands" => Some(tr!(
+            "Uso: protocraft-cli commands [--filter <termo>]\nLista os comandos de edição disponíveis para run."
+        )),
+        "run" => Some(tr!(
+            "Uso: protocraft-cli run <arquivo.protocraft> (--actions <acoes.json> | --cmd <id> --params '<json>' [...]) [--output <novo.protocraft>]\nAplica um lote atômico pelo Engine compartilhado com a interface. Sem --output, apenas informa o resultado em JSON."
+        )),
+        "validate" => Some(tr!(
+            "Uso: protocraft-cli validate <arquivo.protocraft>\nValida o formato e executa o ERC básico; códigos de saída diferentes de zero indicam erro."
+        )),
+        "netlist" => Some(tr!(
+            "Uso: protocraft-cli netlist <arquivo.protocraft>\nExibe redes e pinos conectados."
+        )),
+        "simulate" => Some(tr!(
+            "Uso: protocraft-cli simulate <arquivo.protocraft> [--engine stable|dynamic|mixed] [--transient passo_s fim_s] [--csv arquivo.csv]\nSem --transient executa análise DC."
+        )),
+        "spice" => Some(tr!(
+            "Uso: protocraft-cli spice <arquivo.protocraft> [--transient passo_s fim_s] [--output arquivo.cir]\nExporta uma netlist SPICE; não executa um simulador externo."
+        )),
+        "examples" => Some(tr!(
+            "Uso: protocraft-cli examples <pasta>\nGrava os exemplos originais do ProtoCraft na pasta indicada."
+        )),
+        "import-proteus" => Some(tr!(
+            "Uso: protocraft-cli import-proteus <arquivo.pdsprj|arquivo.dsn> --output <arquivo.protocraft> [--report <relatorio.json>]\nImportação experimental e parcial; confira sempre os avisos."
+        )),
         _ => None,
     }
 }
@@ -623,13 +676,17 @@ fn run_commands(args: &[String]) -> Result<(), Box<dyn Error>> {
         .iter()
         .filter(|command| {
             filter.as_ref().is_none_or(|filter| {
-                command.id.contains(filter) || command.description.to_lowercase().contains(filter)
+                command.id.contains(filter)
+                    || command.description.to_lowercase().contains(filter)
+                    || eda_i18n::text(command.description)
+                        .to_lowercase()
+                        .contains(filter)
             })
         })
         .map(|command| {
             serde_json::json!({
                 "id": command.id,
-                "description": command.description,
+                "description": eda_i18n::text(command.description),
                 "params": command.params,
             })
         })
@@ -841,28 +898,43 @@ fn run_proteus_import(args: &[String]) -> Result<(), Box<dyn Error>> {
     let imported = eda_import::import_proteus(input)?;
     let report_json = serde_json::to_vec_pretty(&imported.report)?;
     eda_storage::save(output, &imported.project)?;
-    println!("Projeto importado salvo: {}", output.display());
     println!(
-        "Importação experimental {}: {} componentes, {} fios, {} junções e {} rótulos",
-        imported.report.format,
-        imported.report.components,
-        imported.report.wires,
-        imported.report.junctions,
-        imported.report.labels
+        "{}",
+        trf!("Projeto importado salvo: {path}", path = output.display())
+    );
+    println!(
+        "{}",
+        trf!(
+            "Importação experimental {project}: {components} componentes, {wires} fios, {junctions} junções e {labels} rótulos",
+            project = &imported.report.format,
+            components = imported.report.components,
+            wires = imported.report.wires,
+            junctions = imported.report.junctions,
+            labels = imported.report.labels
+        )
     );
     if !imported.report.electrical_complete {
         println!(
-            "Aviso: a importação não preservou todo o significado elétrico; revise o relatório antes de simular."
+            "{}",
+            tr!(
+                "Aviso: a importação não preservou todo o significado elétrico; revise o relatório antes de simular."
+            )
         );
     }
     if !imported.report.unsupported_components.is_empty() {
         println!(
-            "Componentes sem suporte completo: {}",
-            imported.report.unsupported_components.join(", ")
+            "{}",
+            trf!(
+                "Componentes sem suporte completo: {components}",
+                components = imported.report.unsupported_components.join(", ")
+            )
         );
     }
     for warning in &imported.report.warnings {
-        println!("Aviso: {warning}");
+        println!(
+            "{}",
+            trf!("Aviso: {warning}", warning = eda_i18n::text(warning))
+        );
     }
     if let Some(path) = report_path {
         let result = (|| -> Result<(), std::io::Error> {
@@ -879,7 +951,7 @@ fn run_proteus_import(args: &[String]) -> Result<(), Box<dyn Error>> {
                 format!("Projeto salvo, mas não foi possível gravar o relatório: {error}").into(),
             );
         }
-        println!("Relatório salvo: {}", path.display());
+        println!("{}", trf!("Relatório salvo: {path}", path = path.display()));
     }
     Ok(())
 }

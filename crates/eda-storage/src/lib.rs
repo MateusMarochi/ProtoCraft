@@ -1,4 +1,4 @@
-//! PersistÃªncia validada, limitada e substituÃ­da atomicamente.
+//! Persistência validada, limitada e substituída atomicamente.
 use eda_core::Project;
 use eda_simulation::SimulationResult;
 use std::{
@@ -16,9 +16,9 @@ pub const FORMAT_VERSION: u32 = eda_core::FORMAT_VERSION;
 pub enum StorageError {
     #[error("Falha de acesso ao arquivo: {0}")]
     Io(#[from] std::io::Error),
-    #[error("JSON de projeto invÃ¡lido: {0}")]
+    #[error("JSON de projeto inválido: {0}")]
     Json(#[from] serde_json::Error),
-    #[error("Projeto invÃ¡lido: {0}")]
+    #[error("Projeto inválido: {0}")]
     Invalid(String),
     #[error("Versão de formato {0} não suportada; esta versão lê formatos 1 a 6")]
     Version(u64),
@@ -44,12 +44,12 @@ fn decode(bytes: &[u8]) -> Result<Project, StorageError> {
     let version = value
         .get("format_version")
         .and_then(|v| v.as_u64())
-        .ok_or_else(|| StorageError::Invalid("format_version ausente ou invÃ¡lido".into()))?;
+        .ok_or_else(|| StorageError::Invalid("format_version ausente ou inválido".into()))?;
     if !(1..=u64::from(FORMAT_VERSION)).contains(&version) {
         return Err(StorageError::Version(version));
     }
     let mut project: Project = serde_json::from_value(value)?;
-    // O formato 2 adiciona geometria e metadados opcionais; os objetos v1 sÃ£o preservados.
+    // O formato 2 adiciona geometria e metadados opcionais; os objetos v1 são preservados.
     if version < u64::from(FORMAT_VERSION) {
         project.format_version = FORMAT_VERSION;
     }
@@ -59,7 +59,7 @@ fn decode(bytes: &[u8]) -> Result<Project, StorageError> {
     Ok(project)
 }
 
-/// O backup contÃ©m exatamente o arquivo vÃ¡lido que precedeu o salvamento.
+/// O backup contém exatamente o arquivo válido que precedeu o salvamento.
 pub fn backup_path(path: impl AsRef<Path>) -> PathBuf {
     let mut name = path.as_ref().as_os_str().to_owned();
     name.push(".bak");
@@ -70,7 +70,7 @@ pub fn save(path: impl AsRef<Path>, project: &Project) -> Result<(), StorageErro
     let bytes = encode(project)?;
     let path = path.as_ref();
     if path.exists() {
-        // NÃ£o substituÃ­mos arquivo corrompido ou de versÃ£o que este programa desconhece.
+        // Não substituímos arquivo corrompido ou de versão que este programa desconhece.
         load(path)?;
         let previous = fs::read(path)?;
         atomic_write(&backup_path(path), &previous)?;
@@ -78,7 +78,7 @@ pub fn save(path: impl AsRef<Path>, project: &Project) -> Result<(), StorageErro
     atomic_write(path, &bytes)
 }
 
-/// Cria um projeto sem substituir um destino que jÃ¡ exista.
+/// Cria um projeto sem substituir um destino que já exista.
 pub fn create_new(path: impl AsRef<Path>, project: &Project) -> Result<(), StorageError> {
     let bytes = encode(project)?;
     let path = path.as_ref();
@@ -121,14 +121,14 @@ fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), StorageError> {
     Ok(())
 }
 
-/// CSV longo: uma linha por amostra, permitindo sÃ©ries de comprimentos diferentes.
+/// CSV longo: uma linha por amostra, permitindo séries de comprimentos diferentes.
 pub fn export_csv(path: impl AsRef<Path>, result: &SimulationResult) -> Result<(), StorageError> {
     let mut csv = String::from("serie,unidade,tempo_s,valor\n");
     for trace in &result.traces {
         for sample in &trace.samples {
             if !sample[0].is_finite() || !sample[1].is_finite() {
                 return Err(StorageError::Invalid(
-                    "Resultado contÃ©m amostra nÃ£o finita".into(),
+                    "Resultado contém amostra não finita".into(),
                 ));
             }
             csv.push_str(&format!(
@@ -185,7 +185,7 @@ mod tests {
     fn refuses_future_and_corrupt_overwrite() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("futuro.protocraft");
-        for contents in [r#"{"format_version":99}"#, "nÃ£o Ã© JSON"] {
+        for contents in [r#"{"format_version":99}"#, "não é JSON"] {
             fs::write(&path, contents).unwrap();
             assert!(load(&path).is_err());
             assert!(save(&path, &eda_core::examples::voltage_divider()).is_err());

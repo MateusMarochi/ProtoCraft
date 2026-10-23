@@ -638,6 +638,7 @@ name = "eda-app"
 version = "0.6.1"
 dependencies = [
  "eda-core",
+ "eda-i18n",
  "eda-import",
  "eda-library",
  "eda-netlist",
@@ -657,6 +658,7 @@ name = "eda-cli"
 version = "0.6.1"
 dependencies = [
  "eda-core",
+ "eda-i18n",
  "eda-import",
  "eda-library",
  "eda-netlist",
@@ -674,6 +676,15 @@ version = "0.6.1"
 dependencies = [
  "serde",
  "thiserror 2.0.21",
+]
+
+[[package]]
+name = "eda-i18n"
+version = "0.6.1"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sys-locale",
 ]
 
 [[package]]
@@ -2642,6 +2653,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.9",
+]
+
+[[package]]
+name = "sys-locale"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8eab9a99a024a169fe8a903cf9d4a3b3601109bcc13bd9e3c6fff259138626c4"
+dependencies = [
+ "libc",
 ]
 
 [[package]]

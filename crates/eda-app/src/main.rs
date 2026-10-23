@@ -1,3 +1,18 @@
+macro_rules! tr {
+    ($source:literal) => {
+        eda_i18n::text($source)
+    };
+}
+
+macro_rules! trf {
+    ($source:literal, $($name:ident = $value:expr),+ $(,)?) => {
+        eda_i18n::format(
+            $source,
+            &[$((stringify!($name), format!("{}", $value))),+],
+        )
+    };
+}
+
 mod clipboard;
 mod device_ui;
 mod geometry;
@@ -108,6 +123,67 @@ enum Tool {
     Junction,
     Label,
 }
+
+#[derive(Clone, Copy)]
+enum ToolIcon {
+    Select,
+    Component,
+    Wire,
+    Junction,
+    NetLabel,
+}
+
+fn paint_tool_icon(painter: &egui::Painter, rect: Rect, icon: ToolIcon, color: Color32) {
+    let stroke = Stroke::new(1.6_f32, color);
+    let point = |x: f32, y: f32| {
+        Pos2::new(
+            rect.left() + rect.width() * x,
+            rect.top() + rect.height() * y,
+        )
+    };
+    let line = |a: (f32, f32), b: (f32, f32)| {
+        painter.line_segment([point(a.0, a.1), point(b.0, b.1)], stroke)
+    };
+
+    match icon {
+        ToolIcon::Select => {
+            line((0.20, 0.12), (0.24, 0.78));
+            line((0.20, 0.12), (0.72, 0.52));
+            line((0.24, 0.78), (0.43, 0.59));
+            line((0.43, 0.59), (0.59, 0.84));
+            line((0.59, 0.84), (0.72, 0.52));
+            line((0.24, 0.78), (0.20, 0.12));
+        }
+        ToolIcon::Component => {
+            let body = Rect::from_min_max(point(0.31, 0.28), point(0.69, 0.72));
+            painter.rect_stroke(body, 1.5, stroke, egui::StrokeKind::Inside);
+            line((0.08, 0.50), (0.31, 0.50));
+            line((0.69, 0.50), (0.92, 0.50));
+        }
+        ToolIcon::Wire => {
+            line((0.10, 0.78), (0.46, 0.78));
+            line((0.46, 0.78), (0.46, 0.25));
+            line((0.46, 0.25), (0.90, 0.25));
+            painter.circle_filled(point(0.10, 0.78), 1.8_f32, color);
+            painter.circle_filled(point(0.90, 0.25), 1.8_f32, color);
+        }
+        ToolIcon::Junction => {
+            line((0.50, 0.12), (0.50, 0.78));
+            line((0.16, 0.50), (0.50, 0.50));
+            line((0.50, 0.50), (0.88, 0.50));
+            painter.circle_filled(point(0.50, 0.50), 2.1_f32, color);
+        }
+        ToolIcon::NetLabel => {
+            line((0.08, 0.50), (0.33, 0.50));
+            line((0.33, 0.50), (0.49, 0.27));
+            line((0.49, 0.27), (0.86, 0.27));
+            line((0.86, 0.27), (0.86, 0.73));
+            line((0.86, 0.73), (0.49, 0.73));
+            line((0.49, 0.73), (0.33, 0.50));
+        }
+    }
+}
+
 enum Pending {
     New(Project),
     Open,
@@ -130,9 +206,164 @@ enum InspectorTab {
     Nets,
 }
 
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+enum BasicComponentCategory {
+    #[default]
+    All,
+    Passive,
+    Semiconductor,
+    Source,
+    Logic,
+    Connection,
+}
+
+impl BasicComponentCategory {
+    fn label(self) -> &'static str {
+        match self {
+            Self::All => "Todas as categorias",
+            Self::Passive => "Passivos",
+            Self::Semiconductor => "Semicondutores",
+            Self::Source => "Fontes e sinais",
+            Self::Logic => "Lógica e circuitos integrados",
+            Self::Connection => "Conexões e controles",
+        }
+    }
+
+    fn contains(self, kind: ComponentKind) -> bool {
+        use ComponentKind::*;
+        match self {
+            Self::All => true,
+            Self::Passive => matches!(kind, Resistor | Capacitor | Inductor | Potentiometer),
+            Self::Semiconductor => {
+                matches!(kind, Diode | Led | Zener | Npn | Pnp | Nmos | Pmos)
+            }
+            Self::Source => matches!(
+                kind,
+                VoltageSource
+                    | CurrentSource
+                    | SineVoltage
+                    | SquareVoltage
+                    | TriangleVoltage
+                    | SawVoltage
+                    | Vcvs
+                    | Vccs
+            ),
+            Self::Logic => matches!(
+                kind,
+                OpAmp
+                    | LogicNot
+                    | LogicAnd
+                    | LogicOr
+                    | LogicXor
+                    | LogicNand
+                    | LogicNor
+                    | Comparator
+                    | Schmitt
+                    | Timer555
+                    | DFlipFlop
+                    | Counter4
+                    | Counter10
+            ),
+            Self::Connection => matches!(kind, Switch | LogicInput | Ground | Connector),
+        }
+    }
+}
+
+fn localized_component_label(kind: ComponentKind) -> String {
+    eda_i18n::text(kind.label())
+}
+
+fn component_matches_query(kind: ComponentKind, terms: &[&str]) -> bool {
+    if terms.is_empty() {
+        return true;
+    }
+    let document = normalize_component_search(&format!(
+        "{} {} {}",
+        kind.label(),
+        kind.prefix(),
+        component_search_terms(kind)
+    ));
+    let words: Vec<_> = document.split_whitespace().collect();
+    terms.iter().all(|term| {
+        words
+            .iter()
+            .any(|word| word == term || (term.chars().count() >= 3 && word.starts_with(term)))
+    })
+}
+
+fn component_search_terms(kind: ComponentKind) -> &'static str {
+    use ComponentKind::*;
+    match kind {
+        Resistor => "resistor resistance ohm passive passivo resistencia",
+        Capacitor => "capacitor capacitance condensador capacitancia passivo passiva",
+        Inductor => "inductor coil bobina inductance indutancia passivo passiva",
+        Diode => "diode diodo rectifier retificador semiconductor semicondutor",
+        Led => "led light emitting diode diodo emissor de luz indicador",
+        Zener => "zener breakdown diode diodo de ruptura regulador tensao",
+        Switch => "switch chave interruptor toggle spst controle",
+        Potentiometer => "potentiometer pot potenciometro resistor variavel variable resistor",
+        VoltageSource => "voltage source fonte de tensao dc supply alimentacao",
+        CurrentSource => "current source fonte de corrente dc supply",
+        SineVoltage => "sine sinewave sinusoidal senoidal fonte signal sinal ac",
+        SquareVoltage => "square pulse pulso quadrada onda retangular clock pwm",
+        TriangleVoltage => "triangle triangular triangular fonte waveform onda",
+        SawVoltage => "sawtooth dente de serra rampa waveform onda",
+        Npn => "npn transistor bjt bipolar transistor transistor bipolar",
+        Pnp => "pnp transistor bjt bipolar transistor transistor bipolar",
+        OpAmp => "op amp operational amplifier amplificador operacional amplifier",
+        LogicInput => "logic input entrada logica digital input stimulus estimulo",
+        LogicNot => "not inverter inversor porta logica logic gate",
+        LogicAnd => "and porta e logic gate",
+        LogicOr => "or porta ou logic gate",
+        LogicXor => "xor exclusive or ou exclusivo porta logica",
+        LogicNand => "nand not and porta nao e logic gate",
+        LogicNor => "nor not or porta nao ou logic gate",
+        Ground => "ground gnd terra massa referencia eletrica",
+        Connector => "connector conector terminal header pino",
+        Nmos => "nmos n channel mosfet transistor mos canal n",
+        Pmos => "pmos p channel mosfet transistor mos canal p",
+        Comparator => "comparator comparador hysteresis histerese schmitt trigger",
+        Schmitt => "schmitt trigger inversor inverter histerese",
+        Timer555 => "555 ne555 timer temporizador oscilador oscillator astable monostable ci ic",
+        DFlipFlop => "d flip flop dff flipflop latch biestable digital",
+        Counter4 => "4 bit counter contador binario digital",
+        Counter10 => "decade counter contador decada decimal digital",
+        Vcvs => "vcvs voltage controlled voltage source fonte tensao controlada",
+        Vccs => "vccs current controlled current source fonte corrente controlada",
+        Device | Imported => "device componente importado biblioteca",
+    }
+}
+
+fn normalize_component_search(value: &str) -> String {
+    let mut normalized = String::with_capacity(value.len());
+    for character in value.chars().flat_map(char::to_lowercase) {
+        let replacement = match character {
+            'á' | 'à' | 'â' | 'ã' | 'ä' => Some('a'),
+            'é' | 'è' | 'ê' | 'ë' => Some('e'),
+            'í' | 'ì' | 'î' | 'ï' => Some('i'),
+            'ó' | 'ò' | 'ô' | 'õ' | 'ö' => Some('o'),
+            'ú' | 'ù' | 'û' | 'ü' => Some('u'),
+            'ç' => Some('c'),
+            value if value.is_ascii_alphanumeric() => Some(value),
+            _ => None,
+        };
+        if let Some(character) = replacement {
+            normalized.push(character);
+        } else if !normalized.ends_with(' ') && !normalized.is_empty() {
+            normalized.push(' ');
+        }
+    }
+    normalized.trim().to_owned()
+}
+
 struct ProtoCraft {
     library_mcu: bool,
     library_device: Option<String>,
+    basic_component_category: BasicComponentCategory,
+    device_library_filters: device_ui::DeviceLibraryFilters,
+    device_search_key: Option<String>,
+    device_search_results: Vec<eda_library::DeviceSearchHit<'static>>,
+    device_results_limit: usize,
     pcb: pcb_ui::PcbUi,
     engine: Engine,
     logo: Option<egui::TextureHandle>,
@@ -150,6 +381,7 @@ struct ProtoCraft {
     wire_start: Option<Point>,
     wire_vertical: bool,
     label_name: String,
+    library_search: String,
     component_filter: String,
     inspector_tab: InspectorTab,
     show_library: bool,
@@ -206,15 +438,20 @@ impl ProtoCraft {
             BottomTab::Import
         };
         let default_status = if engine.project().import_info.is_some() && path.is_some() {
-            "Projeto importado aberto. Consulte a aba Importação."
+            tr!("Projeto importado aberto. Consulte a aba Importação.")
         } else if path.is_some() {
-            "Projeto aberto."
+            tr!("Projeto aberto.")
         } else {
-            "Pronto. Divisor de 10 V: execute DC para obter 5 V na saída."
+            tr!("Pronto. Divisor de 10 V: execute DC para obter 5 V na saída.")
         };
         Self {
             library_mcu: false,
             library_device: None,
+            basic_component_category: BasicComponentCategory::All,
+            device_library_filters: Default::default(),
+            device_search_key: None,
+            device_search_results: Vec::new(),
+            device_results_limit: 80,
             pcb: Default::default(),
             engine,
             logo,
@@ -232,6 +469,7 @@ impl ProtoCraft {
             wire_start: None,
             wire_vertical: false,
             label_name: "OUT".into(),
+            library_search: String::new(),
             component_filter: String::new(),
             inspector_tab: InspectorTab::Properties,
             show_library: true,
@@ -246,7 +484,7 @@ impl ProtoCraft {
             snap: true,
             dark: true,
             status_error: startup_message.is_some(),
-            status: startup_message.unwrap_or_else(|| default_status.into()),
+            status: startup_message.unwrap_or(default_status),
             pending: None,
             close_allowed: false,
             netlist,
@@ -274,13 +512,17 @@ impl ProtoCraft {
         self.unsaved_import || self.engine.revision() != self.saved_revision
     }
     fn message(&mut self, message: impl Into<String>, error: bool) {
-        self.status = message.into();
+        let source = message.into();
+        self.status = eda_i18n::text(&source);
         self.status_error = error;
     }
     fn command(&mut self, command: Command) {
         match self.engine.execute(command) {
-            Ok(()) => self.message("Alteração aplicada.", false),
-            Err(error) => self.message(format!("Não foi possível editar: {error}"), true),
+            Ok(()) => self.message(tr!("Alteração aplicada."), false),
+            Err(error) => self.message(
+                trf!("Não foi possível editar: {error}", error = error),
+                true,
+            ),
         }
     }
     fn refresh_derived(&mut self) {
@@ -313,7 +555,7 @@ impl ProtoCraft {
             Pending::Open => {
                 if let Some(path) = rfd::FileDialog::new()
                     .add_filter(
-                        "Projeto ProtoCraft e backups",
+                        tr!("Projeto ProtoCraft e backups"),
                         &["protocraft", "json", "bak"],
                     )
                     .pick_file()
@@ -321,15 +563,17 @@ impl ProtoCraft {
                     match eda_storage::load(&path) {
                         Ok(project) => {
                             self.replace(project, Some(path));
-                            self.message("Projeto aberto.", false);
+                            self.message(tr!("Projeto aberto."), false);
                         }
-                        Err(error) => self.message(format!("Falha ao abrir: {error}"), true),
+                        Err(error) => {
+                            self.message(trf!("Falha ao abrir: {error}", error = error), true)
+                        }
                     }
                 }
             }
             Pending::Import => {
                 if let Some(path) = rfd::FileDialog::new()
-                    .add_filter("Projeto Proteus experimental", &["pdsprj", "dsn"])
+                    .add_filter(tr!("Projeto Proteus experimental"), &["pdsprj", "dsn"])
                     .pick_file()
                 {
                     self.import_path(&path);
@@ -383,17 +627,17 @@ impl ProtoCraft {
                 self.derived_revision = u64::MAX;
                 self.refresh_derived();
                 self.message(
-                    "Projeto carregado. Salve uma cópia para preservar suas alterações.",
+                    tr!("Projeto carregado. Salve uma cópia para preservar suas alterações."),
                     false,
                 );
             }
-            Err(error) => self.message(format!("Projeto rejeitado: {error}"), true),
+            Err(error) => self.message(trf!("Projeto rejeitado: {error}", error = error), true),
         }
     }
     fn save(&mut self, save_as: bool) -> bool {
         let path = if save_as || self.path.is_none() {
             rfd::FileDialog::new()
-                .add_filter("Projeto ProtoCraft", &["protocraft"])
+                .add_filter(tr!("Projeto ProtoCraft"), &["protocraft"])
                 .set_file_name(format!("{}.protocraft", self.engine.project().name))
                 .save_file()
         } else {
@@ -407,7 +651,10 @@ impl ProtoCraft {
         }
         if let Err(error) = ensure_export_destination(&path, self.import_source.as_deref()) {
             self.message(
-                format!("Escolha um destino diferente do projeto Proteus original: {error}"),
+                trf!(
+                    "Escolha um destino diferente do projeto Proteus original: {error}",
+                    error = error
+                ),
                 true,
             );
             return false;
@@ -416,12 +663,12 @@ impl ProtoCraft {
             Ok(()) => {
                 self.saved_revision = self.engine.revision();
                 self.unsaved_import = false;
-                self.message(format!("Salvo em {}", path.display()), false);
+                self.message(trf!("Salvo em {path}", path = path.display()), false);
                 self.path = Some(path);
                 true
             }
             Err(error) => {
-                self.message(format!("Falha ao salvar: {error}"), true);
+                self.message(trf!("Falha ao salvar: {error}", error = error), true);
                 false
             }
         }
@@ -431,7 +678,10 @@ impl ProtoCraft {
             Ok(import) => {
                 // A validação precisa anteceder a substituição do documento atual.
                 if let Err(error) = import.project.validate() {
-                    self.message(format!("Projeto importado rejeitado: {error}"), true);
+                    self.message(
+                        trf!("Projeto importado rejeitado: {error}", error = error),
+                        true,
+                    );
                     return;
                 }
                 let report = import.report;
@@ -441,11 +691,14 @@ impl ProtoCraft {
                 self.import_notes = import_report_notes(report);
                 self.tab = BottomTab::Import;
                 self.message(
-                    "Proteus importado. Salve como .protocraft para preservar o resultado.",
+                    tr!("Proteus importado. Salve como .protocraft para preservar o resultado."),
                     false,
                 );
             }
-            Err(error) => self.message(format!("Falha ao importar Proteus: {error}"), true),
+            Err(error) => self.message(
+                trf!("Falha ao importar Proteus: {error}", error = error),
+                true,
+            ),
         }
     }
     fn confirmation(&mut self, ctx: &egui::Context) {
@@ -454,17 +707,17 @@ impl ProtoCraft {
         }
         let mut choice = 0;
         egui::Modal::new(egui::Id::new("save_confirmation")).show(ctx, |ui| {
-            ui.heading("Salvar alterações?");
-            ui.label("O projeto tem alterações que ainda não foram salvas.");
+            ui.heading(tr!("Salvar alterações?"));
+            ui.label(tr!("O projeto tem alterações que ainda não foram salvas."));
             ui.add_space(10.0);
             ui.horizontal(|ui| {
-                if ui.button("Salvar e continuar").clicked() {
+                if ui.button(tr!("Salvar e continuar")).clicked() {
                     choice = 1;
                 }
-                if ui.button("Descartar alterações").clicked() {
+                if ui.button(tr!("Descartar alterações")).clicked() {
                     choice = 2;
                 }
-                if ui.button("Cancelar").clicked() {
+                if ui.button(tr!("Cancelar")).clicked() {
                     choice = 3;
                 }
             });
@@ -487,7 +740,7 @@ impl ProtoCraft {
     fn simulation(&mut self, analysis: Analysis) {
         self.stop_live();
         if self.simulation.is_some() {
-            self.message("Uma análise já está em execução.", false);
+            self.message(tr!("Uma análise já está em execução."), false);
             return;
         }
         let request = SimulationRequest {
@@ -507,17 +760,23 @@ impl ProtoCraft {
                         .map_err(|error| error.to_string());
                 // Se a janela fechar, descartar o resultado é o comportamento esperado.
                 if sender.send(result).is_err() {
-                    eprintln!("ProtoCraft: janela encerrada antes do resultado da simulação.");
+                    eprintln!(
+                        "{}",
+                        tr!("A janela foi fechada antes da chegada do resultado da simulação.")
+                    );
                 }
             }) {
             Ok(_) => {
                 self.simulation = Some(receiver);
                 self.simulation_control = Some(control);
                 self.tab = BottomTab::Results;
-                self.message("Simulando em segundo plano…", false);
+                self.message(tr!("Simulando em segundo plano…"), false);
             }
             Err(error) => self.message(
-                format!("Não foi possível iniciar a simulação: {error}"),
+                trf!(
+                    "Não foi possível iniciar a simulação: {error}",
+                    error = error
+                ),
                 true,
             ),
         }
@@ -533,15 +792,17 @@ impl ProtoCraft {
                         let stale = result.revision != self.engine.revision();
                         self.selected_trace = preferred_trace(&result);
                         self.result = Some(result);
-                        self.message(if stale { "Análise concluída para uma revisão anterior. Execute novamente para atualizar." } else { "Análise concluída." }, false);
+                        self.message(if stale { tr!("Análise concluída para uma revisão anterior. Execute novamente para atualizar.") } else { tr!("Análise concluída.") }, false);
                     }
-                    Err(error) => self.message(format!("Simulação interrompida: {error}"), true),
+                    Err(error) => {
+                        self.message(trf!("Simulação interrompida: {error}", error = error), true)
+                    }
                 }
             }
             Some(Err(mpsc::TryRecvError::Disconnected)) => {
                 self.simulation = None;
                 self.simulation_control = None;
-                self.message("O processo de simulação terminou sem resultado.", true);
+                self.message(tr!("O processo de simulação terminou sem resultado."), true);
             }
             Some(Err(mpsc::TryRecvError::Empty)) => {
                 ctx.request_repaint_after(Duration::from_millis(50))
@@ -638,47 +899,47 @@ impl ProtoCraft {
                     ui.add(egui::Image::new((logo.id(), Vec2::splat(24.0))));
                 }
                 ui.label(
-                    egui::RichText::new("ProtoCraft")
+                    egui::RichText::new(tr!("ProtoCraft"))
                         .strong()
                         .color(theme.accent),
                 );
                 ui.separator();
-                ui.menu_button("Arquivo", |ui| {
-                    if ui.button("Novo projeto    Ctrl+N").clicked() {
+                ui.menu_button(tr!("Arquivo"), |ui| {
+                    if ui.button(tr!("Novo projeto    Ctrl+N")).clicked() {
                         self.request(Pending::New(Project::empty("Novo projeto")), ctx);
                         ui.close();
                     }
-                    if ui.button("Abrir…    Ctrl+O").clicked() {
+                    if ui.button(tr!("Abrir…    Ctrl+O")).clicked() {
                         self.request(Pending::Open, ctx);
                         ui.close();
                     }
-                    if ui.button("Importar Proteus…").clicked() {
+                    if ui.button(tr!("Importar Proteus…")).clicked() {
                         self.request(Pending::Import, ctx);
                         ui.close();
                     }
-                    if ui.button("Salvar    Ctrl+S").clicked() {
+                    if ui.button(tr!("Salvar    Ctrl+S")).clicked() {
                         self.save(false);
                         ui.close();
                     }
-                    if ui.button("Salvar como…").clicked() {
+                    if ui.button(tr!("Salvar como…")).clicked() {
                         self.save(true);
                         ui.close();
                     }
                     ui.separator();
-                    if ui.button("Exportar netlist SPICE…").clicked() {
+                    if ui.button(tr!("Exportar netlist SPICE…")).clicked() {
                         self.export_spice();
                         ui.close();
                     }
-                    if ui.button("Sair").clicked() {
+                    if ui.button(tr!("Sair")).clicked() {
                         self.request(Pending::Close, ctx);
                         ui.close();
                     }
                 });
-                ui.menu_button("Editar", |ui| {
+                ui.menu_button(tr!("Editar"), |ui| {
                     if ui
                         .add_enabled(
                             self.engine.can_undo(),
-                            egui::Button::new("Desfazer    Ctrl+Z"),
+                            egui::Button::new(tr!("Desfazer    Ctrl+Z")),
                         )
                         .clicked()
                     {
@@ -688,7 +949,7 @@ impl ProtoCraft {
                     if ui
                         .add_enabled(
                             self.engine.can_redo(),
-                            egui::Button::new("Refazer    Ctrl+Y"),
+                            egui::Button::new(tr!("Refazer    Ctrl+Y")),
                         )
                         .clicked()
                     {
@@ -699,7 +960,7 @@ impl ProtoCraft {
                     if ui
                         .add_enabled(
                             self.clipboard_selection().is_some(),
-                            egui::Button::new("Copiar componente    Ctrl+C"),
+                            egui::Button::new(tr!("Copiar componente    Ctrl+C")),
                         )
                         .clicked()
                     {
@@ -709,14 +970,14 @@ impl ProtoCraft {
                     if ui
                         .add_enabled(
                             self.clipboard_can_cut(),
-                            egui::Button::new("Recortar componente    Ctrl+X"),
+                            egui::Button::new(tr!("Recortar componente    Ctrl+X")),
                         )
                         .clicked()
                     {
                         self.cut_component(ctx);
                         ui.close();
                     }
-                    if ui.button("Colar componente    Ctrl+V").clicked() {
+                    if ui.button(tr!("Colar componente    Ctrl+V")).clicked() {
                         ctx.send_viewport_cmd(egui::ViewportCommand::RequestPaste);
                         ui.close();
                     }
@@ -724,7 +985,7 @@ impl ProtoCraft {
                     if ui
                         .add_enabled(
                             self.selected.is_some(),
-                            egui::Button::new("Girar seleção    R"),
+                            egui::Button::new(tr!("Girar seleção    R")),
                         )
                         .clicked()
                     {
@@ -734,7 +995,7 @@ impl ProtoCraft {
                     if ui
                         .add_enabled(
                             self.selected.is_some(),
-                            egui::Button::new("Excluir seleção    Del"),
+                            egui::Button::new(tr!("Excluir seleção    Del")),
                         )
                         .clicked()
                     {
@@ -742,44 +1003,44 @@ impl ProtoCraft {
                         ui.close();
                     }
                 });
-                ui.menu_button("Visualizar", |ui| {
+                ui.menu_button(tr!("Visualizar"), |ui| {
                     let mut dark = self.dark;
-                    if ui.checkbox(&mut dark, "Tema escuro").changed() {
+                    if ui.checkbox(&mut dark, tr!("Tema escuro")).changed() {
                         self.dark = dark;
                         apply_theme(ctx, dark);
                     }
                     ui.separator();
                     if ui
-                        .selectable_label(!self.pcb.active, "Esquemático")
+                        .selectable_label(!self.pcb.active, tr!("Esquemático"))
                         .clicked()
                     {
                         self.pcb.active = false;
                         ui.close();
                     }
                     if ui
-                        .selectable_label(self.pcb.active, "PCB — dimensões reais")
+                        .selectable_label(self.pcb.active, tr!("PCB — dimensões reais"))
                         .clicked()
                     {
                         self.pcb.active = true;
                         self.pcb.fit = true;
                         ui.close();
                     }
-                    ui.checkbox(&mut self.show_library, "Biblioteca e ferramentas");
-                    ui.checkbox(&mut self.show_inspector, "Explorador e propriedades");
-                    ui.checkbox(&mut self.show_analysis, "Painel inferior");
+                    ui.checkbox(&mut self.show_library, tr!("Biblioteca e ferramentas"));
+                    ui.checkbox(&mut self.show_inspector, tr!("Explorador e propriedades"));
+                    ui.checkbox(&mut self.show_analysis, tr!("Painel inferior"));
                     ui.separator();
-                    if ui.button("Enquadrar esquema    F").clicked() {
+                    if ui.button(tr!("Enquadrar esquema    F")).clicked() {
                         self.center_next = true;
                         ui.close();
                     }
                 });
-                ui.menu_button("Inserir", |ui| {
-                    ui.menu_button("Componente", |ui| {
+                ui.menu_button(tr!("Inserir"), |ui| {
+                    ui.menu_button(tr!("Componente"), |ui| {
                         for kind in ComponentKind::all() {
                             if ui
                                 .selectable_label(
                                     matches!(self.tool, Tool::Place(current) if current == *kind),
-                                    kind.label(),
+                                    localized_component_label(*kind),
                                 )
                                 .clicked()
                             {
@@ -790,10 +1051,10 @@ impl ProtoCraft {
                     });
                     ui.separator();
                     for (label, tool) in [
-                        ("Selecionar / mover", Tool::Select),
-                        ("Fio ortogonal", Tool::Wire),
-                        ("Junção elétrica", Tool::Junction),
-                        ("Nome de rede", Tool::Label),
+                        (tr!("Selecionar / mover"), Tool::Select),
+                        (tr!("Fio ortogonal"), Tool::Wire),
+                        (tr!("Junção elétrica"), Tool::Junction),
+                        (tr!("Nome de rede"), Tool::Label),
                     ] {
                         if ui.button(label).clicked() {
                             self.tool = tool;
@@ -802,11 +1063,11 @@ impl ProtoCraft {
                         }
                     }
                 });
-                ui.menu_button("Projeto", |ui| {
+                ui.menu_button(tr!("Projeto"), |ui| {
                     if ui
-                        .button(format!(
-                            "Explorador de componentes ({})",
-                            self.engine.project().components.len()
+                        .button(trf!(
+                            "Explorador de componentes ({count})",
+                            count = self.engine.project().components.len()
                         ))
                         .clicked()
                     {
@@ -815,7 +1076,7 @@ impl ProtoCraft {
                         ui.close();
                     }
                     if ui
-                        .button(format!("Redes ({})", self.netlist.nets.len()))
+                        .button(trf!("Redes ({count})", count = self.netlist.nets.len()))
                         .clicked()
                     {
                         self.inspector_tab = InspectorTab::Nets;
@@ -823,29 +1084,29 @@ impl ProtoCraft {
                         ui.close();
                     }
                     ui.separator();
-                    if ui.button("Diagnóstico ERC").clicked() {
+                    if ui.button(tr!("Diagnóstico ERC")).clicked() {
                         self.tab = BottomTab::Erc;
                         self.show_analysis = true;
                         ui.close();
                     }
-                    if ui.button("Relatório de importação").clicked() {
+                    if ui.button(tr!("Relatório de importação")).clicked() {
                         self.tab = BottomTab::Import;
                         self.show_analysis = true;
                         ui.close();
                     }
                 });
-                ui.menu_button("Configurações", |ui| {
-                    if ui.button("Motor e visualização…").clicked() {
+                ui.menu_button(tr!("Configurações"), |ui| {
+                    if ui.button(tr!("Motor e visualização…")).clicked() {
                         self.show_settings = true;
                         ui.close();
                     }
                 });
-                ui.menu_button("Simulação", |ui| {
-                    if ui.button("Iniciar execução contínua").clicked() {
+                ui.menu_button(tr!("Simulação"), |ui| {
+                    if ui.button(tr!("Iniciar execução contínua")).clicked() {
                         self.start_live();
                         ui.close();
                     }
-                    if ui.button("Parar execução contínua").clicked() {
+                    if ui.button(tr!("Parar execução contínua")).clicked() {
                         self.stop_live();
                         ui.close();
                     }
@@ -859,7 +1120,7 @@ impl ProtoCraft {
                                     .components
                                     .values()
                                     .any(|c| c.device.is_some()),
-                            egui::Button::new("Executar análise DC    F5"),
+                            egui::Button::new(tr!("Executar análise DC    F5")),
                         )
                         .clicked()
                     {
@@ -875,7 +1136,7 @@ impl ProtoCraft {
                                     .components
                                     .values()
                                     .any(|c| c.device.is_some()),
-                            egui::Button::new("Executar transiente"),
+                            egui::Button::new(tr!("Executar transiente")),
                         )
                         .clicked()
                     {
@@ -883,15 +1144,15 @@ impl ProtoCraft {
                         ui.close();
                     }
                     if let Some(control) = &self.simulation_control
-                        && ui.button("Cancelar análise").clicked()
+                        && ui.button(tr!("Cancelar análise")).clicked()
                     {
                         control.cancel();
-                        self.message("Cancelamento solicitado…", false);
+                        self.message(tr!("Cancelamento solicitado…"), false);
                         ui.close();
                     }
                 });
-                ui.menu_button("Exemplos", |ui| {
-                    if ui.button("STM32 + ESP32-S3 · pinagem e PCB").clicked() {
+                ui.menu_button(tr!("Exemplos"), |ui| {
+                    if ui.button(tr!("STM32 + ESP32-S3 · pinagem e PCB")).clicked() {
                         match eda_library::physical_example() {
                             Ok(p) => self.request(Pending::New(p), ctx),
                             Err(e) => self.message(e, true),
@@ -900,32 +1161,32 @@ impl ProtoCraft {
                     }
                     ui.separator();
                     for (_, name, project) in examples::CATALOG {
-                        if ui.button(*name).clicked() {
+                        if ui.button(eda_i18n::text(name)).clicked() {
                             self.request(Pending::New(project()), ctx);
                             ui.close();
                         }
                     }
                 });
-                ui.menu_button("Ajuda", |ui| {
-                    if ui.button("Atalhos e limites").clicked() {
+                ui.menu_button(tr!("Ajuda"), |ui| {
+                    if ui.button(tr!("Atalhos e limites")).clicked() {
                         self.tab = BottomTab::Help;
                         self.show_analysis = true;
                         ui.close();
                     }
-                    ui.label("ProtoCraft · editor esquemático");
+                    ui.label(tr!("ProtoCraft · editor esquemático"));
                 });
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     let icon = if self.dark {
-                        "Tema: Escuro"
+                        tr!("Tema: Escuro")
                     } else {
-                        "Tema: Claro"
+                        tr!("Tema: Claro")
                     };
                     if ui
                         .button(icon)
                         .on_hover_text(if self.dark {
-                            "Tema claro"
+                            tr!("Tema claro")
                         } else {
-                            "Tema escuro"
+                            tr!("Tema escuro")
                         })
                         .clicked()
                     {
@@ -941,67 +1202,87 @@ impl ProtoCraft {
         });
         egui::TopBottomPanel::top("command_toolbar").show(ctx, |ui| {
             ui.horizontal_wrapped(|ui| {
-                if ui.button("Novo").clicked() {
+                ui.label(
+                    egui::RichText::new(tr!("PROJETO"))
+                        .small()
+                        .color(theme.muted),
+                );
+                if ui.button(tr!("Novo")).clicked() {
                     self.request(Pending::New(Project::empty("Novo projeto")), ctx);
                 }
-                if ui.button("Abrir").clicked() {
+                if ui.button(tr!("Abrir")).clicked() {
                     self.request(Pending::Open, ctx);
                 }
-                if ui.button("Salvar").clicked() {
+                if ui.button(tr!("Salvar")).clicked() {
                     self.save(false);
                 }
                 ui.separator();
+                ui.label(
+                    egui::RichText::new(tr!("HISTÓRICO"))
+                        .small()
+                        .color(theme.muted),
+                );
                 if ui
-                    .add_enabled(self.engine.can_undo(), egui::Button::new("Desfazer"))
-                    .on_hover_text("Desfazer · Ctrl+Z")
+                    .add_enabled(self.engine.can_undo(), egui::Button::new(tr!("Desfazer")))
+                    .on_hover_text(tr!("Desfazer · Ctrl+Z"))
                     .clicked()
                 {
                     self.engine.undo();
                 }
                 if ui
-                    .add_enabled(self.engine.can_redo(), egui::Button::new("Refazer"))
-                    .on_hover_text("Refazer · Ctrl+Y")
+                    .add_enabled(self.engine.can_redo(), egui::Button::new(tr!("Refazer")))
+                    .on_hover_text(tr!("Refazer · Ctrl+Y"))
                     .clicked()
                 {
                     self.engine.redo();
                 }
                 ui.separator();
+                ui.label(
+                    egui::RichText::new(tr!("FERRAMENTAS"))
+                        .small()
+                        .color(theme.muted),
+                );
                 self.tool_button(
                     ui,
-                    "SEL",
-                    "Selecionar / mover",
+                    ToolIcon::Select,
+                    tr!("Selecionar / mover"),
                     matches!(self.tool, Tool::Select),
                     Tool::Select,
                 );
                 self.tool_button(
                     ui,
-                    "CMP",
-                    "Selecionar componente",
+                    ToolIcon::Component,
+                    tr!("Selecionar componente"),
                     matches!(self.tool, Tool::Place(_)),
                     Tool::Place(ComponentKind::Resistor),
                 );
                 self.tool_button(
                     ui,
-                    "FIO",
-                    "Fio ortogonal",
+                    ToolIcon::Wire,
+                    tr!("Fio ortogonal"),
                     matches!(self.tool, Tool::Wire),
                     Tool::Wire,
                 );
                 self.tool_button(
                     ui,
-                    "JUN",
-                    "Junção elétrica",
+                    ToolIcon::Junction,
+                    tr!("Junção elétrica"),
                     matches!(self.tool, Tool::Junction),
                     Tool::Junction,
                 );
                 self.tool_button(
                     ui,
-                    "NET",
-                    "Nome de rede",
+                    ToolIcon::NetLabel,
+                    tr!("Nome de rede"),
                     matches!(self.tool, Tool::Label),
                     Tool::Label,
                 );
                 ui.separator();
+                ui.label(
+                    egui::RichText::new(tr!("SIMULAÇÃO"))
+                        .small()
+                        .color(theme.muted),
+                );
                 if ui
                     .add_enabled(
                         self.simulation.is_none()
@@ -1011,17 +1292,17 @@ impl ProtoCraft {
                                 .components
                                 .values()
                                 .any(|c| c.device.is_some()),
-                        egui::Button::new(egui::RichText::new("▶ DC").color(Color32::WHITE))
+                        egui::Button::new(egui::RichText::new(tr!("▶ DC")).color(Color32::WHITE))
                             .fill(Color32::from_rgb(28, 116, 95)),
                     )
-                    .on_hover_text("Executar análise DC · F5")
+                    .on_hover_text(tr!("Executar análise DC · F5"))
                     .clicked()
                 {
                     self.simulation(Analysis::Dc);
                 }
-                ui.label("Δt");
+                ui.label(tr!("Δt"));
                 ui.add(egui::TextEdit::singleline(&mut self.transient_step).desired_width(52.0));
-                ui.label("Fim");
+                ui.label(tr!("Fim"));
                 ui.add(egui::TextEdit::singleline(&mut self.transient_stop).desired_width(52.0));
                 if ui
                     .add_enabled(
@@ -1032,7 +1313,7 @@ impl ProtoCraft {
                                 .components
                                 .values()
                                 .any(|c| c.device.is_some()),
-                        egui::Button::new("▶ Transiente"),
+                        egui::Button::new(tr!("▶ Transiente")),
                     )
                     .clicked()
                 {
@@ -1046,7 +1327,16 @@ impl ProtoCraft {
 
         egui::TopBottomPanel::top("document_tabs").show(ctx, |ui| {
             ui.horizontal(|ui| {
-                ui.label("Esquemático 1");
+                if ui
+                    .selectable_label(!self.pcb.active, tr!("Esquemático"))
+                    .clicked()
+                {
+                    self.pcb.active = false;
+                }
+                if ui.selectable_label(self.pcb.active, tr!("PCB")).clicked() {
+                    self.pcb.active = true;
+                    self.pcb.fit = true;
+                }
                 ui.separator();
                 ui.label(
                     egui::RichText::new(format!(
@@ -1058,17 +1348,17 @@ impl ProtoCraft {
                 );
                 if self.engine.project().import_info.is_some() {
                     ui.label(
-                        egui::RichText::new("IMPORTADO · REVISÃO NECESSÁRIA")
+                        egui::RichText::new(tr!("IMPORTADO · REVISÃO NECESSÁRIA"))
                             .small()
                             .color(theme.gold),
                     );
                 }
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     ui.label(
-                        egui::RichText::new(format!(
-                            "{} componentes · {} redes",
-                            self.engine.project().components.len(),
-                            self.netlist.nets.len()
+                        egui::RichText::new(trf!(
+                            "{components} componentes · {nets} redes",
+                            components = self.engine.project().components.len(),
+                            nets = self.netlist.nets.len()
                         ))
                         .small()
                         .color(theme.muted),
@@ -1081,16 +1371,19 @@ impl ProtoCraft {
     fn tool_button(
         &mut self,
         ui: &mut egui::Ui,
-        icon: &str,
-        tooltip: &str,
+        icon: ToolIcon,
+        tooltip: impl Into<String>,
         active: bool,
         tool: Tool,
     ) {
-        if ui
-            .add_sized([34.0, 30.0], egui::Button::new(icon).selected(active))
-            .on_hover_text(tooltip)
-            .clicked()
-        {
+        let response = ui.add_sized([34.0, 30.0], egui::Button::new("").selected(active));
+        let icon_color = if active {
+            ui.visuals().text_color()
+        } else {
+            ui.visuals().widgets.inactive.fg_stroke.color
+        };
+        paint_tool_icon(ui.painter(), response.rect.shrink(7.0), icon, icon_color);
+        if response.on_hover_text(tooltip.into()).clicked() {
             self.tool = tool;
             self.wire_start = None;
         }
@@ -1102,7 +1395,10 @@ impl ProtoCraft {
             geometry::parse_value(&self.transient_stop),
         ) {
             (Ok(step), Ok(stop)) => self.simulation(Analysis::Transient { step, stop }),
-            _ => self.message("Tempo inválido. Use segundos ou sufixos SI: 10u, 5m.", true),
+            _ => self.message(
+                tr!("Tempo inválido. Use segundos ou sufixos SI: 10u, 5m."),
+                true,
+            ),
         }
     }
 
@@ -1110,7 +1406,7 @@ impl ProtoCraft {
         match eda_simulation::export_spice(self.engine.project(), Analysis::Dc) {
             Ok(text) => {
                 if let Some(path) = rfd::FileDialog::new()
-                    .add_filter("Netlist SPICE", &["cir"])
+                    .add_filter(tr!("Netlist SPICE"), &["cir"])
                     .set_file_name("circuito.cir")
                     .save_file()
                 {
@@ -1122,44 +1418,91 @@ impl ProtoCraft {
                             std::fs::write(&path, text).map_err(|error| error.to_string())
                         });
                     match exported {
-                        Ok(()) => {
-                            self.message(format!("Netlist exportada: {}", path.display()), false)
+                        Ok(()) => self.message(
+                            trf!("Netlist exportada: {path}", path = path.display()),
+                            false,
+                        ),
+                        Err(error) => {
+                            self.message(trf!("Falha ao exportar: {error}", error = error), true)
                         }
-                        Err(error) => self.message(format!("Falha ao exportar: {error}"), true),
                     }
                 }
             }
-            Err(error) => self.message(format!("Não foi possível exportar: {error}"), true),
+            Err(error) => self.message(
+                trf!("Não foi possível exportar: {error}", error = error),
+                true,
+            ),
         }
     }
 
     fn library(&mut self, ctx: &egui::Context) {
         let theme = Palette::new(ctx);
-        egui::SidePanel::left("library").default_width(230.0).width_range(190.0..=320.0).show(ctx, |ui| {
+        egui::SidePanel::left("library").default_width(320.0).width_range(265.0..=440.0).show(ctx, |ui| {
             ui.add_space(8.0);
             ui.horizontal(|ui| {
-                ui.heading("Dispositivos");
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| { ui.label(egui::RichText::new("BIBLIOTECA").small().color(theme.muted)); });
+                ui.heading(tr!("Componentes"));
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| { ui.label(egui::RichText::new(tr!("BIBLIOTECA")).small().color(theme.muted)); });
             });
-            ui.add(egui::TextEdit::singleline(&mut self.component_filter).hint_text("Pesquisar componente…").desired_width(f32::INFINITY));
-            ui.horizontal(|ui| {ui.selectable_value(&mut self.library_mcu,false,"Básicos");ui.selectable_value(&mut self.library_mcu,true,"STM32 / ESP32");});
+            ui.add(egui::TextEdit::singleline(&mut self.library_search)
+                .hint_text(tr!("Buscar por nome, código, função ou família…"))
+                .desired_width(f32::INFINITY));
+            ui.small(tr!("A busca aceita português e inglês · ex.: amplificador, op amp, resistência, Wi-Fi"));
+            ui.horizontal(|ui| {ui.selectable_value(&mut self.library_mcu,false,tr!("Básicos"));ui.selectable_value(&mut self.library_mcu,true,tr!("STM32 / ESP32"));});
             ui.add_space(5.0);
             if self.library_mcu {egui::ScrollArea::vertical().show(ui,|ui|self.device_library(ui));return;}
+            egui::ComboBox::from_id_salt("basic_component_category")
+                .selected_text(eda_i18n::text(self.basic_component_category.label()))
+                .width(ui.available_width())
+                .show_ui(ui, |ui| {
+                    for category in [
+                        BasicComponentCategory::All,
+                        BasicComponentCategory::Passive,
+                        BasicComponentCategory::Semiconductor,
+                        BasicComponentCategory::Source,
+                        BasicComponentCategory::Logic,
+                        BasicComponentCategory::Connection,
+                    ] {
+                        ui.selectable_value(
+                            &mut self.basic_component_category,
+                            category,
+                            eda_i18n::text(category.label()),
+                        );
+                    }
+                });
             egui::ScrollArea::vertical().show(ui, |ui| {
-                let query = self.component_filter.to_lowercase();
+                let query = normalize_component_search(&self.library_search);
+                let query_terms: Vec<_> = query.split_whitespace().collect();
+                let mut visible = 0usize;
                 for kind in ComponentKind::all() {
                     let kind = *kind;
-                    if !query.is_empty() && !kind.label().to_lowercase().contains(&query) { continue; }
+                    if !self.basic_component_category.contains(kind)
+                        || !component_matches_query(kind, &query_terms)
+                    {
+                        continue;
+                    }
+                    visible += 1;
                     let active = matches!(self.tool, Tool::Place(current) if current == kind);
-                    if ui.add_sized([ui.available_width(), 27.0], egui::Button::new(format!("{}    {}", kind.prefix(), kind.label())).selected(active)).clicked() { self.tool = Tool::Place(kind); self.wire_start = None; }
+                    let label = format!("{}    {}", kind.prefix(), localized_component_label(kind));
+                    if ui.add_sized(
+                        [ui.available_width(), 29.0],
+                        egui::Button::new(label).selected(active),
+                    ).clicked() {
+                        self.tool = Tool::Place(kind);
+                        self.wire_start = None;
+                    }
                 }
-                if !query.is_empty() && !ComponentKind::all().iter().any(|kind| kind.label().to_lowercase().contains(&query)) { ui.label("Nenhum componente encontrado."); }
+                if visible == 0 {
+                    ui.add_space(12.0);
+                    ui.weak(tr!("Nenhum componente corresponde à busca e categoria selecionadas."));
+                } else {
+                    ui.small(trf!("{count} tipos disponíveis", count=visible));
+                }
                 ui.add_space(8.0);
-                if matches!(self.tool, Tool::Label) { ui.separator(); ui.label("Nome da rede"); ui.text_edit_singleline(&mut self.label_name); }
-                if matches!(self.tool, Tool::Wire) { ui.separator(); ui.checkbox(&mut self.wire_vertical, "Primeiro trecho vertical"); }
+                if matches!(self.tool, Tool::Label) { ui.separator(); ui.label(tr!("Nome da rede")); ui.text_edit_singleline(&mut self.label_name); }
+                if matches!(self.tool, Tool::Wire) { ui.separator(); ui.checkbox(&mut self.wire_vertical, tr!("Primeiro trecho vertical")); }
                 ui.separator();
-                ui.checkbox(&mut self.snap, "Atração à grade");
-                ui.label(egui::RichText::new("Conexões sempre usam coordenadas inteiras. Cruzamento de fios exige junção.").small().color(theme.muted));
+                ui.checkbox(&mut self.snap, tr!("Atração à grade"));
+                ui.label(egui::RichText::new(tr!("Conexões sempre usam coordenadas inteiras. Cruzamento de fios exige junção.")).small().color(theme.muted));
             });
         });
     }
@@ -1172,39 +1515,37 @@ impl ProtoCraft {
                 ui.add_space(8.0);
                 for (icon, hint, tool, active) in [
                     (
-                        "S",
+                        ToolIcon::Select,
                         "Selecionar · V",
                         Tool::Select,
                         matches!(self.tool, Tool::Select),
                     ),
                     (
-                        "C",
+                        ToolIcon::Component,
                         "Componente",
                         Tool::Place(ComponentKind::Resistor),
                         matches!(self.tool, Tool::Place(_)),
                     ),
-                    ("F", "Fio · W", Tool::Wire, matches!(self.tool, Tool::Wire)),
                     (
-                        "J",
+                        ToolIcon::Wire,
+                        "Fio · W",
+                        Tool::Wire,
+                        matches!(self.tool, Tool::Wire),
+                    ),
+                    (
+                        ToolIcon::Junction,
                         "Junção · J",
                         Tool::Junction,
                         matches!(self.tool, Tool::Junction),
                     ),
                     (
-                        "N",
+                        ToolIcon::NetLabel,
                         "Nome de rede · L",
                         Tool::Label,
                         matches!(self.tool, Tool::Label),
                     ),
                 ] {
-                    if ui
-                        .add_sized([32.0, 34.0], egui::Button::new(icon).selected(active))
-                        .on_hover_text(hint)
-                        .clicked()
-                    {
-                        self.tool = tool;
-                        self.wire_start = None;
-                    }
+                    self.tool_button(ui, icon, hint, active, tool);
                 }
             });
     }
@@ -1220,11 +1561,12 @@ impl ProtoCraft {
             .show(ctx, |ui| {
                 ui.add_space(8.0);
                 ui.horizontal(|ui| {
-                    ui.heading("Explorador");
+                    ui.heading(tr!("Explorador"));
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        ui.small(format!(
-                            "ERC {}",
-                            self.diagnostics
+                        ui.small(trf!(
+                            "ERC {count}",
+                            count = self
+                                .diagnostics
                                 .iter()
                                 .filter(|d| d.severity == Severity::Error)
                                 .count()
@@ -1235,14 +1577,14 @@ impl ProtoCraft {
                     ui.selectable_value(
                         &mut self.inspector_tab,
                         InspectorTab::Properties,
-                        "Propriedades",
+                        tr!("Propriedades"),
                     );
                     ui.selectable_value(
                         &mut self.inspector_tab,
                         InspectorTab::Components,
-                        "Componentes",
+                        tr!("Componentes"),
                     );
-                    ui.selectable_value(&mut self.inspector_tab, InspectorTab::Nets, "Redes");
+                    ui.selectable_value(&mut self.inspector_tab, InspectorTab::Nets, tr!("Redes"));
                 });
                 ui.separator();
                 match self.inspector_tab {
@@ -1259,71 +1601,71 @@ impl ProtoCraft {
                 match object {
                     ObjectId::Component(id) => {
                         if let Some(component) = self.engine.project().components.get(&id).cloned() {
-                            ui.label(egui::RichText::new(component.kind.label()).size(18.0).strong().color(theme.accent));
-                            ui.label(format!("Posição: {}, {} · {}°", component.position.x, component.position.y, u16::from(component.rotation) * 90));
+                            ui.label(egui::RichText::new(localized_component_label(component.kind)).size(18.0).strong().color(theme.accent));
+                            ui.label(trf!("Posição: {x}, {y} · {rotation}°", x=component.position.x, y=component.position.y, rotation=u16::from(component.rotation) * 90));
                             ui.add_space(12.0);
-                            ui.label("Referência");
+                            ui.label(tr!("Referência"));
                             ui.text_edit_singleline(&mut self.property_reference);
                             if !component.kind.requires_mixed() && component.device.is_none() {
-                            ui.label(if component.kind.is_waveform() {"Amplitude de pico (V)".to_owned()} else {match component.kind {
-                                ComponentKind::Diode|ComponentKind::Led=>"Corrente de saturação Is (A)".to_owned(),
-                                ComponentKind::Zener=>"Tensão de ruptura (V)".to_owned(),
-                                ComponentKind::Npn|ComponentKind::Pnp=>"Ganho de corrente β".to_owned(),
-                                ComponentKind::Nmos|ComponentKind::Pmos=>"Parâmetro de condução k (A/V²)".to_owned(),
-                                kind if kind.is_gate() || kind==ComponentKind::LogicInput=>"Nível alto (V)".to_owned(),
-                                _=>format!("Valor ({})",component.kind.unit()),
+                            ui.label(if component.kind.is_waveform() {tr!("Amplitude de pico (V)")} else {match component.kind {
+                                ComponentKind::Diode|ComponentKind::Led=>tr!("Corrente de saturação Is (A)").to_owned(),
+                                ComponentKind::Zener=>tr!("Tensão de ruptura (V)").to_owned(),
+                                ComponentKind::Npn|ComponentKind::Pnp=>tr!("Ganho de corrente β").to_owned(),
+                                ComponentKind::Nmos|ComponentKind::Pmos=>tr!("Parâmetro de condução k (A/V²)").to_owned(),
+                                kind if kind.is_gate() || kind==ComponentKind::LogicInput=>tr!("Nível alto (V)").to_owned(),
+                                _=>trf!("Valor ({unit})", unit = component.kind.unit()),
                             }});
                             ui.text_edit_singleline(&mut self.property_value);
-                            ui.label(egui::RichText::new("SI: 1k = 1000 · 1u = 0,000001").small().color(theme.muted));
+                            ui.label(egui::RichText::new(tr!("SI: 1k = 1000 · 1u = 0,000001")).small().color(theme.muted));
                             }
                             self.model_properties(ui,&component);
                             self.physical_properties(ui,&component);
-                            if matches!(component.kind,ComponentKind::Switch|ComponentKind::LogicInput) && ui.button("Alternar agora").clicked() {self.toggle_interactive(id);}
-                            if ui.button("Aplicar propriedades").clicked() {
+                            if matches!(component.kind,ComponentKind::Switch|ComponentKind::LogicInput) && ui.button(tr!("Alternar agora")).clicked() {self.toggle_interactive(id);}
+                            if ui.button(tr!("Aplicar propriedades")).clicked() {
                                 match geometry::parse_value(&self.property_value) {
                                     Ok(value) => self.command(Command::Batch(vec![Command::SetComponent { id, reference: self.property_reference.trim().to_owned(), value },Command::SetModel {id,parameters:self.property_parameters.clone()}])),
                                     Err(error) => self.message(error, true),
                                 }
                             }
-                            if ui.button("Girar 90°    R").on_hover_text("Os fios ficam nas posições originais; confira as conexões após girar.").clicked() { self.rotate(); }
+                            if ui.button(tr!("Girar 90°    R")).on_hover_text(tr!("Os fios ficam nas posições originais; confira as conexões após girar.")).clicked() { self.rotate(); }
                             ui.separator();
-                            ui.strong("Pinos elétricos");
-                            for pin in component.pins() { ui.label(format!("{} · {} → ({}, {})", component.pin_number(pin.reference.pin), component.pin_name(pin.reference.pin), pin.position.x, pin.position.y)); }
+                            ui.strong(tr!("Pinos elétricos"));
+                            for pin in component.pins() { ui.label(trf!("{number} · {name} → ({x}, {y})", number=component.pin_number(pin.reference.pin), name=component.pin_name(pin.reference.pin), x=pin.position.x, y=pin.position.y)); }
                             if let Some(imported) = &component.imported {
-                                ui.separator(); ui.strong("Dados originais Proteus");
-                                ui.label(format!("Dispositivo: {}", imported.device));
-                                ui.label(format!("Valor original: {}", imported.value_text));
-                                ui.label(if component.kind == ComponentKind::Imported { "Modelo elétrico não suportado" } else { "Modelo genérico reconhecido; confira os parâmetros" });
-                                for pin in &imported.pins { ui.label(format!("Pino {}: {}", pin.number, pin.name)); }
-                                ui.collapsing("Propriedades preservadas", |ui| { for (key, value) in &imported.properties { ui.label(format!("{key}: {value}")); } });
+                                ui.separator(); ui.strong(tr!("Dados originais Proteus"));
+                                ui.label(trf!("Dispositivo: {device}", device=&imported.device));
+                                ui.label(trf!("Valor original: {value}", value=&imported.value_text));
+                                ui.label(if component.kind == ComponentKind::Imported { tr!("Modelo elétrico não suportado") } else { tr!("Modelo genérico reconhecido; confira os parâmetros") });
+                                for pin in &imported.pins { ui.label(trf!("Pino {number}: {name}", number=pin.number, name=&pin.name)); }
+                                ui.collapsing(tr!("Propriedades preservadas"), |ui| { for (key, value) in &imported.properties { ui.label(trf!("{key}: {value}", key=key, value=value)); } });
                             }
                         }
                     }
-                    ObjectId::Wire(id) => if let Some(wire) = self.engine.project().wires.get(&id) { ui.heading("Fio"); ui.label(format!("({}, {}) para ({}, {})", wire.start.x, wire.start.y, wire.end.x, wire.end.y)); },
-                    ObjectId::Junction(_) => { ui.heading("Junção"); ui.label("Junção elétrica explícita"); }
-                    ObjectId::Label(id) => if let Some(label) = self.engine.project().labels.get(&id) { ui.heading("Nome de rede"); ui.strong(&label.name); ui.label("Mesmo nome conecta redes nesta folha."); },
+                    ObjectId::Wire(id) => if let Some(wire) = self.engine.project().wires.get(&id) { ui.heading(tr!("Fio")); ui.label(trf!("({start_x}, {start_y}) para ({end_x}, {end_y})", start_x=wire.start.x, start_y=wire.start.y, end_x=wire.end.x, end_y=wire.end.y)); },
+                    ObjectId::Junction(_) => { ui.heading(tr!("Junção")); ui.label(tr!("Junção elétrica explícita")); }
+                    ObjectId::Label(id) => if let Some(label) = self.engine.project().labels.get(&id) { ui.heading(tr!("Nome de rede")); ui.strong(&label.name); ui.label(tr!("Mesmo nome conecta redes nesta folha.")); },
                 }
                 ui.add_space(12.0);
-                if ui.button(egui::RichText::new("Excluir seleção    Del").color(theme.error)).clicked() { self.delete(); }
+                if ui.button(egui::RichText::new(tr!("Excluir seleção    Del")).color(theme.error)).clicked() { self.delete(); }
             } else {
-                ui.label(egui::RichText::new("Selecione um item no esquema ou no Explorador de componentes.").color(theme.muted));
+                ui.label(egui::RichText::new(tr!("Selecione um item no esquema ou no Explorador de componentes.")).color(theme.muted));
             }
-            ui.add_space(20.0); ui.separator(); ui.heading("Projeto");
+            ui.add_space(20.0); ui.separator(); ui.heading(tr!("Projeto"));
             ui.text_edit_singleline(&mut self.project_name);
-            if ui.button("Renomear projeto").clicked() { self.command(Command::RenameProject { name: self.project_name.clone() }); }
-            ui.label(format!("{} componentes · {} fios", self.engine.project().components.len(), self.engine.project().wires.len()));
-            ui.label(format!("{} redes · revisão {}", self.netlist.nets.len(), self.engine.revision()));
+            if ui.button(tr!("Renomear projeto")).clicked() { self.command(Command::RenameProject { name: self.project_name.clone() }); }
+            ui.label(trf!("{components} componentes · {wires} fios", components=self.engine.project().components.len(), wires=self.engine.project().wires.len()));
+            ui.label(trf!("{nets} redes · revisão {revision}", nets=self.netlist.nets.len(), revision=self.engine.revision()));
             let errors = self.diagnostics.iter().filter(|d| d.severity == Severity::Error).count();
-            ui.label(egui::RichText::new(format!("ERC: {errors} erros / {} avisos", self.diagnostics.len() - errors)).color(if errors > 0 { theme.error } else { theme.accent }));
+            ui.label(egui::RichText::new(trf!("ERC: {errors} erros / {warnings} avisos", errors=errors, warnings=self.diagnostics.len() - errors)).color(if errors > 0 { theme.error } else { theme.accent }));
             if let Some(path) = &self.path { ui.label(egui::RichText::new(path.display().to_string()).small().color(theme.muted)); }
         });
     }
 
     fn component_explorer(&mut self, ui: &mut egui::Ui) {
-        ui.label("Design Explorer · componentes");
+        ui.label(tr!("Design Explorer · componentes"));
         ui.add(
             egui::TextEdit::singleline(&mut self.component_filter)
-                .hint_text("Filtrar por referência…"),
+                .hint_text(tr!("Filtrar por referência…")),
         );
         let query = self.component_filter.to_lowercase();
         let rows: Vec<_> = self
@@ -1335,7 +1677,7 @@ impl ProtoCraft {
                 (
                     component.id,
                     component.reference.clone(),
-                    component.kind.label().to_owned(),
+                    localized_component_label(component.kind),
                     component.value,
                 )
             })
@@ -1349,8 +1691,8 @@ impl ProtoCraft {
             egui::Grid::new("component_explorer_grid")
                 .striped(true)
                 .show(ui, |ui| {
-                    ui.strong("Ref.");
-                    ui.strong("Dispositivo");
+                    ui.strong(tr!("Ref."));
+                    ui.strong(tr!("Dispositivo"));
                     ui.end_row();
                     for (id, reference, kind, value) in rows {
                         let label = format!("{reference}   {kind}   {}", engineering(value));
@@ -1368,7 +1710,7 @@ impl ProtoCraft {
     }
 
     fn net_explorer(&mut self, ui: &mut egui::Ui) {
-        ui.label("Design Explorer · conectividade");
+        ui.label(tr!("Design Explorer · conectividade"));
         let rows: Vec<_> = self
             .netlist
             .nets
@@ -1386,14 +1728,17 @@ impl ProtoCraft {
             for (name, pin_count, point_count, first_component) in rows {
                 ui.horizontal(|ui| {
                     if ui
-                        .selectable_label(false, format!("{name}   ·   {pin_count} pinos"))
+                        .selectable_label(
+                            false,
+                            trf!("{name} · {pins} pinos", name = name, pins = pin_count),
+                        )
                         .clicked()
                         && let Some(id) = first_component
                     {
                         self.choose(Some(ObjectId::Component(id)));
                         self.inspector_tab = InspectorTab::Properties;
                     }
-                    ui.small(format!("{point_count} nós"));
+                    ui.small(trf!("{count} nós", count = point_count));
                 });
             }
         });
@@ -1403,18 +1748,18 @@ impl ProtoCraft {
         let theme = Palette::new(ctx);
         egui::TopBottomPanel::bottom("status").show(ctx, |ui| {
             ui.horizontal_wrapped(|ui| {
-                ui.label(
-                    egui::RichText::new(&self.status).color(if self.status_error {
+                ui.label(egui::RichText::new(eda_i18n::text(&self.status)).color(
+                    if self.status_error {
                         theme.error
                     } else {
                         theme.muted
-                    }),
-                );
+                    },
+                ));
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    ui.label(format!(
-                        "{} · {:.0}%",
-                        if self.dirty() { "Não salvo" } else { "Salvo" },
-                        self.zoom / 18.0 * 100.0
+                    ui.label(trf!(
+                        "{status} · {zoom}%",
+                        status = eda_i18n::text(if self.dirty() { "Não salvo" } else { "Salvo" }),
+                        zoom = format!("{:.0}", self.zoom / 18.0 * 100.0)
                     ));
                 });
             });
@@ -1422,43 +1767,43 @@ impl ProtoCraft {
         if self.show_analysis {
             egui::TopBottomPanel::bottom("analysis").resizable(true).default_height(205.0).min_height(100.0).show(ctx, |ui| {
             ui.horizontal(|ui| {
-                ui.selectable_value(&mut self.tab, BottomTab::Results, "Resultados");
-                ui.selectable_value(&mut self.tab, BottomTab::Erc, format!("ERC ({})", self.diagnostics.len()));
-                ui.selectable_value(&mut self.tab, BottomTab::Netlist, "Netlist");
-                ui.selectable_value(&mut self.tab, BottomTab::Help, "Atalhos e limites");
-                ui.selectable_value(&mut self.tab, BottomTab::Import, "Importação");
+                ui.selectable_value(&mut self.tab, BottomTab::Results, tr!("Resultados"));
+                ui.selectable_value(&mut self.tab, BottomTab::Erc, trf!("ERC ({count})", count=self.diagnostics.len()));
+                ui.selectable_value(&mut self.tab, BottomTab::Netlist, tr!("Netlist"));
+                ui.selectable_value(&mut self.tab, BottomTab::Help, tr!("Atalhos e limites"));
+                ui.selectable_value(&mut self.tab, BottomTab::Import, tr!("Importação"));
             }); ui.separator();
             match self.tab {
                 BottomTab::Import => { egui::ScrollArea::vertical().show(ui, |ui| {
-                    ui.strong("Importação Proteus experimental");
-                    if self.import_notes.is_empty() { ui.label("Use Arquivo → Importar Proteus. A conversão preserva os dados reconhecidos e informa limitações por projeto."); }
-                    for note in &self.import_notes { ui.label(note); }
-                    ui.label("Símbolos importados são representações originais do ProtoCraft, com pinos nas coordenadas convertidas do projeto.");
+                    ui.strong(tr!("Importação Proteus experimental"));
+                    if self.import_notes.is_empty() { ui.label(tr!("Use Arquivo → Importar Proteus. A conversão preserva os dados reconhecidos e informa limitações por projeto.")); }
+                    for note in &self.import_notes { ui.label(eda_i18n::text(note)); }
+                    ui.label(tr!("Símbolos importados são representações originais do ProtoCraft, com pinos nas coordenadas convertidas do projeto."));
                 }); }
                 BottomTab::Results => self.results(ui),
                 BottomTab::Erc => {
                     let mut selected = None;
                     egui::ScrollArea::vertical().show(ui, |ui| {
-                        if self.diagnostics.is_empty() { ui.colored_label(theme.accent, "✓ Nenhum diagnóstico ERC básico. Isso não substitui revisão elétrica."); }
+                        if self.diagnostics.is_empty() { ui.colored_label(theme.accent, tr!("✓ Nenhum diagnóstico ERC básico. Isso não substitui revisão elétrica.")); }
                         for diagnostic in &self.diagnostics {
                             let color = if matches!(diagnostic.severity, Severity::Error) { theme.error } else { theme.gold };
-                            if ui.button(egui::RichText::new(format!("{} [{}] {}", if matches!(diagnostic.severity, Severity::Error) { "ERRO" } else { "AVISO" }, diagnostic.code, diagnostic.message)).color(color)).clicked() { selected = diagnostic.objects.first().copied(); }
+                            if ui.button(egui::RichText::new(trf!("{severity} [{code}] {message}", severity=if matches!(diagnostic.severity, Severity::Error) { tr!("ERRO") } else { tr!("AVISO") }, code=&diagnostic.code, message=eda_i18n::text(&diagnostic.message))).color(color)).clicked() { selected = diagnostic.objects.first().copied(); }
                         }
                     });
                     if selected.is_some() { self.choose(selected); }
                 }
                 BottomTab::Netlist => { egui::ScrollArea::vertical().show(ui, |ui| {
-                    for net in &self.netlist.nets { ui.monospace(format!("{}   {} pinos   {} pontos", net.name, net.pins.len(), net.points.len())); }
+                    for net in &self.netlist.nets { ui.monospace(trf!("{name} · {pins} pinos · {points} pontos", name=&net.name, pins=net.pins.len(), points=net.points.len())); }
                 }); }
                 BottomTab::Help => { egui::ScrollArea::vertical().show(ui, |ui| {
-                    ui.label("V selecionar · W fio · J junção · L nome de rede · R girar seleção · Del excluir · Esc cancelar ferramenta · F enquadrar");
-                    ui.label("Roda: zoom no cursor · botão central/direito: deslocar · arrastar componente: mover · clique: posicionar / iniciar ou terminar fio");
-                    ui.label("Ctrl+N novo · Ctrl+O abrir · Ctrl+S salvar · Ctrl+Shift+S salvar como · Ctrl+Z desfazer · Ctrl+Y refazer · F5 DC");
-                    ui.label("Ctrl+C copia · Ctrl+X recorta · Ctrl+V cola no cursor. Componentes preservam valor, rotação, pinagem e footprint. Em campos de texto os atalhos editam o texto.");
-                    ui.label("Valores SI: 1k, 2.2M, 1m, 1u, 1n, 1p ou notação científica. M = mega; m = mili.");
-                    ui.label("Motores Estável e Dinâmico em Configurações. Modelos genéricos: RLC, fontes de ondas, chave, potenciômetro, LED/Zener, BJT, operacional e lógica combinacional. O motor Misto acrescenta eventos, atrasos, comparadores, 555 e lógica sequencial. Sem AC de pequenos sinais, parasitas, MCU ou PCB.");
-                    ui.label("Contínua mantém o estado elétrico entre avanços. Dois cliques alternam chave/entrada lógica. Mudança de topologia reinicia o tempo; mudanças de parâmetros preservam o estado.");
-                    ui.label("Mover/rotacionar componente não acompanha fios: confira os pinos e ERC após cada edição. Importação Proteus experimental em Arquivo; salve o resultado em .protocraft.");
+                    ui.label(tr!("V selecionar · W fio · J junção · L nome de rede · R girar seleção · Del excluir · Esc cancelar ferramenta · F enquadrar"));
+                    ui.label(tr!("Roda: zoom no cursor · botão central/direito: deslocar · arrastar componente: mover · clique: posicionar / iniciar ou terminar fio"));
+                    ui.label(tr!("Ctrl+N novo · Ctrl+O abrir · Ctrl+S salvar · Ctrl+Shift+S salvar como · Ctrl+Z desfazer · Ctrl+Y refazer · F5 DC"));
+                    ui.label(tr!("Ctrl+C copia · Ctrl+X recorta · Ctrl+V cola no cursor. Componentes preservam valor, rotação, pinagem e footprint. Em campos de texto os atalhos editam o texto."));
+                    ui.label(tr!("Valores SI: 1k, 2.2M, 1m, 1u, 1n, 1p ou notação científica. M = mega; m = mili."));
+                    ui.label(tr!("Motores Estável e Dinâmico em Configurações. Modelos genéricos: RLC, fontes de ondas, chave, potenciômetro, LED/Zener, BJT, operacional e lógica combinacional. O motor Misto acrescenta eventos, atrasos, comparadores, 555 e lógica sequencial. Sem AC de pequenos sinais, parasitas, MCU ou PCB."));
+                    ui.label(tr!("Contínua mantém o estado elétrico entre avanços. Dois cliques alternam chave/entrada lógica. Mudança de topologia reinicia o tempo; mudanças de parâmetros preservam o estado."));
+                    ui.label(tr!("Mover/rotacionar componente não acompanha fios: confira os pinos e ERC após cada edição. Importação Proteus experimental em Arquivo; salve o resultado em .protocraft."));
                 }); }
             }
         });
@@ -1475,26 +1820,30 @@ impl ProtoCraft {
                 .values()
                 .any(|c| c.device.is_some())
             {
-                ui.heading("Projeto físico: confira a pinagem e a PCB.");
-                ui.label("Esses microcontroladores não executam firmware nem simulam seus periféricos nesta versão.");
+                ui.heading(tr!("Projeto físico: confira a pinagem e a PCB."));
+                ui.label(tr!("Esses microcontroladores não executam firmware nem simulam seus periféricos nesta versão."));
                 return;
             }
             ui.add_space(16.0);
             ui.label(
-                egui::RichText::new("O circuito está pronto para explorar.")
+                egui::RichText::new(tr!("O circuito está pronto para explorar."))
                     .size(18.0)
                     .color(theme.accent),
             );
-            ui.label("Execute DC para tensões e correntes; use o exemplo RC para observar a carga do capacitor no transiente.");
+            ui.label(tr!("Execute DC para tensões e correntes; use o exemplo RC para observar a carga do capacitor no transiente."));
             return;
         };
         let mut export = false;
         ui.horizontal_wrapped(|ui| {
-            ui.label(format!("{} · revisão {}", result.backend, result.revision));
+            ui.label(trf!(
+                "{engine} · revisão {revision}",
+                engine = eda_i18n::text(&result.backend),
+                revision = result.revision
+            ));
             if result.revision != self.engine.revision() {
-                ui.colored_label(theme.gold, "⚠ Resultado desatualizado");
+                ui.colored_label(theme.gold, tr!("⚠ Resultado desatualizado"));
             }
-            if ui.button("Exportar CSV…").clicked() {
+            if ui.button(tr!("Exportar CSV…")).clicked() {
                 export = true;
             }
             if matches!(result.analysis, Analysis::Transient { .. }) {
@@ -1504,23 +1853,29 @@ impl ProtoCraft {
                             .traces
                             .get(self.selected_trace)
                             .map(|trace| trace.name.as_str())
-                            .unwrap_or("Sem sinais"),
+                            .map(eda_i18n::text)
+                            .unwrap_or_else(|| tr!("Sem sinais")),
                     )
                     .show_ui(ui, |ui| {
                         for (index, trace) in result.traces.iter().enumerate() {
                             ui.selectable_value(
                                 &mut self.selected_trace,
                                 index,
-                                format!("{} [{}]", trace.name, trace.unit),
+                                trf!("{name} [{unit}]", name = &trace.name, unit = &trace.unit),
                             );
                         }
                     });
             }
         });
         if !result.warnings.is_empty() {
-            ui.collapsing("Modelo e método", |ui| {
+            ui.collapsing(tr!("Modelo e método"), |ui| {
                 for warning in &result.warnings {
-                    ui.add(egui::Label::new(egui::RichText::new(warning).color(theme.gold)).wrap());
+                    ui.add(
+                        egui::Label::new(
+                            egui::RichText::new(eda_i18n::text(warning)).color(theme.gold),
+                        )
+                        .wrap(),
+                    );
                 }
             });
         }
@@ -1532,16 +1887,16 @@ impl ProtoCraft {
                         .striped(true)
                         .min_col_width(130.0)
                         .show(ui, |ui| {
-                            ui.strong("Sinal");
-                            ui.strong("Valor");
-                            ui.strong("Unidade");
+                            ui.strong(tr!("Sinal"));
+                            ui.strong(tr!("Valor"));
+                            ui.strong(tr!("Unidade"));
                             ui.end_row();
                             for trace in &result.traces {
                                 ui.label(&trace.name);
                                 if let Some(sample) = trace.samples.last() {
                                     ui.monospace(format!("{:.7}", sample[1]));
                                 } else {
-                                    ui.label("Sem amostras");
+                                    ui.label(tr!("Sem amostras"));
                                 }
                                 ui.label(&trace.unit);
                                 ui.end_row();
@@ -1557,7 +1912,7 @@ impl ProtoCraft {
         }
         if export
             && let Some(path) = rfd::FileDialog::new()
-                .add_filter("Resultados CSV", &["csv"])
+                .add_filter(tr!("Resultados CSV"), &["csv"])
                 .set_file_name("resultado.csv")
                 .save_file()
         {
@@ -1567,8 +1922,13 @@ impl ProtoCraft {
                     eda_storage::export_csv(&path, result).map_err(|error| error.to_string())
                 });
             match exported {
-                Ok(()) => self.message(format!("Resultados exportados: {}", path.display()), false),
-                Err(error) => self.message(format!("Falha ao exportar CSV: {error}"), true),
+                Ok(()) => self.message(
+                    trf!("Resultados exportados: {path}", path = path.display()),
+                    false,
+                ),
+                Err(error) => {
+                    self.message(trf!("Falha ao exportar CSV: {error}", error = error), true)
+                }
             }
         }
     }
@@ -1755,7 +2115,10 @@ impl ProtoCraft {
                                     })
                                 };
                                 let Some(initial) = initial else {
-                                    self.message("Selecione um dispositivo do catálogo.", true);
+                                    self.message(
+                                        tr!("Selecione um dispositivo do catálogo."),
+                                        true,
+                                    );
                                     return;
                                 };
                                 let mut commands = vec![initial];
@@ -1971,16 +2334,22 @@ impl ProtoCraft {
                     && let Some(c) = self.engine.project().components.get(&id)
                 {
                     response.clone().on_hover_ui(|ui| {
-                        ui.strong(format!("{} · {}", c.reference, c.kind.label()));
+                        ui.strong(trf!(
+                            "{reference} · {component}",
+                            reference = &c.reference,
+                            component = localized_component_label(c.kind)
+                        ));
                         if matches!(c.kind, ComponentKind::Switch | ComponentKind::LogicInput) {
-                            ui.label("Dois cliques para alternar o estado.");
+                            ui.label(tr!("Dois cliques para alternar o estado."));
                         }
                         if let Some(point) = solved
                             .and_then(|r| r.operating_points.iter().find(|p| p.component == id))
                         {
-                            ui.monospace(format!(
-                                "U: {:.6} V · I: {:.6} A · P: {:.6} W",
-                                point.voltage, point.current, point.power
+                            ui.monospace(trf!(
+                                "U: {voltage} V · I: {current} A · P: {power} W",
+                                voltage = format!("{:.6}", point.voltage),
+                                current = format!("{:.6}", point.current),
+                                power = format!("{:.6}", point.power)
                             ));
                         }
                     });
@@ -2139,17 +2508,17 @@ impl ProtoCraft {
                     );
                 }
                 let tool = match self.tool {
-                    Tool::Select => "SELECIONAR",
-                    Tool::Place(kind) => kind.label(),
+                    Tool::Select => tr!("SELECIONAR"),
+                    Tool::Place(kind) => localized_component_label(kind),
                     Tool::Wire => {
                         if self.wire_start.is_some() {
-                            "FIO · clique para continuar, Esc para terminar"
+                            tr!("FIO · clique para continuar, Esc para terminar")
                         } else {
-                            "FIO · clique no primeiro terminal"
+                            tr!("FIO · clique no primeiro terminal")
                         }
                     }
-                    Tool::Junction => "JUNÇÃO",
-                    Tool::Label => "NOME DE REDE",
+                    Tool::Junction => tr!("JUNÇÃO"),
+                    Tool::Label => tr!("NOME DE REDE"),
                 };
                 painter.text(
                     rect.left_top() + Vec2::new(18.0, 16.0),
@@ -2228,8 +2597,14 @@ impl eframe::App for ProtoCraft {
                 && let Some(path) = self.capture_path.take()
             {
                 match save_screenshot(&path, &image) {
-                    Ok(()) => self.message(format!("Captura salva em {}", path.display()), false),
-                    Err(error) => self.message(format!("Falha ao salvar captura: {error}"), true),
+                    Ok(()) => self.message(
+                        trf!("Captura salva em {path}", path = path.display()),
+                        false,
+                    ),
+                    Err(error) => self.message(
+                        trf!("Falha ao salvar captura: {error}", error = error),
+                        true,
+                    ),
                 }
             }
             ctx.request_repaint_after(Duration::from_millis(100));
@@ -2356,14 +2731,14 @@ fn grid_spacing(zoom: f32) -> i32 {
 fn stored_import_notes(project: &Project) -> Vec<String> {
     match &project.import_info {
         Some(info) => {
+            let status = if info.electrical_complete {
+                "completa no subconjunto suportado"
+            } else {
+                "parcial"
+            };
             let mut notes = vec![format!(
-                "Origem: {} · conversão elétrica {}",
-                info.source_format,
-                if info.electrical_complete {
-                    "completa no subconjunto suportado"
-                } else {
-                    "parcial"
-                }
+                "Origem: {} · conversão elétrica {status}",
+                info.source_format
             )];
             notes.extend(info.notes.iter().cloned());
             notes
@@ -2374,17 +2749,22 @@ fn stored_import_notes(project: &Project) -> Vec<String> {
 
 fn import_report_notes(report: eda_import::ImportReport) -> Vec<String> {
     let mut notes = vec![
-        format!(
-            "{} · FILEVER {} · {} componentes · {} fios · {} junções · {} rótulos",
-            report.format,
-            report
-                .file_version
-                .map(|v| v.to_string())
-                .unwrap_or_else(|| "não informado".into()),
-            report.components,
-            report.wires,
-            report.junctions,
-            report.labels
+        eda_i18n::format(
+            "{project} · FILEVER {filever} · {components} componentes · {wires} fios · {junctions} junções · {labels} rótulos",
+            &[
+                ("project", report.format.clone()),
+                (
+                    "filever",
+                    report
+                        .file_version
+                        .map(|v| v.to_string())
+                        .unwrap_or_else(|| tr!("não informado")),
+                ),
+                ("components", report.components.to_string()),
+                ("wires", report.wires.to_string()),
+                ("junctions", report.junctions.to_string()),
+                ("labels", report.labels.to_string()),
+            ],
         ),
         if report.electrical_complete {
             "Conversão elétrica do subconjunto suportado concluída. Confira ERC e modelos antes de simular.".into()
@@ -2394,9 +2774,17 @@ fn import_report_notes(report: eda_import::ImportReport) -> Vec<String> {
     ];
     notes.extend(report.warnings);
     if !report.unsupported_components.is_empty() {
-        notes.push(format!(
-            "Sem modelo: {}",
-            report.unsupported_components.join(", ")
+        notes.push(eda_i18n::format(
+            "Sem modelo: {components}",
+            &[(
+                "components",
+                report
+                    .unsupported_components
+                    .iter()
+                    .map(|item| eda_i18n::text(item))
+                    .collect::<Vec<_>>()
+                    .join(", "),
+            )],
         ));
     }
     notes
@@ -3046,7 +3434,7 @@ fn draw_plot(ui: &mut egui::Ui, trace: &eda_simulation::Trace) {
     painter.text(
         rect.left_top() - Vec2::new(0.0, 8.0),
         egui::Align2::LEFT_BOTTOM,
-        format!("{} [{}]", trace.name, trace.unit),
+        trf!("{name} [{unit}]", name = &trace.name, unit = &trace.unit),
         egui::FontId::proportional(12.0),
         theme.accent,
     );
@@ -3068,14 +3456,21 @@ fn draw_plot(ui: &mut egui::Ui, trace: &eda_simulation::Trace) {
             Stroke::new(1.0_f32, theme.gold),
         );
         painter.circle_filled(pos, 4.0, theme.gold);
-        response.on_hover_text(format!(
-            "t = {:.7} s\n{} = {:.7} {}",
-            sample[0], trace.name, sample[1], trace.unit
+        response.on_hover_text(trf!(
+            "t = {time} s\n{trace} = {value} {unit}",
+            time = format!("{:.7}", sample[0]),
+            trace = &trace.name,
+            value = format!("{:.7}", sample[1]),
+            unit = &trace.unit
         ));
     }
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn run() -> Result<(), Box<dyn std::error::Error>> {
+    let loaded_settings = settings::Settings::load();
+    if let Ok(settings) = &loaded_settings {
+        eda_i18n::set_preference(settings.language);
+    }
     let mut args = std::env::args_os().skip(1);
     let mut smoke = false;
     let mut capture_path = None;
@@ -3148,11 +3543,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         } else if arg == "--help" || arg == "-h" {
             println!(
-                "ProtoCraft [projeto.protocraft|projeto.pdsprj|esquema.dsn] [--analysis dc|transient] [--engine stable|dynamic|mixed] [--continuous] [--settings] [--pcb] [--light] [--capture captura.png] [--window-position X Y] [--window-size W H] [--smoke-exit]\n\n--analysis        Executa a análise ao abrir; transiente usa passo de 10 us e fim de 5 ms.\n--light           Abre com tema claro.\n--capture         Salva uma captura PNG após concluir a análise inicial.\n--window-position Define a posição inicial da janela em coordenadas da área de trabalho.\n--window-size     Define o tamanho inicial; mínimo de 1000 × 650 pixels.\n--smoke-exit      Fecha automaticamente após 3 s e conclusão da captura/análise (limite: 15 s)."
+                "{}",
+                tr!(
+                    "ProtoCraft [projeto.protocraft|projeto.pdsprj|esquema.dsn] [--analysis dc|transient] [--engine stable|dynamic|mixed] [--continuous] [--settings] [--pcb] [--light] [--capture captura.png] [--window-position X Y] [--window-size W H] [--smoke-exit]\n\n--analysis        Executa a análise ao abrir; transiente usa passo de 10 us e fim de 5 ms.\n--light           Abre com tema claro.\n--capture         Salva uma captura PNG após concluir a análise inicial.\n--window-position Define a posição inicial da janela em coordenadas da área de trabalho.\n--window-size     Define o tamanho inicial; mínimo de 1000 × 650 pixels.\n--smoke-exit      Fecha automaticamente após 3 s e conclusão da captura/análise (limite: 15 s)."
+                )
             );
             return Ok(());
         } else if arg.to_string_lossy().starts_with('-') || path.is_some() {
-            return Err(format!("Argumento desconhecido: {}", arg.to_string_lossy()).into());
+            return Err(format!(
+                "Argumento desconhecido: {argument}",
+                argument = arg.to_string_lossy()
+            )
+            .into());
         } else {
             path = Some(PathBuf::from(arg));
         }
@@ -3178,8 +3580,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 examples::voltage_divider(),
                 None,
                 Some(format!(
-                    "Não foi possível abrir {}: {error}",
-                    path.display()
+                    "Não foi possível abrir {path}: {error}",
+                    path = path.display()
                 )),
             ),
         }
@@ -3205,7 +3607,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let logo = match load_brand_texture(&cc.egui_ctx) {
                 Ok(texture) => Some(texture),
                 Err(error) => {
-                    eprintln!("Não foi possível carregar a marca do ProtoCraft: {error}");
+                    eprintln!(
+                        "{}",
+                        trf!(
+                            "Não foi possível carregar a marca do ProtoCraft: {error}",
+                            error = error
+                        )
+                    );
                     None
                 }
             };
@@ -3233,9 +3641,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 app.pcb.active = true;
                 app.pcb.report = eda_pcb::check(app.engine.project()).ok();
             }
-            match settings::Settings::load() {
-                Ok(settings) => app.settings = settings,
-                Err(e) => app.message(format!("Falha ao ler configurações: {e}"), true),
+            match loaded_settings {
+                Ok(settings) => {
+                    app.settings = settings;
+                }
+                Err(error) => app.message(
+                    trf!("Falha ao ler configurações: {error}", error = error),
+                    true,
+                ),
             }
             if startup_engine.is_none()
                 && app
@@ -3261,6 +3674,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }),
     )?;
     Ok(())
+}
+
+fn main() {
+    if let Err(error) = run() {
+        eprintln!("{}: {}", tr!("Erro"), eda_i18n::text(&error.to_string()));
+        std::process::exit(1);
+    }
 }
 
 #[cfg(test)]

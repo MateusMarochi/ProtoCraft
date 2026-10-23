@@ -1,0 +1,42 @@
+# ProtoCraft
+
+> ProtoCraft is a Rust electronic design automation (EDA) desktop application and headless CLI for schematic capture, circuit simulation, PCB layout/routing, and manufacturing-file export.
+
+ProtoCraft uses an original implementation and a native `.protocraft` project format. Its user interface and CLI support English and Brazilian Portuguese. Selected Proteus `.pdsprj` and `.dsn` projects can be imported experimentally; this importer is partial. STM32 and ESP32 catalog data supports physical device/footprint design, not firmware emulation.
+
+## Start here
+
+- [Repository overview](README.md): concise project summary, capabilities, limitations, quick start, and search vocabulary.
+- [English documentation](README.en.md): full build instructions, features, usage, and known limits.
+- [Documentação em português](README.pt-BR.md): visão geral, instalação, CLI e limitações.
+
+## Technical references
+
+- [Architecture and crate boundaries](docs/architecture.md)
+- [Project format and migrations](docs/file-format.md)
+- [CLI and automation](docs/cli.md)
+- [Simulation engines](docs/simulation-engines.md)
+- [Mixed analog/digital simulation](docs/mixed-simulation.md)
+- [Simulation validation and limits](docs/simulation-validation.md)
+- [PCB editing, routing, DRC, Gerber, and Excellon](docs/manual-routing.md)
+- [STM32/ESP32 physical catalog](docs/mcu-pcb.md)
+- [Proteus import behavior and limitations](docs/proteus-import.md)
+- [Roadmap](docs/roadmap.md)
+- [Third-party data and asset terms](NOTICE.md)
+
+## Source map
+
+- `crates/eda-core`: project model, component definitions, commands, history, and geometry.
+- `crates/eda-netlist`: electrical connectivity and ERC.
+- `crates/eda-simulation`: native Rust DC/transient solvers, mixed-signal events, and SPICE export.
+- `crates/eda-pcb`: PCB domain, manual routing, initial autorouter, DRC, and board exports.
+- `crates/eda-storage`: versioned `.protocraft` persistence and manufacturing workflow.
+- `crates/eda-library`: offline physical device and footprint catalog.
+- `crates/eda-import`: experimental Proteus container, CDB/DSN parsing, and conversion.
+- `crates/eda-i18n`: locale selection, translation catalogs, fallback, and JSON overlays.
+- `crates/eda-app`: desktop application.
+- `crates/eda-cli`: headless command-line application.
+
+## Search vocabulary
+
+Rust EDA, electronic design automation, circuit simulator, schematic capture, PCB design, PCB layout, PCB routing, PCB autorouter, Gerber RS-274X, Excellon drill files, SPICE netlist, STM32, ESP32, Proteus project importer, `.protocraft`, headless CLI, EDA em Rust, automação de circuitos eletrônicos, roteamento de PCB.

@@ -132,7 +132,7 @@ impl ProtoCraft {
                 }
             },
             Err(e) => {
-                self.message(format!("Edição recusada: {e}"), true);
+                self.message(trf!("Edição recusada: {error}", error = e), true);
                 false
             }
         }
@@ -278,10 +278,10 @@ impl ProtoCraft {
         }
     }
     pub(super) fn pcb_edit_controls(&mut self, ui: &mut egui::Ui, board: &Board) {
-        ui.strong("Trilhas e furos");
+        ui.strong(tr!("Trilhas e furos"));
         ui.horizontal(|ui| {
             if ui
-                .selectable_label(!self.pcb.routing && !self.pcb.hole_tool, "Selecionar")
+                .selectable_label(!self.pcb.routing && !self.pcb.hole_tool, tr!("Selecionar"))
                 .clicked()
             {
                 self.pcb.routing = false;
@@ -289,7 +289,7 @@ impl ProtoCraft {
                 self.pcb.finish_route();
             }
             if ui
-                .selectable_label(self.pcb.routing, "Trilha · X")
+                .selectable_label(self.pcb.routing, tr!("Trilha · X"))
                 .clicked()
             {
                 self.pcb.routing = true;
@@ -298,7 +298,7 @@ impl ProtoCraft {
                 self.pcb.clear_geometry_selection();
             }
             if ui
-                .selectable_label(self.pcb.hole_tool, "Furo · H")
+                .selectable_label(self.pcb.hole_tool, tr!("Furo · H"))
                 .clicked()
             {
                 self.pcb.finish_route();
@@ -308,17 +308,17 @@ impl ProtoCraft {
             }
         });
         ui.horizontal(|ui| {
-            ui.label("Camada");
+            ui.label(tr!("Camada"));
             let old = self.pcb.layer;
-            ui.selectable_value(&mut self.pcb.layer, BoardSide::Top, "Superior");
-            ui.selectable_value(&mut self.pcb.layer, BoardSide::Bottom, "Inferior");
+            ui.selectable_value(&mut self.pcb.layer, BoardSide::Top, tr!("Superior"));
+            ui.selectable_value(&mut self.pcb.layer, BoardSide::Bottom, tr!("Inferior"));
             if old != self.pcb.layer && self.pcb.route.is_some() {
                 self.pcb.layer = old;
                 self.message("Use V para inserir uma via e trocar de camada.", false);
             }
         });
         ui.horizontal(|ui| {
-            ui.label("Grade (mm)");
+            ui.label(tr!("Grade (mm)"));
             egui::ComboBox::from_id_salt("pcb_grid")
                 .selected_text(format!("{}", self.pcb.grid_mm))
                 .show_ui(ui, |ui| {
@@ -329,7 +329,7 @@ impl ProtoCraft {
         });
         if !self.pcb.hole_tool {
             ui.horizontal(|ui| {
-                ui.label("Largura (mm)");
+                ui.label(tr!("Largura (mm)"));
                 ui.add(
                     egui::DragValue::new(&mut self.pcb.width)
                         .speed(0.025)
@@ -337,17 +337,21 @@ impl ProtoCraft {
                 );
             });
             ui.horizontal(|ui| {
-                ui.label("Ângulo");
+                ui.label(tr!("Ângulo"));
                 for mode in [
                     eda_pcb::RouteMode::Diagonal,
                     eda_pcb::RouteMode::Orthogonal,
                     eda_pcb::RouteMode::Free,
                 ] {
-                    ui.selectable_value(&mut self.pcb.route_mode, mode, mode.label());
+                    ui.selectable_value(
+                        &mut self.pcb.route_mode,
+                        mode,
+                        eda_i18n::text(mode.label()),
+                    );
                 }
             });
             ui.horizontal(|ui| {
-                ui.label("Via / furo (mm)");
+                ui.label(tr!("Via / furo (mm)"));
                 ui.add(
                     egui::DragValue::new(&mut self.pcb.via_diameter_mm)
                         .speed(0.05)
@@ -361,55 +365,60 @@ impl ProtoCraft {
             });
             if let Some((position, anchor)) = self.pcb.route {
                 if let Some(c) = self.engine.project().components.get(&anchor.component) {
-                    ui.label(format!(
-                        "Rede de {} · pino {}",
-                        c.reference,
-                        c.pin_number(anchor.pin)
+                    ui.label(trf!(
+                        "Rede de {reference} · pino {pin}",
+                        reference = &c.reference,
+                        pin = c.pin_number(anchor.pin)
                     ));
                 }
-                if ui.button("Via neste ponto · trocar camada").clicked() {
+                if ui.button(tr!("Via neste ponto · trocar camada")).clicked() {
                     self.pcb_route_to(position, None, true);
                 }
-                ui.small("Clique: fixa trecho · Espaço: inverte dobra · V: via no cursor · Backspace: desfaz trecho · Esc: encerra.");
+                ui.small(tr!("Clique: fixa trecho · Espaço: inverte dobra · V: via no cursor · Backspace: desfaz trecho · Esc: encerra."));
             } else {
-                ui.small("X: iniciar trilha. Clique em pad, via ou trilha da camada ativa. A rede vem do esquemático.");
+                ui.small(tr!("X: iniciar trilha. Clique em pad, via ou trilha da camada ativa. A rede vem do esquemático."));
             }
         } else {
             ui.horizontal(|ui| {
-                ui.label("Furo NPTH (mm)");
+                ui.label(tr!("Furo NPTH (mm)"));
                 ui.add(
                     egui::DragValue::new(&mut self.pcb.hole_diameter_mm)
                         .speed(0.1)
                         .range(0.1..=50.0),
                 );
             });
-            ui.small("Clique para colocar furos mecânicos não metalizados. Esc volta à seleção.");
+            ui.small(tr!(
+                "Clique para colocar furos mecânicos não metalizados. Esc volta à seleção."
+            ));
         }
         self.pcb_geometry_inspector(ui, board);
         ui.separator();
-        ui.checkbox(&mut self.pcb.show_airwires, "Mostrar conexões pendentes");
+        ui.checkbox(
+            &mut self.pcb.show_airwires,
+            tr!("Mostrar conexões pendentes"),
+        );
         if ui
             .add_enabled(
                 self.pcb.autorouting.is_none() && self.pcb.fabrication.is_none(),
-                egui::Button::new("Autorrotear conexões pendentes"),
+                egui::Button::new(tr!("Autorrotear conexões pendentes")),
             )
             .clicked()
         {
             self.start_autorouting();
         }
         if self.pcb.autorouting.is_some() {
-            ui.small(
-                "A busca está em execução em segundo plano; edições novas descartam o resultado.",
-            );
+            ui.small(tr!(
+                "A busca está em execução em segundo plano; edições novas descartam o resultado."
+            ));
         }
-        if ui.button("Verificar DRC e conexões").clicked() {
+        if ui.button(tr!("Verificar DRC e conexões")).clicked() {
             match eda_pcb::check(self.engine.project()) {
                 Ok(r) => {
                     self.message(
-                        format!(
-                            "DRC: {} erros · {} ligações pendentes",
-                            r.errors(),
-                            r.airwires.len()
+                        trf!(
+                            "DRC: {errors} erros · {airwires} ligações pendentes",
+                            errors = r.errors(),
+                            airwires = r.airwires.len()
                         ),
                         r.errors() > 0,
                     );
@@ -419,10 +428,10 @@ impl ProtoCraft {
             }
         }
         if let Some(report) = &self.pcb.report {
-            ui.label(format!(
-                "DRC: {} erros · {} pendentes",
-                report.errors(),
-                report.airwires.len()
+            ui.label(trf!(
+                "DRC: {errors} erros · {airwires} pendentes",
+                errors = report.errors(),
+                airwires = report.airwires.len()
             ));
         }
     }
@@ -476,12 +485,12 @@ impl ProtoCraft {
         }
         ui.separator();
         ui.strong(match selection {
-            GeometrySelection::Track(id) => format!("Trilha {id}"),
-            GeometrySelection::Via(id) => format!("Via {id} · metalizada"),
-            GeometrySelection::Hole(id) => format!("Furo {id} · NPTH"),
+            GeometrySelection::Track(id) => trf!("Trilha {id}", id = id),
+            GeometrySelection::Via(id) => trf!("Via {id} · metalizada", id = id),
+            GeometrySelection::Hole(id) => trf!("Furo {id} · NPTH", id = id),
         });
         ui.horizontal(|ui| {
-            ui.label("X / Y (mm)");
+            ui.label(tr!("X / Y (mm)"));
             for v in &mut self.pcb.edit_position {
                 ui.add(
                     egui::DragValue::new(v)
@@ -492,7 +501,7 @@ impl ProtoCraft {
         });
         if matches!(selection, GeometrySelection::Track(_)) {
             ui.horizontal(|ui| {
-                ui.label("Fim X / Y");
+                ui.label(tr!("Fim X / Y"));
                 for v in &mut self.pcb.edit_end {
                     ui.add(
                         egui::DragValue::new(v)
@@ -502,15 +511,15 @@ impl ProtoCraft {
                 }
             });
             ui.horizontal(|ui| {
-                ui.selectable_value(&mut self.pcb.edit_layer, BoardSide::Top, "Superior");
-                ui.selectable_value(&mut self.pcb.edit_layer, BoardSide::Bottom, "Inferior");
+                ui.selectable_value(&mut self.pcb.edit_layer, BoardSide::Top, tr!("Superior"));
+                ui.selectable_value(&mut self.pcb.edit_layer, BoardSide::Bottom, tr!("Inferior"));
             });
         }
         ui.horizontal(|ui| {
             ui.label(if matches!(selection, GeometrySelection::Track(_)) {
-                "Largura (mm)"
+                tr!("Largura (mm)")
             } else {
-                "Diâmetro (mm)"
+                tr!("Diâmetro (mm)")
             });
             ui.add(
                 egui::DragValue::new(&mut self.pcb.edit_width)
@@ -520,7 +529,7 @@ impl ProtoCraft {
         });
         if matches!(selection, GeometrySelection::Via(_)) {
             ui.horizontal(|ui| {
-                ui.label("Furação (mm)");
+                ui.label(tr!("Furação (mm)"));
                 ui.add(
                     egui::DragValue::new(&mut self.pcb.edit_drill)
                         .speed(0.05)
@@ -529,7 +538,7 @@ impl ProtoCraft {
             });
         }
         ui.horizontal(|ui| {
-            if ui.button("Aplicar edição").clicked() {
+            if ui.button(tr!("Aplicar edição")).clicked() {
                 let position =
                     NmPoint::new(nm(self.pcb.edit_position[0]), nm(self.pcb.edit_position[1]));
                 let command = match selection {
@@ -559,11 +568,13 @@ impl ProtoCraft {
                 };
                 self.pcb_checked_command(command);
             }
-            if ui.button("Excluir · Del").clicked() {
+            if ui.button(tr!("Excluir · Del")).clicked() {
                 self.pcb_delete_selection();
             }
         });
-        ui.small("Arraste para mover. Ao mover cobre, confira as conexões pendentes.");
+        ui.small(tr!(
+            "Arraste para mover. Ao mover cobre, confira as conexões pendentes."
+        ));
     }
     pub(super) fn pcb_geometry_drag_command(
         &self,

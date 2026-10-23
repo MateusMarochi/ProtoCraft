@@ -17,6 +17,7 @@ ProtoCraft is a Rust desktop application for electronic design. It brings togeth
 - Two-layer PCB editor with manual 45-degree, 90-degree, and free-angle tracks, an initial A* autorouter, vias, non-plated holes, geometry editing, and design-rule checks.
 - Manufacturing Gerber/Excellon generation with RS-274X, Protel extensions, millimeters, absolute drill coordinates, 1:1 scale, and ZIP packaging through the JLCPCB preset. KiCad CLI is required for this optional workflow.
 - Offline physical catalog with 2,283 STM32 and 48 Espressif entries, including pins, packages, pads, and dimensions. This is physical design support; MCU firmware is not emulated.
+- English and Brazilian Portuguese (pt-BR) desktop/CLI localization, selected from the operating-system locale with an English fallback; translators can replace JSON catalogs without rebuilding.
 - Native JSON `.protocraft` format with migrations and recovery backups.
 - Experimental Proteus ISIS 8 import for selected `.pdsprj` and `.dsn` project data, with import reports and preservation of unsupported model information.
 - Headless CLI sharing the application’s project, connectivity, and simulation code.
@@ -98,3 +99,7 @@ Imported projects with partial connectivity remain blocked from simulation. Revi
 - [Third-party notices and attribution](NOTICE.md)
 
 The design goal is a usable EDA built from independently implemented code and documented public data. ProtoCraft does not include Proteus code or binaries. Original source code, documentation, and bundled circuit examples are available under MIT or Apache-2.0, at your option. See [NOTICE.md](NOTICE.md) for separate terms covering third-party data and assets.
+
+## Search terms
+
+Rust EDA, electronic design automation, circuit simulator, schematic capture, circuit design, PCB layout, PCB routing, PCB autorouter, Gerber RS-274X, Excellon drill files, SPICE netlist export, STM32, ESP32, Proteus project importer, `.protocraft`, desktop EDA, headless CLI.
