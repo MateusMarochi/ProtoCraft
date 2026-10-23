@@ -1,0 +1,78 @@
+name: Release Windows x64
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  package:
+    name: Build and publish x64 packages
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install pinned Rust toolchain and restore Cargo cache
+        uses: actions-rust-lang/setup-rust-toolchain@v2
+
+      - name: Install Inno Setup
+        run: choco install innosetup --yes --no-progress
+
+      - name: Validate and build release binaries
+        run: ./scripts/build.ps1
+        shell: pwsh
+
+      - name: Package portable ZIP and Windows installer
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          if (-not $tag.StartsWith('v')) { throw "Tag de release inválida: $tag" }
+          $version = $tag.Substring(1)
+          if ($version -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') {
+              throw "Tag de release não segue SemVer: $tag"
+          }
+          $manifestVersion = (Select-String -LiteralPath 'Cargo.toml' -Pattern '^version = "([^"]+)"').Matches[0].Groups[1].Value
+          if ($manifestVersion -ne $version) {
+              throw "A tag $tag não corresponde à versão do Cargo.toml ($manifestVersion)."
+          }
+
+          ./scripts/package.ps1 -SkipBuild -Version $version
+          ./scripts/installer.ps1 `
+            -Version $version `
+            -Compiler 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+
+          $releaseFiles = @(
+              (Join-Path $PWD "dist\ProtoCraft-$version-Setup-x64.exe"),
+              (Join-Path $PWD "dist\ProtoCraft-$version-windows-x64.zip")
+          )
+          $checksumFile = Join-Path $PWD "dist\ProtoCraft-$version-SHA256SUMS.txt"
+          $checksumLines = foreach ($file in $releaseFiles) {
+              $hash = (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant()
+              "$hash  $([IO.Path]::GetFileName($file))"
+          }
+          [IO.File]::WriteAllLines($checksumFile, $checksumLines, [Text.Encoding]::ASCII)
+
+      - name: Create GitHub release and upload packages
+        uses: softprops/action-gh-release@v3
+        with:
+          name: ProtoCraft ${{ github.ref_name }}
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          make_latest: ${{ !contains(github.ref_name, '-') }}
+          fail_on_unmatched_files: true
+          files: |
+            dist/ProtoCraft-*-Setup-x64.exe
+            dist/ProtoCraft-*-windows-x64.zip
+            dist/ProtoCraft-*-SHA256SUMS.txt

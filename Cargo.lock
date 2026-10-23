@@ -635,7 +635,7 @@ dependencies = [
 
 [[package]]
 name = "eda-app"
-version = "0.6.1"
+version = "0.6.1-rc.2"
 dependencies = [
  "eda-core",
  "eda-i18n",
@@ -655,7 +655,7 @@ dependencies = [
 
 [[package]]
 name = "eda-cli"
-version = "0.6.1"
+version = "0.6.1-rc.2"
 dependencies = [
  "eda-core",
  "eda-i18n",
@@ -672,7 +672,7 @@ dependencies = [
 
 [[package]]
 name = "eda-core"
-version = "0.6.1"
+version = "0.6.1-rc.2"
 dependencies = [
  "serde",
  "thiserror 2.0.21",
@@ -680,7 +680,7 @@ dependencies = [
 
 [[package]]
 name = "eda-i18n"
-version = "0.6.1"
+version = "0.6.1-rc.2"
 dependencies = [
  "serde",
  "serde_json",
@@ -689,7 +689,7 @@ dependencies = [
 
 [[package]]
 name = "eda-import"
-version = "0.6.1"
+version = "0.6.1-rc.2"
 dependencies = [
  "eda-core",
  "eda-netlist",
@@ -703,7 +703,7 @@ dependencies = [
 
 [[package]]
 name = "eda-library"
-version = "0.6.1"
+version = "0.6.1-rc.2"
 dependencies = [
  "eda-core",
  "serde",
@@ -712,7 +712,7 @@ dependencies = [
 
 [[package]]
 name = "eda-netlist"
-version = "0.6.1"
+version = "0.6.1-rc.2"
 dependencies = [
  "eda-core",
  "serde",
@@ -720,7 +720,7 @@ dependencies = [
 
 [[package]]
 name = "eda-pcb"
-version = "0.6.1"
+version = "0.6.1-rc.2"
 dependencies = [
  "eda-core",
  "eda-library",
@@ -731,7 +731,7 @@ dependencies = [
 
 [[package]]
 name = "eda-simulation"
-version = "0.6.1"
+version = "0.6.1-rc.2"
 dependencies = [
  "eda-core",
  "eda-netlist",
@@ -741,7 +741,7 @@ dependencies = [
 
 [[package]]
 name = "eda-storage"
-version = "0.6.1"
+version = "0.6.1-rc.2"
 dependencies = [
  "eda-core",
  "eda-library",
