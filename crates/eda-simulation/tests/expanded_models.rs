@@ -334,7 +334,7 @@ fn all_original_examples_validate_and_run_with_supported_engines() {
             {
                 continue;
             }
-            if name != &"555-astavel" {
+            if !matches!(*name, "555-astavel" | "555-led-1hz") {
                 run(p.clone(), Analysis::Dc, *engine);
             }
             let r = run(

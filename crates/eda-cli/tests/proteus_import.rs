@@ -22,28 +22,42 @@ fn protects_input_output_report_and_backup_paths_before_import() {
     fs::write(&input, original).unwrap();
     let output = dir.path().join("out.protocraft");
     let cases = [
-        vec!["import-proteus", text(&input), "--output", text(&input)],
-        vec![
-            "import-proteus",
-            text(&input),
-            "--output",
-            text(&output),
-            "--report",
-            text(&input),
-        ],
-        vec![
-            "import-proteus",
-            text(&input),
-            "--output",
-            text(&output),
-            "--report",
-            text(&output),
-        ],
+        (
+            vec!["import-proteus", text(&input), "--output", text(&input)],
+            "Saída e backup devem ser diferentes do arquivo Proteus de entrada",
+        ),
+        (
+            vec![
+                "import-proteus",
+                text(&input),
+                "--output",
+                text(&output),
+                "--report",
+                text(&input),
+            ],
+            "O relatório deve ser diferente da entrada, da saída e do backup",
+        ),
+        (
+            vec![
+                "import-proteus",
+                text(&input),
+                "--output",
+                text(&output),
+                "--report",
+                text(&output),
+            ],
+            "O relatório deve ser diferente da entrada, da saída e do backup",
+        ),
     ];
-    for args in cases {
+    for (args, expected_source) in cases {
         let result = cli(&args);
         assert!(!result.status.success());
-        assert!(String::from_utf8_lossy(&result.stderr).contains("diferente"));
+        let expected_error = eda_i18n::text(expected_source);
+        let stderr = String::from_utf8_lossy(&result.stderr);
+        assert!(
+            stderr.contains(&expected_error),
+            "stderr: {stderr}; expected: {expected_error}"
+        );
         assert_eq!(fs::read(&input).unwrap(), original);
         assert!(!output.exists());
     }
@@ -58,7 +72,11 @@ fn protects_input_output_report_and_backup_paths_before_import() {
         text(&report),
     ]);
     assert!(!result.status.success());
-    assert!(String::from_utf8_lossy(&result.stderr).contains("relatório já existe"));
+    assert!(
+        String::from_utf8_lossy(&result.stderr).contains(&eda_i18n::text(
+            "O relatório já existe; escolha um novo caminho para preservá-lo"
+        ))
+    );
     assert_eq!(fs::read(&report).unwrap(), b"nao substituir");
     let backup = eda_storage::backup_path(&output);
     fs::write(&backup, original).unwrap();
@@ -136,7 +154,9 @@ fn imports_original_synthetic_dsn_and_reports_partial_electrical_status() {
     assert_eq!(summary["electrical_complete"], false);
     assert!(
         String::from_utf8_lossy(&result.stdout)
-            .contains("não preservou todo o significado elétrico")
+            .contains(&eda_i18n::text(
+                "Aviso: a importação não preservou todo o significado elétrico; revise o relatório antes de simular."
+            ))
     );
     assert_eq!(fs::read(&input).unwrap(), bytes);
 }

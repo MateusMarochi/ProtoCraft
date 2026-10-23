@@ -145,7 +145,7 @@ impl Catalog {
             .feature
             .as_deref()
             .filter(|value| !value.is_empty())
-            .map(|value| expand_query_aliases(value));
+            .map(expand_query_aliases);
 
         let mut ranked: Vec<_> = index
             .documents
@@ -415,7 +415,7 @@ fn expand_query_aliases(value: &str) -> String {
     value
 }
 
-fn search_term_aliases<'a>(term: &'a str) -> Vec<&'a str> {
+fn search_term_aliases(term: &str) -> Vec<&str> {
     let aliases: &[&str] = match term {
         "microcontrolador" | "microcontroladores" | "mcu" => {
             &["microcontroller", "microcontrollers", "mcu"]

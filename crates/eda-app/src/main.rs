@@ -3761,7 +3761,7 @@ mod tests {
         );
         assert_eq!(
             app.status,
-            "Projeto importado aberto. Consulte a aba Importação."
+            eda_i18n::text("Projeto importado aberto. Consulte a aba Importação.")
         );
     }
 
@@ -3982,7 +3982,12 @@ mod tests {
         assert_eq!(result.revision, 0);
         assert_eq!(result.traces[app.selected_trace].name, "V(VOUT)");
         assert_ne!(result.revision, app.engine.revision());
-        assert!(app.status.contains("revisão anterior"));
+        assert_eq!(
+            app.status,
+            eda_i18n::text(
+                "Análise concluída para uma revisão anterior. Execute novamente para atualizar."
+            )
+        );
         assert!(result.traces.iter().any(|trace| {
             trace.name.contains("VOUT")
                 && trace
@@ -4134,6 +4139,12 @@ mod tests {
             app.poll_simulation(&ctx);
             std::thread::yield_now();
         }
-        assert!(app.result.as_ref().unwrap().backend.contains("Dinâmico"));
+        assert!(
+            app.result
+                .as_ref()
+                .unwrap()
+                .backend
+                .contains(&eda_i18n::text("Dinâmico"))
+        );
     }
 }

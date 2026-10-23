@@ -345,10 +345,10 @@ pub fn text(key: &str) -> String {
     if let Some(value) = current.get(key).or_else(|| fallback.get(key)) {
         return value.clone();
     }
-    if let Some(source_key) = reverse_current.get(key) {
-        if let Some(value) = current.get(source_key).or_else(|| fallback.get(source_key)) {
-            return value.clone();
-        }
+    if let Some(source_key) = reverse_current.get(key)
+        && let Some(value) = current.get(source_key).or_else(|| fallback.get(source_key))
+    {
+        return value.clone();
     }
     if let Some(value) = translate_template(key, current, fallback, template_candidates(language)) {
         return value;

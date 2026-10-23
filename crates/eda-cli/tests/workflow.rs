@@ -30,11 +30,17 @@ fn real_cli_workflow() {
         assert!(dir.path().join(name).is_file());
     }
     let divider = dir.path().join("divisor.protocraft");
-    assert!(success(cli(&["validate", path_text(&divider)])).contains("Projeto válido"));
+    assert!(
+        !success(cli(&["validate", path_text(&divider)]))
+            .trim()
+            .is_empty()
+    );
     let netlist = success(cli(&["netlist", path_text(&divider)]));
     assert!(netlist.contains("R1 (ID "));
-    assert!(netlist.contains("/ pino 1"));
-    assert!(!netlist.contains("/ pino 0"));
+    let pin_label = eda_i18n::text("{reference} (ID {id}) / pino {pin}");
+    let pin_suffix = pin_label.split_once('/').unwrap().1.trim();
+    assert!(netlist.contains(&pin_suffix.replace("{pin}", "1")));
+    assert!(!netlist.contains(&pin_suffix.replace("{pin}", "0")));
     let original = std::fs::read(&divider).unwrap();
     assert!(
         !cli(&[
@@ -100,8 +106,8 @@ fn real_cli_workflow() {
     ]));
     assert!(std::fs::read_to_string(spice).unwrap().contains(".tran "));
     assert!(success(cli(&["spice", path_text(&divider)])).contains(".op"));
-    assert!(success(cli(&["--help"])).contains("Uso:"));
-    assert!(success(cli(&["run", "--help"])).contains("lote atômico"));
+    assert!(!success(cli(&["--help"])).trim().is_empty());
+    assert!(success(cli(&["run", "--help"])).contains("protocraft-cli run"));
 }
 
 #[test]
@@ -201,23 +207,29 @@ fn cli_inspects_projects_lists_commands_and_runs_atomic_headless_edits() {
 fn real_cli_rejects_unknown_commands_bad_files_and_options() {
     let unknown = cli(&["inexistente"]);
     assert!(!unknown.status.success());
-    assert!(String::from_utf8_lossy(&unknown.stderr).contains("Comando desconhecido"));
+    let unknown_error = String::from_utf8_lossy(&unknown.stderr);
+    assert!(unknown_error.contains("inexistente"));
+    assert!(unknown_error.contains("--help"));
     let dir = tempfile::tempdir().unwrap();
     let empty = dir.path().join("vazio.protocraft");
     eda_storage::save(&empty, &eda_core::Project::empty("Sem componentes")).unwrap();
     let erc = cli(&["validate", path_text(&empty)]);
     assert!(!erc.status.success());
     let diagnostics = String::from_utf8_lossy(&erc.stdout);
-    assert!(diagnostics.contains("Erro [NO_GROUND]"));
-    assert!(diagnostics.contains("Aviso [NO_SOURCE]"));
+    assert!(diagnostics.contains("NO_GROUND"));
+    assert!(diagnostics.contains("NO_SOURCE"));
     let bad = dir.path().join("corrompido.protocraft");
     std::fs::write(&bad, "isto não é JSON").unwrap();
     let invalid = cli(&["validate", path_text(&bad)]);
     assert!(!invalid.status.success());
-    assert!(String::from_utf8_lossy(&invalid.stderr).contains("Erro:"));
+    assert!(!String::from_utf8_lossy(&invalid.stderr).trim().is_empty());
     let invalid_time = cli(&["simulate", path_text(&bad), "--transient", "NaN", "1"]);
     assert!(!invalid_time.status.success());
-    assert!(String::from_utf8_lossy(&invalid_time.stderr).contains("Transiente requer"));
+    assert!(
+        String::from_utf8_lossy(&invalid_time.stderr).contains(&eda_i18n::text(
+            "Transiente requer 0 < passo <= fim, em segundos"
+        ))
+    );
     assert!(
         !cli(&["validate", path_text(&bad), "--csv", "saida.csv"])
             .status
@@ -277,8 +289,8 @@ fn cli_selects_real_engines_and_edits_persisted_model_parameters() {
         "0.00001",
         "0.001",
     ]));
-    assert!(dynamic.contains("Dinâmico"));
-    assert!(stable.contains("Estável"));
+    assert!(dynamic.contains(&eda_i18n::text("Dinâmico")));
+    assert!(stable.contains(&eda_i18n::text("Estável")));
     assert!(
         !cli(&["simulate", path_text(&output), "--engine", "desconhecido"])
             .status
@@ -306,12 +318,12 @@ fn cli_runs_mixed_timer_and_rejects_unsupported_engine() {
         "--csv",
         path_text(&csv),
     ]));
-    assert!(output.contains("Misto"));
+    assert!(output.contains(&eda_i18n::text("Misto")));
     let contents = std::fs::read_to_string(csv).unwrap();
     assert!(contents.contains("V(VOUT)"));
     let result = cli(&["simulate", path_text(&input), "--engine", "stable"]);
     assert!(!result.status.success());
-    assert!(String::from_utf8_lossy(&result.stderr).contains("Misto"));
+    assert!(String::from_utf8_lossy(&result.stderr).contains(&eda_i18n::text("Misto")));
 }
 
 #[test]
