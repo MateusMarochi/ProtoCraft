@@ -16,6 +16,7 @@ New-Item -ItemType Directory -Force -Path $destination | Out-Null
 Copy-Item -LiteralPath 'target\release\protocraft.exe','target\release\protocraft-cli.exe','README.md','README.en.md','README.pt-BR.md','NOTICE.md','LICENSE-MIT','LICENSE-APACHE' -Destination $destination -Force
 New-Item -ItemType Directory -Force -Path (Join-Path $destination 'assets') | Out-Null
 Copy-Item -LiteralPath 'assets\protocraft-logo.png' -Destination (Join-Path $destination 'assets') -Force
+Copy-Item -LiteralPath 'assets\protocraft-icon.png','assets\protocraft.ico' -Destination (Join-Path $destination 'assets') -Force
 Copy-Item -LiteralPath 'assets\library' -Destination (Join-Path $destination 'assets') -Recurse -Force
 New-Item -ItemType Directory -Force -Path (Join-Path $destination 'examples') | Out-Null
 $exampleDestination = Join-Path $destination 'examples'
@@ -26,7 +27,7 @@ Copy-Item -LiteralPath 'docs' -Destination $destination -Recurse -Force
 Get-FileHash -LiteralPath (Join-Path $destination 'protocraft.exe'),(Join-Path $destination 'protocraft-cli.exe') -Algorithm SHA256 |
     ForEach-Object { "$($_.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($_.Path))" } |
     Set-Content -LiteralPath (Join-Path $destination 'SHA256SUMS.txt') -Encoding ASCII
-$archive = Join-Path $root ("dist\ProtoCraft-$Version-windows-x64.zip")
+$archive = Join-Path $root ("dist\protocraft-$Version-windows-x64-portable.zip")
 Compress-Archive -LiteralPath $destination -DestinationPath $archive -Force
 Write-Host "Pacote portátil disponível em: $destination"
 Write-Host "ZIP: $archive"

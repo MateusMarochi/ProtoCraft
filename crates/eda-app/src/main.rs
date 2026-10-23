@@ -1,3 +1,5 @@
+#![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
+
 macro_rules! tr {
     ($source:literal) => {
         eda_i18n::text($source)
@@ -20,6 +22,7 @@ mod live;
 mod pcb_ui;
 mod settings;
 mod simulation_ui;
+mod window_icon;
 
 use eda_core::{Command, Component, ComponentKind, Engine, ObjectId, Point, Project, examples};
 use eda_netlist::{Diagnostic, Netlist, Severity, build_netlist, erc};
@@ -3591,7 +3594,8 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let engine = Engine::new(project)?;
     let mut viewport = egui::ViewportBuilder::default()
         .with_inner_size([window_size[0] as f32, window_size[1] as f32])
-        .with_min_inner_size([1000.0, 650.0]);
+        .with_min_inner_size([1000.0, 650.0])
+        .with_icon(window_icon::load());
     if let Some((x, y)) = window_position {
         viewport = viewport.with_position([x as f32, y as f32]);
     }
@@ -3678,7 +3682,22 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
 fn main() {
     if let Err(error) = run() {
-        eprintln!("{}: {}", tr!("Erro"), eda_i18n::text(&error.to_string()));
+        let title = tr!("Erro");
+        let description = eda_i18n::text(&error.to_string());
+        if cfg!(debug_assertions) {
+            eprintln!("{title}: {description}");
+        } else {
+            #[cfg(windows)]
+            {
+                let _ = rfd::MessageDialog::new()
+                    .set_title(title)
+                    .set_description(description)
+                    .set_level(rfd::MessageLevel::Error)
+                    .show();
+            }
+            #[cfg(not(windows))]
+            eprintln!("{title}: {description}");
+        }
         std::process::exit(1);
     }
 }

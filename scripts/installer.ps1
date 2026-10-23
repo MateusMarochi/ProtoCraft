@@ -18,7 +18,7 @@ if ($Version -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') {
 }
 & $Compiler "/DAppVersion=$Version" $definition
 if ($LASTEXITCODE -ne 0) { throw "Falha ao gerar instalador (ISCC exit code $LASTEXITCODE)." }
-$installer = Join-Path $root "dist\ProtoCraft-$Version-Setup-x64.exe"
+$installer = Join-Path $root "dist\protocraft-$Version-windows-x64.exe"
 if (-not (Test-Path -LiteralPath $installer)) { throw "Instalador não foi criado: $installer" }
 Get-FileHash -LiteralPath $installer -Algorithm SHA256 | Format-List
 Write-Host "Instalador x64: $installer"

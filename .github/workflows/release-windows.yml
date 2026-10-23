@@ -14,6 +14,7 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  PROTOCRAFT_REQUIRE_WINRES: "1"
 
 jobs:
   package:
@@ -54,10 +55,10 @@ jobs:
             -Compiler 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
 
           $releaseFiles = @(
-              (Join-Path $PWD "dist\ProtoCraft-$version-Setup-x64.exe"),
-              (Join-Path $PWD "dist\ProtoCraft-$version-windows-x64.zip")
+              (Join-Path $PWD "dist\protocraft-$version-windows-x64.exe"),
+              (Join-Path $PWD "dist\protocraft-$version-windows-x64-portable.zip")
           )
-          $checksumFile = Join-Path $PWD "dist\ProtoCraft-$version-SHA256SUMS.txt"
+          $checksumFile = Join-Path $PWD "dist\SHA256SUMS.txt"
           $checksumLines = foreach ($file in $releaseFiles) {
               $hash = (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant()
               "$hash  $([IO.Path]::GetFileName($file))"
@@ -73,6 +74,6 @@ jobs:
           make_latest: ${{ !contains(github.ref_name, '-') }}
           fail_on_unmatched_files: true
           files: |
-            dist/ProtoCraft-*-Setup-x64.exe
-            dist/ProtoCraft-*-windows-x64.zip
-            dist/ProtoCraft-*-SHA256SUMS.txt
+            dist/protocraft-*-windows-x64.exe
+            dist/protocraft-*-windows-x64-portable.zip
+            dist/SHA256SUMS.txt
