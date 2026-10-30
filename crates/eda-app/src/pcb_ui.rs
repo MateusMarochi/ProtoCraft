@@ -1676,7 +1676,7 @@ mod tests {
         let ctx = egui::Context::default();
         let rect = Rect::from_min_size(Pos2::ZERO, Vec2::new(1200.0, 800.0));
         let frame = |app: &mut ProtoCraft, events, time| {
-            let _ = ctx.run_ui(
+            let mut output = ctx.run_ui(
                 egui::RawInput {
                     screen_rect: Some(rect),
                     events,
@@ -1688,6 +1688,7 @@ mod tests {
                     app.pcb_canvas(ui, &ctx);
                 },
             );
+            output.textures_delta.clear();
         };
         frame(&mut app, vec![], 0.0);
         let id = ComponentId(1);

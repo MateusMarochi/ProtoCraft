@@ -4584,7 +4584,7 @@ mod tests {
         app.rotate();
         let ctx = egui::Context::default();
         let pos = Pos2::new(400.0, 300.0);
-        let output = ctx.run_ui(
+        let mut output = ctx.run_ui(
             egui::RawInput {
                 screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(800.0, 600.0))),
                 ..Default::default()
@@ -4594,6 +4594,7 @@ mod tests {
                 app.canvas(ui, &ctx);
             },
         );
+        output.textures_delta.clear();
         assert!(!output.shapes.is_empty());
         for pressed in [true, false] {
             let input = egui::RawInput {
@@ -4609,10 +4610,11 @@ mod tests {
                 ],
                 ..Default::default()
             };
-            let output = ctx.run_ui(input, |ui| {
+            let mut output = ctx.run_ui(input, |ui| {
                 let ctx = ui.ctx().clone();
                 app.canvas(ui, &ctx);
             });
+            output.textures_delta.clear();
             assert!(!output.shapes.is_empty());
         }
         assert_eq!(app.engine.project().components.len(), 1);
@@ -4768,7 +4770,7 @@ mod tests {
             .id;
         let ctx = egui::Context::default();
         let rect = Rect::from_min_size(Pos2::ZERO, Vec2::new(1000.0, 700.0));
-        let output = ctx.run_ui(
+        let mut output = ctx.run_ui(
             egui::RawInput {
                 screen_rect: Some(rect),
                 time: Some(0.0),
@@ -4779,13 +4781,14 @@ mod tests {
                 app.canvas(ui, &ctx);
             },
         );
+        output.textures_delta.clear();
         assert!(!output.shapes.is_empty());
         let pos = app.screen(
             app.engine.project().components[&id].position,
             app.canvas_rect.unwrap(),
         );
         for (index, pressed) in [true, false, true, false].into_iter().enumerate() {
-            let output = ctx.run_ui(
+            let mut output = ctx.run_ui(
                 egui::RawInput {
                     screen_rect: Some(rect),
                     time: Some(0.1 + index as f64 * 0.05),
@@ -4805,6 +4808,7 @@ mod tests {
                     app.canvas(ui, &ctx);
                 },
             );
+            output.textures_delta.clear();
             assert!(!output.shapes.is_empty());
         }
         assert!(app.engine.project().components[&id].parameters.closed);

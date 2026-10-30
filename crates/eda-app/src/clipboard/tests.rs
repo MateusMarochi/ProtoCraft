@@ -36,7 +36,7 @@ fn ctrl(key: Key) -> egui::Event {
     }
 }
 fn frame(app: &mut ProtoCraft, ctx: &egui::Context, events: Vec<egui::Event>) -> egui::FullOutput {
-    ctx.run_ui(
+    let mut output = ctx.run_ui(
         egui::RawInput {
             screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1000.0, 700.0))),
             events,
@@ -46,7 +46,11 @@ fn frame(app: &mut ProtoCraft, ctx: &egui::Context, events: Vec<egui::Event>) ->
             let ctx = ui.ctx().clone();
             app.shortcuts(&ctx);
         },
-    )
+    );
+    // Headless tests inspect input/output state without a renderer. Consume
+    // texture updates explicitly, as egui 0.36 requires for FullOutput.
+    output.textures_delta.clear();
+    output
 }
 fn copied(output: &egui::FullOutput) -> String {
     output
@@ -339,15 +343,16 @@ fn focused_text_editor_owns_copy_cut_paste() {
     let id = egui::Id::new("clipboard_text");
     let mut text = "texto normal".to_owned();
     let before = app.engine.project().clone();
-    let _ = ctx.run_ui(Default::default(), |ui| {
+    let mut output = ctx.run_ui(Default::default(), |ui| {
         egui::CentralPanel::default().show(ui, |ui| {
             ui.add(egui::TextEdit::singleline(&mut text).id(id))
                 .request_focus();
         });
     });
+    output.textures_delta.clear();
     assert!(ctx.egui_wants_keyboard_input());
     let mut text_frame = |events| {
-        ctx.run_ui(
+        let mut output = ctx.run_ui(
             egui::RawInput {
                 events,
                 ..Default::default()
@@ -359,7 +364,9 @@ fn focused_text_editor_owns_copy_cut_paste() {
                     ui.add(egui::TextEdit::singleline(&mut text).id(id));
                 });
             },
-        )
+        );
+        output.textures_delta.clear();
+        output
     };
     let output = text_frame(vec![ctrl(Key::A), egui::Event::Copy]);
     assert_eq!(copied(&output), "texto normal");
@@ -503,7 +510,7 @@ fn paste_uses_cursor_in_each_canvas_instead_of_fallback() {
     );
     let mut pcb = pcb_app();
     let ctx = egui::Context::default();
-    let _ = ctx.run_ui(
+    let mut output = ctx.run_ui(
         egui::RawInput {
             screen_rect: Some(rect),
             ..Default::default()
@@ -513,6 +520,7 @@ fn paste_uses_cursor_in_each_canvas_instead_of_fallback() {
             pcb.pcb_canvas(ui, &ctx);
         },
     );
+    output.textures_delta.clear();
     let text = copied(&frame(&mut pcb, &ctx, vec![egui::Event::Copy]));
     frame(
         &mut pcb,
