@@ -1653,7 +1653,15 @@ mod tests {
     #[test]
     fn pcb_drag_moves_only_physical_placement_and_is_undoable() {
         let project = eda_library::physical_example().unwrap();
-        let mut app = ProtoCraft::new(Engine::new(project).unwrap(), None, None, None, false, None);
+        let mut app = ProtoCraft::new(
+            Engine::new(project).unwrap(),
+            None,
+            None,
+            None,
+            false,
+            None,
+            false,
+        );
         app.pcb.active = true;
         let ctx = egui::Context::default();
         let rect = Rect::from_min_size(Pos2::ZERO, Vec2::new(1200.0, 800.0));
@@ -1717,7 +1725,15 @@ mod tests {
     #[test]
     fn sync_keeps_existing_placements_and_device_copy_preserves_pin_pad_data() {
         let project = eda_library::physical_example().unwrap();
-        let mut app = ProtoCraft::new(Engine::new(project).unwrap(), None, None, None, false, None);
+        let mut app = ProtoCraft::new(
+            Engine::new(project).unwrap(),
+            None,
+            None,
+            None,
+            false,
+            None,
+            false,
+        );
         let before = app
             .engine
             .project()

@@ -18,7 +18,7 @@ fn app() -> ProtoCraft {
     engine
         .execute(Command::RotateComponent { id: ComponentId(1) })
         .unwrap();
-    let mut app = ProtoCraft::new(engine, None, None, None, false, None);
+    let mut app = ProtoCraft::new(engine, None, None, None, false, None, false);
     app.choose(Some(ObjectId::Component(ComponentId(1))));
     app
 }
@@ -271,6 +271,7 @@ fn mcu_clipboard_transfers_pins_and_footprint_between_documents() {
         None,
         false,
         None,
+        false,
     );
     source.choose(Some(ObjectId::Component(ComponentId(1))));
     let ctx = egui::Context::default();
