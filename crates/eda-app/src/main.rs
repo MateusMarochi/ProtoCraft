@@ -45,7 +45,7 @@ struct Palette {
 }
 impl Palette {
     fn new(ctx: &egui::Context) -> Self {
-        if ctx.style().visuals.dark_mode {
+        if ctx.global_style().visuals.dark_mode {
             Self {
                 accent: Color32::from_rgb(97, 190, 211),
                 wire: Color32::from_rgb(109, 193, 230),
@@ -103,8 +103,21 @@ fn apply_theme(ctx: &egui::Context, dark: bool) {
     } else {
         Color32::from_rgb(188, 218, 232)
     };
+    let widget_foreground = Stroke::new(1.0, visuals.text_color());
+    craft_ui::theme::WidgetPalette {
+        noninteractive: visuals.widgets.noninteractive.bg_fill,
+        inactive: visuals.widgets.inactive.bg_fill,
+        hovered: visuals.widgets.hovered.bg_fill,
+        active: visuals.widgets.active.bg_fill,
+        open: visuals.widgets.open.bg_fill,
+    }
+    .apply_to(
+        &mut visuals.widgets,
+        egui::CornerRadius::same(3),
+        widget_foreground,
+    );
     ctx.set_visuals(visuals);
-    let mut style = (*ctx.style()).clone();
+    let mut style = (*ctx.global_style()).clone();
     style.spacing.item_spacing = Vec2::new(8.0, 7.0);
     style.spacing.button_padding = Vec2::new(8.0, 4.0);
     style.visuals.selection.bg_fill = if dark {
@@ -117,7 +130,7 @@ fn apply_theme(ctx: &egui::Context, dark: bool) {
     } else {
         Color32::from_rgb(19, 82, 112)
     };
-    ctx.set_style(style);
+    ctx.set_global_style(style);
 }
 
 fn home_panel<R>(
@@ -265,6 +278,71 @@ enum BottomTab {
     Netlist,
     Help,
     Import,
+}
+
+fn analysis_tabs(ui: &mut egui::Ui, active: &mut BottomTab, erc_count: usize) {
+    let tabs = [
+        (BottomTab::Results, tr!("Resultados")),
+        (BottomTab::Erc, trf!("ERC ({count})", count = erc_count)),
+        (BottomTab::Netlist, tr!("Netlist")),
+        (BottomTab::Help, tr!("Atalhos e limites")),
+        (BottomTab::Import, tr!("Importação")),
+    ];
+    let widths: Vec<_> = tabs
+        .iter()
+        .map(|(_, label)| (label.chars().count() as f32 * 7.0 + 28.0).clamp(76.0, 190.0))
+        .collect();
+    let selected = tabs.iter().position(|(tab, _)| tab == active).unwrap_or(0);
+    let fit = craft_ui::tabs::fit(&widths, selected, ui.available_width(), 76.0, 34.0);
+    let mut chosen = None;
+    ui.horizontal(|ui| {
+        for (index, width) in fit.shown {
+            let Some((tab, label)) = tabs.get(index) else {
+                continue;
+            };
+            let (rect, _) = ui.allocate_exact_size(Vec2::new(width, 26.0), egui::Sense::hover());
+            let selected = tab == active;
+            let response =
+                craft_ui::tabs::Tab::new(egui::Id::new(("analysis-tab", index)), label, selected)
+                    .show_at(ui, rect, |ui, response| {
+                        let visuals = ui.visuals();
+                        let fill = if selected {
+                            visuals.selection.bg_fill
+                        } else if response.hovered() {
+                            visuals.widgets.hovered.bg_fill
+                        } else {
+                            visuals.widgets.inactive.bg_fill
+                        };
+                        ui.painter()
+                            .rect_filled(rect, egui::CornerRadius::same(3), fill);
+                        ui.painter().text(
+                            rect.center(),
+                            egui::Align2::CENTER_CENTER,
+                            label,
+                            egui::FontId::proportional(13.0),
+                            visuals.text_color(),
+                        );
+                    });
+            if response.clicked() {
+                chosen = Some(*tab);
+            }
+        }
+        if !fit.overflow.is_empty() {
+            ui.menu_button(tr!("Mais abas"), |ui| {
+                for index in fit.overflow {
+                    if let Some((tab, label)) = tabs.get(index)
+                        && ui.selectable_label(*active == *tab, label).clicked()
+                    {
+                        chosen = Some(*tab);
+                        ui.close();
+                    }
+                }
+            });
+        }
+    });
+    if let Some(chosen) = chosen {
+        *active = chosen;
+    }
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -926,7 +1004,7 @@ impl ProtoCraft {
         }
     }
     fn shortcuts(&mut self, ctx: &egui::Context) {
-        if self.pending.is_some() || ctx.wants_keyboard_input() {
+        if self.pending.is_some() || ctx.egui_wants_keyboard_input() {
             return;
         }
         if self.clipboard_shortcuts(ctx) {
@@ -991,7 +1069,7 @@ impl ProtoCraft {
         }
     }
 
-    fn home(&mut self, ctx: &egui::Context) {
+    fn home(&mut self, root_ui: &mut egui::Ui, ctx: &egui::Context) {
         let theme = Palette::new(ctx);
         let recent_paths = self.settings.recent_projects.clone();
         let mut open_path = None;
@@ -1013,9 +1091,9 @@ impl ProtoCraft {
             Color32::from_rgb(61, 119, 148)
         };
 
-        egui::TopBottomPanel::top("home_menu")
+        egui::Panel::top("home_menu")
             .frame(egui::Frame::new().fill(toolbar))
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 ui.horizontal(|ui| {
                     if let Some(logo) = &self.logo {
                         ui.add(egui::Image::new((logo.id(), Vec2::splat(22.0))));
@@ -1058,9 +1136,9 @@ impl ProtoCraft {
                 });
             });
 
-        egui::TopBottomPanel::top("home_toolbar")
+        egui::Panel::top("home_toolbar")
             .frame(egui::Frame::new().fill(toolbar))
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 ui.horizontal(|ui| {
                     for (label, id) in [
                         (tr!("Novo projeto"), 0),
@@ -1076,9 +1154,9 @@ impl ProtoCraft {
                 });
             });
 
-        egui::TopBottomPanel::top("home_document_tab")
+        egui::Panel::top("home_document_tab")
             .frame(egui::Frame::new().fill(page))
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.label(
                         egui::RichText::new(tr!("Página inicial"))
@@ -1097,7 +1175,7 @@ impl ProtoCraft {
 
         egui::CentralPanel::default()
             .frame(egui::Frame::new().fill(page).inner_margin(egui::Margin::symmetric(10, 9)))
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 let hero_size = Vec2::new(ui.available_width(), 94.0);
                 ui.allocate_ui_with_layout(
                     hero_size,
@@ -1309,7 +1387,7 @@ impl ProtoCraft {
         }
     }
 
-    fn top(&mut self, ctx: &egui::Context) {
+    fn top(&mut self, root_ui: &mut egui::Ui, ctx: &egui::Context) {
         let theme = Palette::new(ctx);
         let menu_fill = if self.dark {
             Color32::from_rgb(42, 58, 67)
@@ -1326,9 +1404,9 @@ impl ProtoCraft {
         } else {
             Color32::from_rgb(199, 220, 232)
         };
-        egui::TopBottomPanel::top("main_menu")
+        egui::Panel::top("main_menu")
             .frame(egui::Frame::new().fill(menu_fill))
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 ui.horizontal(|ui| {
                     if let Some(logo) = &self.logo {
                         ui.add(egui::Image::new((logo.id(), Vec2::splat(24.0))));
@@ -1674,13 +1752,13 @@ impl ProtoCraft {
             });
 
         if !self.pcb.active {
-            egui::TopBottomPanel::top("simulation_controls").show(ctx, |ui| {
+            egui::Panel::top("simulation_controls").show(root_ui, |ui| {
                 ui.horizontal_wrapped(|ui| self.live_controls(ui));
             });
         }
-        egui::TopBottomPanel::top("command_toolbar")
+        egui::Panel::top("command_toolbar")
             .frame(egui::Frame::new().fill(ribbon_fill))
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 ui.horizontal_wrapped(|ui| {
                     ui.label(
                         egui::RichText::new(tr!("PROJETO"))
@@ -1842,9 +1920,9 @@ impl ProtoCraft {
                 });
             });
 
-        egui::TopBottomPanel::top("document_tabs")
+        egui::Panel::top("document_tabs")
             .frame(egui::Frame::new().fill(tab_fill))
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 ui.horizontal(|ui| {
                     if ui
                         .selectable_label(!self.pcb.active, tr!("Captura esquemática"))
@@ -1957,9 +2035,9 @@ impl ProtoCraft {
         }
     }
 
-    fn library(&mut self, ctx: &egui::Context) {
+    fn library(&mut self, root_ui: &mut egui::Ui, ctx: &egui::Context) {
         let theme = Palette::new(ctx);
-        egui::SidePanel::left("library").default_width(320.0).width_range(265.0..=440.0).show(ctx, |ui| {
+        egui::Panel::left("library").default_size(320.0).size_range(265.0..=440.0).show(root_ui, |ui| {
             ui.add_space(8.0);
             ui.horizontal(|ui| {
                 ui.heading(tr!("Componentes"));
@@ -2029,11 +2107,11 @@ impl ProtoCraft {
         });
     }
 
-    fn mode_strip(&mut self, ctx: &egui::Context) {
-        egui::SidePanel::left("mode_strip")
-            .exact_width(46.0)
+    fn mode_strip(&mut self, root_ui: &mut egui::Ui, _ctx: &egui::Context) {
+        egui::Panel::left("mode_strip")
+            .exact_size(46.0)
             .resizable(false)
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 ui.add_space(8.0);
                 for (icon, hint, tool, active) in [
                     (
@@ -2072,15 +2150,15 @@ impl ProtoCraft {
             });
     }
 
-    fn properties(&mut self, ctx: &egui::Context) {
+    fn properties(&mut self, root_ui: &mut egui::Ui, ctx: &egui::Context) {
         if !self.show_inspector {
             return;
         }
         let theme = Palette::new(ctx);
-        egui::SidePanel::right("inspector")
-            .default_width(270.0)
-            .width_range(230.0..=420.0)
-            .show(ctx, |ui| {
+        egui::Panel::right("inspector")
+            .default_size(270.0)
+            .size_range(230.0..=420.0)
+            .show(root_ui, |ui| {
                 ui.add_space(8.0);
                 ui.horizontal(|ui| {
                     ui.heading(tr!("Explorador"));
@@ -2266,9 +2344,9 @@ impl ProtoCraft {
         });
     }
 
-    fn bottom(&mut self, ctx: &egui::Context) {
+    fn bottom(&mut self, root_ui: &mut egui::Ui, ctx: &egui::Context) {
         let theme = Palette::new(ctx);
-        egui::TopBottomPanel::bottom("status").show(ctx, |ui| {
+        egui::Panel::bottom("status").show(root_ui, |ui| {
             ui.horizontal_wrapped(|ui| {
                 ui.label(egui::RichText::new(eda_i18n::text(&self.status)).color(
                     if self.status_error {
@@ -2311,14 +2389,9 @@ impl ProtoCraft {
             return;
         }
         if self.show_analysis {
-            egui::TopBottomPanel::bottom("analysis").resizable(true).default_height(205.0).min_height(100.0).show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.selectable_value(&mut self.tab, BottomTab::Results, tr!("Resultados"));
-                ui.selectable_value(&mut self.tab, BottomTab::Erc, trf!("ERC ({count})", count=self.diagnostics.len()));
-                ui.selectable_value(&mut self.tab, BottomTab::Netlist, tr!("Netlist"));
-                ui.selectable_value(&mut self.tab, BottomTab::Help, tr!("Atalhos e limites"));
-                ui.selectable_value(&mut self.tab, BottomTab::Import, tr!("Importação"));
-            }); ui.separator();
+            egui::Panel::bottom("analysis").resizable(true).default_size(205.0).min_size(100.0).show(root_ui, |ui| {
+            analysis_tabs(ui, &mut self.tab, self.diagnostics.len());
+            ui.separator();
             match self.tab {
                 BottomTab::Import => { egui::ScrollArea::vertical().show(ui, |ui| {
                     ui.strong(tr!("Importação Proteus experimental"));
@@ -2599,11 +2672,11 @@ impl ProtoCraft {
         self.pan = -Vec2::new((min_x + max_x) / 2.0, (min_y + max_y) / 2.0) * self.zoom;
     }
 
-    fn canvas(&mut self, ctx: &egui::Context) {
+    fn canvas(&mut self, root_ui: &mut egui::Ui, ctx: &egui::Context) {
         let theme = Palette::new(ctx);
         egui::CentralPanel::default()
             .frame(egui::Frame::NONE)
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 let (response, painter) =
                     ui.allocate_painter(ui.available_size(), Sense::click_and_drag());
                 let rect = response.rect;
@@ -3121,7 +3194,8 @@ impl ProtoCraft {
 }
 
 impl eframe::App for ProtoCraft {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn ui(&mut self, root_ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        let ctx = root_ui.ctx().clone();
         if self.capture_path.is_some() {
             if !self.capture_requested
                 && self.simulation.is_none()
@@ -3171,39 +3245,39 @@ impl eframe::App for ProtoCraft {
                 ctx.request_repaint_after(Duration::from_millis(100));
             }
         }
-        self.poll_simulation(ctx);
-        self.poll_live(ctx);
-        self.shortcuts(ctx);
+        self.poll_simulation(&ctx);
+        self.poll_live(&ctx);
+        self.shortcuts(&ctx);
         self.refresh_derived();
         if self.show_home {
-            self.home(ctx);
-            self.confirmation(ctx);
-            self.settings_window(ctx);
+            self.home(root_ui, &ctx);
+            self.confirmation(&ctx);
+            self.settings_window(&ctx);
             ctx.send_viewport_cmd(egui::ViewportCommand::Title(format!(
                 "{} — ProtoCraft",
                 tr!("Início")
             )));
             return;
         }
-        self.top(ctx);
-        self.bottom(ctx);
+        self.top(root_ui, &ctx);
+        self.bottom(root_ui, &ctx);
         if self.show_library && !self.pcb.active {
-            self.mode_strip(ctx);
-            self.library(ctx);
+            self.mode_strip(root_ui, &ctx);
+            self.library(root_ui, &ctx);
         }
         if self.pcb.active {
-            self.pcb_mode_strip(ctx);
-            self.pcb_tools(ctx);
+            self.pcb_mode_strip(root_ui, &ctx);
+            self.pcb_tools(root_ui, &ctx);
             if self.pcb.show_inspector {
-                self.pcb_inspector(ctx);
+                self.pcb_inspector(root_ui, &ctx);
             }
-            self.pcb_canvas(ctx);
+            self.pcb_canvas(root_ui, &ctx);
         } else {
-            self.properties(ctx);
-            self.canvas(ctx);
+            self.properties(root_ui, &ctx);
+            self.canvas(root_ui, &ctx);
         }
-        self.confirmation(ctx);
-        self.settings_window(ctx);
+        self.confirmation(&ctx);
+        self.settings_window(&ctx);
         ctx.send_viewport_cmd(egui::ViewportCommand::Title(format!(
             "{}{} — ProtoCraft",
             self.engine.project().name,
@@ -3379,7 +3453,7 @@ fn draw_component(
     } else if selected {
         theme.gold
     } else {
-        painter.ctx().style().visuals.text_color()
+        painter.ctx().global_style().visuals.text_color()
     };
     let stroke = Stroke::new(if selected { 2.5_f32 } else { 1.8_f32 }, color);
     if component.device.is_some() {
@@ -4510,12 +4584,15 @@ mod tests {
         app.rotate();
         let ctx = egui::Context::default();
         let pos = Pos2::new(400.0, 300.0);
-        let output = ctx.run(
+        let output = ctx.run_ui(
             egui::RawInput {
                 screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(800.0, 600.0))),
                 ..Default::default()
             },
-            |ctx| app.canvas(ctx),
+            |ui| {
+                let ctx = ui.ctx().clone();
+                app.canvas(ui, &ctx);
+            },
         );
         assert!(!output.shapes.is_empty());
         for pressed in [true, false] {
@@ -4532,7 +4609,10 @@ mod tests {
                 ],
                 ..Default::default()
             };
-            let output = ctx.run(input, |ctx| app.canvas(ctx));
+            let output = ctx.run_ui(input, |ui| {
+                let ctx = ui.ctx().clone();
+                app.canvas(ui, &ctx);
+            });
             assert!(!output.shapes.is_empty());
         }
         assert_eq!(app.engine.project().components.len(), 1);
@@ -4688,13 +4768,16 @@ mod tests {
             .id;
         let ctx = egui::Context::default();
         let rect = Rect::from_min_size(Pos2::ZERO, Vec2::new(1000.0, 700.0));
-        let output = ctx.run(
+        let output = ctx.run_ui(
             egui::RawInput {
                 screen_rect: Some(rect),
                 time: Some(0.0),
                 ..Default::default()
             },
-            |ctx| app.canvas(ctx),
+            |ui| {
+                let ctx = ui.ctx().clone();
+                app.canvas(ui, &ctx);
+            },
         );
         assert!(!output.shapes.is_empty());
         let pos = app.screen(
@@ -4702,7 +4785,7 @@ mod tests {
             app.canvas_rect.unwrap(),
         );
         for (index, pressed) in [true, false, true, false].into_iter().enumerate() {
-            let output = ctx.run(
+            let output = ctx.run_ui(
                 egui::RawInput {
                     screen_rect: Some(rect),
                     time: Some(0.1 + index as f64 * 0.05),
@@ -4717,7 +4800,10 @@ mod tests {
                     ],
                     ..Default::default()
                 },
-                |ctx| app.canvas(ctx),
+                |ui| {
+                    let ctx = ui.ctx().clone();
+                    app.canvas(ui, &ctx);
+                },
             );
             assert!(!output.shapes.is_empty());
         }

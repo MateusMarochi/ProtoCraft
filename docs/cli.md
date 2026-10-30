@@ -27,6 +27,8 @@ ProtoCraft-CLI.cmd simulate projetos\pisca-1hz.protocraft --engine mixed --trans
 
 É possível informar `--ra-ohms`, `--rb-ohms`, `--c-farads` e `--led-resistor-ohms`. Use `--frequency-hz` para calcular C1 automaticamente a partir de RA e RB; ele não pode ser combinado com `--c-farads`. Os valores são em unidades SI. Por exemplo, `--frequency-hz 1` calcula C1 em aproximadamente 10,21 µF. A CLI informa a frequência teórica estimada e o CSV permite conferir o resultado transiente. O preset é um ponto de partida de esquemático, não uma PCB roteada.
 
+Para um exemplo físico completo, com footprints, PCB de duas camadas, roteamento e instruções de fabricação, use [`555-led-1hz-pcb.protocraft`](../examples/555-led-1hz-pcb.protocraft) e consulte o [guia da placa 555](555-led-1hz-pcb.md).
+
 O comando `examples <pasta>` continua gravando o conjunto completo, agora sem substituir nenhum arquivo existente; caso encontre um conflito, interrompe antes de criar os exemplos.
 
 ## Inspecionar um projeto
@@ -121,3 +123,7 @@ protocraft-cli pcb-check placa-com-furo.protocraft
 ```
 
 `update_track` recebe `{track:{id,start,end,width_nm,layer,net}}`; `update_via` recebe `{via:{id,position,diameter_nm,drill_nm,net}}`; `update_hole` recebe o objeto `hole` completo. Atualizações exigem um ID já existente. A CLI valida o domínio, e `pcb-check` confere a geometria; a fabricação exige DRC aprovado. O desktop também usa o DRC antes de confirmar cada edição de cobre/furação.
+
+## Servidor MCP
+
+Para conectar um cliente compatível com MCP, inicie `protocraft-cli mcp --project <arquivo.protocraft>`. O processo atende um projeto headless por stdio e encerra quando o cliente fecha o pipe. Ferramentas, schemas, protocolo, controle por revisão e limites da sessão estão no [guia MCP](mcp.md).

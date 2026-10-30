@@ -13,10 +13,9 @@ macro_rules! trf {
     };
 }
 
-mod automation;
 mod physical_cli;
 
-use automation::{Action, COMMANDS, parse_action, parse_actions};
+use eda_automation::{Action, COMMANDS, parse_action, parse_actions};
 use eda_simulation::{Analysis, SimulationControl, SimulationEngine, SimulationRequest};
 use std::{
     env,
@@ -40,6 +39,44 @@ fn help() {
             "ProtoCraft — automação de circuitos\n\nUso:\n  protocraft-cli templates\n  protocraft-cli new --output projeto.protocraft [--template 555-led-1hz] [--name 'Meu circuito'] [--open]\n  protocraft-cli open <projeto.protocraft>\n  protocraft-cli devices [--filter termo] [--limit N] [--offset N]\n  protocraft-cli device <modelo>\n  protocraft-cli device-project <modelo> --output projeto.protocraft\n  protocraft-cli pcb-check <projeto>\n  protocraft-cli pcb-route <projeto> --output roteado.protocraft [--grid-mm 0.25] [--track-width-mm 0.25] [--max-expansions 600000] [--no-optimize]\n  protocraft-cli pcb-info <projeto>\n  protocraft-cli pcb-export <projeto> --format kicad|svg --output arquivo\n  protocraft-cli pcb-manufacture <projeto> --preset jlcpcb|standard --output pasta-nova --kicad caminho/kicad-cli.exe\n  protocraft-cli engines\n  protocraft-cli components\n  protocraft-cli examples <pasta>\n  protocraft-cli import-proteus <arquivo.pdsprj|arquivo.dsn> --output <arquivo.protocraft> [--report <relatorio.json>]\n  protocraft-cli info <arquivo.protocraft>\n  protocraft-cli commands [--filter <termo>]\n  protocraft-cli run <arquivo.protocraft> (--actions <acoes.json> | --cmd <id> --params '<json>' [...]) [--output <novo.protocraft>]\n  protocraft-cli validate <arquivo.protocraft>\n  protocraft-cli netlist <arquivo.protocraft>\n  protocraft-cli simulate <arquivo.protocraft> [--engine stable|dynamic|mixed] [--transient passo_s fim_s] [--csv arquivo.csv]\n  protocraft-cli spice <arquivo.protocraft> [--transient passo_s fim_s] [--output arquivo.cir]\n\nnew cria um projeto novo; --open inicia o editor desktop se estiver junto da CLI.\nrun aplica todos os comandos como uma edição atômica do Engine; use --output para salvar.\ninfo, commands e run escrevem JSON em stdout. Pontos usam coordenadas inteiras da grade.\nImportação Proteus experimental: consulte os avisos e o relatório de limitações.\nSimulação nativa em Rust: motores stable, dynamic e mixed, DC e transiente, modelos genéricos.\nUse engines e components para consultar as opções. C/L iniciam em zero; estados digitais são configuráveis no motor Misto."
         )
     );
+    println!(
+        "{}",
+        tr!("Servidor MCP stdio: protocraft-cli mcp --project projeto.protocraft")
+    );
+}
+fn run_mcp(args: &[String]) -> Result<(), Box<dyn Error>> {
+    if args == ["--help"] {
+        println!(
+            "{}",
+            tr!("Uso: protocraft-cli mcp --project <arquivo.protocraft>")
+        );
+        return Ok(());
+    }
+    let mut project = None;
+    let mut index = 0;
+    while index < args.len() {
+        match args[index].as_str() {
+            "--project" if project.is_none() => {
+                project = Some(PathBuf::from(
+                    args.get(index + 1)
+                        .filter(|value| !value.starts_with("--"))
+                        .ok_or_else(|| tr!("Informe o caminho do projeto .protocraft"))?,
+                ));
+                index += 2;
+            }
+            option => {
+                return Err(eda_i18n::format(
+                    "Opção desconhecida ou repetida para mcp: {option}",
+                    &[("option", option.to_owned())],
+                )
+                .into());
+            }
+        }
+    }
+    let project =
+        project.ok_or_else(|| tr!("Uso: protocraft-cli mcp --project <arquivo.protocraft>"))?;
+    eda_mcp::serve(project)?;
+    Ok(())
 }
 fn run() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().skip(1).collect();
@@ -70,6 +107,9 @@ fn run() -> Result<(), Box<dyn Error>> {
     }
     if command == "open" {
         return run_open_project(&args[1..]);
+    }
+    if command == "mcp" {
+        return run_mcp(&args[1..]);
     }
     if physical_cli::handles(command) {
         return physical_cli::run(&args);

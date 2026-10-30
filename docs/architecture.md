@@ -1,39 +1,49 @@
-# Arquitetura implementada
+# Arquitetura do ProtoCraft
 
-O workspace separa regras elétricas da interface e de I/O. Os arquivos `.protocraft` são dados próprios; nenhuma DLL do Proteus é usada na compilação ou execução.
+O ProtoCraft usa camadas Rust com um motor headless como autoridade sobre o documento. Interface desktop, CLI e servidor MCP enviam comandos ao mesmo `Engine`; eles não mantêm cópias independentes das regras de edição. O projeto segue os limites arquiteturais do ecossistema Craft e usa componentes compartilhados de `craft-ui` sem incorporar código da PCBCraft.
 
-| Crate | Responsabilidade | Dependências internas |
+## Camadas e crates
+
+| Camada | Crates | Responsabilidade |
 |---|---|---|
-| eda-core | IDs, geometria inteira, componentes, projeto, comandos e undo/redo | nenhuma |
-| eda-netlist | Derivação de redes e ERC | core |
-| eda-simulation | MNA, controles de execução, resultados e exportação SPICE | core, netlist |
-| eda-library | Catálogo físico offline normalizado, definições e proveniência | core |
-| eda-pcb | Pads posicionados, vínculo às redes, conexões pendentes, DRC e exportação textual | core, netlist |
-| eda-storage | JSON versionado, backup, CSV e fabricação externa supervisionada | core, simulation, pcb |
-| eda-import | Contêiner Proteus, parsers CDB/DSN limitados e conversão com relatório | core, netlist |
-| eda-app | Aplicativo desktop, ferramentas, renderer, estado transitório e apresentação | todos os módulos anteriores |
-| eda-cli | Automação headless, inspeção JSON e ações de edição em lote pelo mesmo Engine usado na interface | core, netlist, simulation, storage |
+| L0 — modelo e geometria | `eda-core` | IDs estáveis, unidades, documentos, comandos tipados, validação, transações, revisões e histórico |
+| L1 — definições e entrada | `eda-library`, `eda-import` | Catálogo físico offline; leitura e conversão limitada de formatos externos |
+| L2 — regras e cálculos | `eda-netlist`, `eda-pcb`, `eda-simulation` | Conectividade/ERC, PCB/DRC/roteamento e simulação; sem acesso à janela |
+| L3 — persistência e integração | `eda-storage` | Formato `.protocraft`, backup, CSV e fluxo externo de fabricação supervisionado |
+| L4 — superfícies | `eda-automation`, `eda-mcp`, `eda-cli`, `eda-app` | Mapeamento de comandos, protocolo MCP, terminal e interface desktop |
 
-O estado autoritativo fica no `Engine`. Cada edição cria um candidato, aplica o comando, valida o projeto inteiro e só então troca o snapshot atual. Falhas preservam o estado e o histórico. Undo/redo restaura snapshots com os mesmos IDs; até 100 edições anteriores são mantidas. A revisão aumenta também no undo/redo e identifica resultados numéricos que ficaram obsoletos.
+O formato nativo versionado é o contrato compartilhado entre o editor e a CLI. A biblioteca física e as regras geométricas de PCB usam nanômetros; o esquemático usa coordenadas inteiras da grade. A conversão para pixels existe somente na camada de apresentação.
 
-Uma unidade inteira de coordenada corresponde a um passo de grade. Apenas o renderer converte para pixels. Fios são segmentos ortogonais com posições próprias. Pinos têm índice e coordenada explícitos, derivados de símbolo/rotação; o desenho usa o mesmo contrato. Mover/rotacionar altera os pinos, não estica os fios; portanto o ERC e a netlist refletem eventuais desconexões.
+## Motor, comandos e histórico
 
-A netlist usa união de pontos elétricos, índices por linha/coluna e agrupamento determinístico. Pontos elétricos são pinos, extremidades de fios, junções e rótulos. Cruzamentos interiores sem esses pontos não conectam. Terras são reunidos em `NetId(0)`, nomes iguais conectam redes na folha e são case-sensitive. Todos os consumidores usam `build_netlist`.
+O `Engine` é o único ponto que confirma mutações. Ele clona o documento candidato, aplica um comando ou lote, valida as invariantes e só então atualiza o snapshot e a revisão. Um erro descarta o candidato sem alterar o projeto ou o histórico. CLI e MCP reutilizam `eda-automation::Action` para converter JSON em comandos tipados; a interface chama o mesmo `Engine`.
 
-O backend numérico original implementa `SimulationBackend`; `MnaBackend` recebe snapshot e `SimulationControl`. O resultado contém a revisão da entrada. A GUI executa o trabalho em thread separada e descarta resultados antigos ao trocar documentos. O solver não acessa GPU, janelas, arquivos ou rede. DC usa capacitores abertos e indutores ideais em curto; transiente oferece backward Euler e trapezoidal, selecionados por `SimulationEngine`. `TransientSession` conserva estado entre blocos limitados; a GUI usa um worker com canal limitado de resultados e descarta amostras obsoletas. Modelos analógicos genéricos ficam em `models.rs`; `mixed.rs` mantém estados e agenda de transições; `stepper.rs` sincroniza passos analógicos, bordas e limiares sem mutar estado nas tentativas de refinamento. A exportação fica em `spice.rs`. O motor Misto usa backward Euler e estágios de saída ligados às alimentações explícitas dos novos chips. Diodos são genéricos, com tolerâncias e limites documentados separadamente.
+As edições aceitam uma revisão esperada para recusar mutações feitas sobre dados desatualizados. Undo e redo também avançam a revisão. O alocador mantém um limite superior monotônico de IDs, de modo que ramificações depois de undo não reutilizem IDs já emitidos. O histórico guarda até 100 snapshots.
 
-Decisão inicial: eframe/egui 0.33 com renderer OpenGL, evitando um renderer GPU próprio antes de medir necessidade. Foram escolhidos crates com licenças permissivas. O código-fonte original e a documentação do produto são licenciados sob MIT ou Apache-2.0, à escolha de quem recebe; os dados e assets de terceiros mantêm termos separados, descritos em [NOTICE.md](../NOTICE.md). Foi mantida uma versão de UI conhecida e compatível com a toolchain instalada, em vez de depender de mudanças recentes da API 0.37. O lockfile fixa o grafo efetivo.
+`eda-automation` publica o catálogo de comandos, valida objetos JSON sem campos desconhecidos e fornece JSON Schema por comando, além do esquema discriminado para lotes. A validação final do documento continua no `Engine`; o schema ajuda clientes a formar chamadas válidas sem substituir as regras de domínio.
 
-Limites de escala: snapshots de edição não são uma solução final para projetos muito grandes; o esquema v1 representa uma única folha e componentes básicos. Conectividade e domínio precisam evoluir com testes de regressão antes de hierarquia e PCB avançada. `docs/roadmap.md` distingue o que existe dos módulos futuros.
+## CLI e MCP
 
-O formato persistido v6 acrescenta furos NPTH; a v5 incorpora dispositivos/footprints/PCB em nanômetros; a v4 amplia os modelos e seus parâmetros; a v3 introduziu os parâmetros tipados; a v2 preservou a folha única e acrescentou metadados e pinos de importação. A conversão não usa proximidade nem arredondamento para ligar componentes: lê nós elétricos dos templates do DSN, aplica espelhos/rotações inteiras, preserva números do CDB e normaliza a grade por divisor comum. O renderer usa símbolos próprios. Parsers e conversor não executam modelos, firmware ou scripts. O estado parcial é persistido e bloqueia a simulação independentemente do caminho GUI/CLI.
+`eda-cli` oferece fluxos headless para criação, inspeção, edição, validação, simulação, exportação e importação. O subcomando `mcp --project arquivo.protocraft` inicia `eda-mcp` por stdio. O servidor mantém um único projeto headless no processo e disponibiliza inspeção, validação, netlist/ERC, busca facetada do catálogo físico, DRC, autorroteamento, comandos em lote, undo/redo e save.
 
-A seleção do motor e as opções visuais ficam em configurações locais JSON gravadas atomicamente. Toda alteração de modelo passa por `Command::SetModel`, incluindo interações por duplo clique e automação CLI. O renderer usa a mesma geometria de pinos dos modelos, associa resultados à revisão atual e não calcula correntes de fio por aproximação.
+O MCP moderno anuncia versão e capacidades com `server/discover`; cada chamada de protocolo moderno valida os metadados exigidos. A camada legada também aceita o handshake MCP `initialize` de 2025-11-25. Edições usam `expected_revision`, lotes são atômicos e salvar é explícito. O servidor trabalha com uma sessão própria do arquivo indicado; ainda não há uma ponte para controlar a instância desktop em execução.
 
-A GUI mantém a PCB no mesmo projeto do esquemático; cada edição física usa Command e revisão. A fabricação roda em worker separado, com DRC nativo e processo KiCad CLI explicitamente configurado, limites de tempo e arquivos em pasta nova. O núcleo e eda-pcb não executam processos externos.
+## Interface e Craft UI
 
-`eda-storage::fabrication::ManufacturingPreset` define a seleção comum à GUI/CLI. O preset JLCPCB aplica opções explícitas ao KiCad, confere os cabeçalhos e o contorno em escala real, e compacta somente Gerber/Excellon com a biblioteca ZIP já utilizada no workspace. A escolha do preset fica nas preferências do desktop; o projeto e suas regras de PCB não são alterados pela exportação.
+A interface desktop é uma camada egui/eframe fina que apresenta o documento e delega edições ao motor. O workspace usa Rust edition 2024 e Cargo resolver 3. `eframe`/`egui` foram atualizados para a série 0.36 exigida pela revisão de `craft-ui` fixada no `Cargo.lock`.
 
-O roteamento manual é separado da interface em `eda-pcb/routing.rs`: dobra definida pelo usuário, identificação de alvos na camada ativa e conferência da edição. O controlador desktop confirma lotes de segmentos/via pelo Engine, mantendo apenas a prévia e o histórico da rota em apresentação. O DRC de furação em `drilling.rs` inclui furos de footprints, vias e furos mecânicos independentes; as saídas KiCad/SVG/Excellon consomem os mesmos dados persistidos.
+O ProtoCraft integra `craft-ui` para ajuste de abas e estilos de estados de controles. A aplicação continua dona das cores completas, ícones, textos, localização e execução de comandos; esses dados não são trazidos da biblioteca compartilhada. A localização de interface e automação usa `assets/i18n/en.json` e `assets/i18n/pt-BR.json`.
 
-`eda-app/clipboard.rs` centraliza eventos nativos Copy/Cut/Paste e teclas de fallback, com deduplicação e respeito ao foco dos editores de texto. A saída CopyText e a solicitação RequestPaste passam pelo backend egui-winit para usar o clipboard do sistema. Payloads externos são limitados e validados; dados de recorte e sua identidade pertencem ao documento atual. Menus e atalhos usam os mesmos controladores e comandos do Engine.
+O editor segue em uma superfície desktop; separar esquemático e PCB como abas do workspace e consolidar bibliotecas/diagnósticos são etapas da interface. A arquitetura por crates não exige que o motor seja carregado pela UI e deixa CLI/MCP operarem sem renderer.
+
+## Limites atuais
+
+- O MCP é headless, sem ponte para o projeto aberto no desktop.
+- Não há frontend WebAssembly.
+- A importação Proteus é parcial e bloqueia simulações com conectividade incompleta.
+- Hierarquia de esquemas, zonas, pares diferenciais, modelos MCU e simuladores externos completos seguem fora do escopo implementado.
+- Snapshots inteiros simplificam transações; projetos muito grandes podem exigir histórico incremental.
+
+## Referência arquitetural e licenças
+
+A arquitetura pública da PCBCraft ajudou a identificar contratos úteis: motor headless como fronteira de mutação, IDs estáveis, lotes atômicos, revisão esperada e UI compartilhando uma biblioteca permissiva. O código e assets GPL da PCBCraft não foram incorporados. O código original do ProtoCraft mantém MIT ou Apache-2.0; `craft-ui` é uma dependência independente MIT ou Apache-2.0, fixada por commit e registrada em [NOTICE.md](../NOTICE.md) e [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt).

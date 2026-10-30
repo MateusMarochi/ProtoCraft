@@ -1,6 +1,9 @@
 use eda_core::{Command, ComponentId, ComponentKind, JunctionId, LabelId, ObjectId, Point, WireId};
 use serde::Deserialize;
 
+mod schema;
+pub use schema::{batch_action_schema, command_schema};
+
 #[derive(Debug, Deserialize)]
 #[serde(
     tag = "command",

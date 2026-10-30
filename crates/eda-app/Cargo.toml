@@ -19,7 +19,8 @@ eda-simulation.workspace = true
 eda-storage.workspace = true
 eda-import.workspace = true
 eda-i18n.workspace = true
-eframe = { version = "0.33", default-features = false, features = ["default_fonts", "glow", "x11", "wayland"] }
+eframe = { version = "0.36", default-features = false, features = ["default_fonts", "glow", "x11", "wayland"] }
+craft-ui.workspace = true
 rfd = "0.15.4"
 png = "0.18"
 serde.workspace = true

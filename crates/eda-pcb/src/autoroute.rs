@@ -52,12 +52,12 @@ impl Default for AutorouteConfig {
             grid_nm: 250_000,
             via_diameter_nm: 600_000,
             via_drill_nm: 300_000,
-            bend_penalty_nm: 180_000,
+            bend_penalty_nm: 1_000_000,
             via_penalty_nm: 3 * NM_PER_MM,
             congestion_penalty_nm: 120_000,
             max_vias_per_connection: 4,
             max_connections: 256,
-            max_expansions_per_connection: 32_000,
+            max_expansions_per_connection: 128_000,
             max_total_expansions: 600_000,
             max_optimization_connections: 32,
             optimize_routes: true,
@@ -100,6 +100,7 @@ pub struct AutoroutePlan {
 struct Endpoint {
     position: NmPoint,
     layers: u8,
+    drill_radius_nm: Option<i64>,
 }
 
 #[derive(Debug, Clone)]
@@ -523,10 +524,24 @@ pub fn autoroute(project: &Project, config: &AutorouteConfig) -> Result<Autorout
             start: Endpoint {
                 position: airwire.start,
                 layers: start_layers,
+                drill_radius_nm: endpoint_drill_radius(
+                    &pads,
+                    board,
+                    &netlist,
+                    airwire.net,
+                    airwire.start,
+                ),
             },
             end: Endpoint {
                 position: airwire.end,
                 layers: end_layers,
+                drill_radius_nm: endpoint_drill_radius(
+                    &pads,
+                    board,
+                    &netlist,
+                    airwire.net,
+                    airwire.end,
+                ),
             },
         });
     }
@@ -834,6 +849,28 @@ fn endpoint_layers(
     layers & 3
 }
 
+fn endpoint_drill_radius(
+    pads: &[super::PlacedPad],
+    board: &Board,
+    netlist: &eda_netlist::Netlist,
+    net: NetId,
+    point: NmPoint,
+) -> Option<i64> {
+    pads.iter()
+        .filter(|pad| {
+            pad.net == Some(net)
+                && pad.position == point
+                && pad.pad.technology == PadTechnology::ThroughHole
+        })
+        .filter_map(|pad| pad.pad.drill)
+        .map(|drill| drill.x.max(drill.y) / 2)
+        .chain(board.vias.values().filter_map(|via| {
+            (via.position == point && netlist.net_for_pin(via.net) == Some(net))
+                .then_some(via.drill_nm / 2)
+        }))
+        .max()
+}
+
 fn build_obstacle_index(
     project: &Project,
     pads: &[super::PlacedPad],
@@ -1027,18 +1064,25 @@ fn search_connection(
                 congestion_range_nm: (config.grid_nm * 4).max(NM_PER_MM),
                 candidates: Vec::with_capacity(64),
             };
-            if context
+            if octilinear_or_short(
+                connection.start.position,
+                connection.end.position,
+                config.grid_nm.max(MIN_GRID_NM).saturating_mul(2),
+            ) && context
                 .segment_cost(connection.start.position, connection.end.position, layer)
                 .is_some()
             {
-                let route = make_route(
+                let Some(route) = make_route(
                     connection.clone(),
                     vec![
                         (connection.start.position, side_for_bit(layer)),
                         (connection.end.position, side_for_bit(layer)),
                     ],
                     config,
-                );
+                    &mut context,
+                ) else {
+                    continue;
+                };
                 return SearchResult {
                     route: Some(route),
                     expansions,
@@ -1146,6 +1190,9 @@ fn astar_attempt(
                     continue;
                 }
                 let point = grid_point(min_x, min_y, x, y, step);
+                if !octilinear_or_short(start, point, step.saturating_mul(2)) {
+                    continue;
+                }
                 let Some(connector_cost) = context.segment_cost(start, point, source_layer) else {
                     continue;
                 };
@@ -1194,6 +1241,7 @@ fn astar_attempt(
         let current = grid_point(min_x, min_y, node.state.x, node.state.y, step);
         let current_layer = node.state.layer;
         if connection.end.layers & current_layer != 0
+            && octilinear_or_short(current, end, step.saturating_mul(2))
             && let Some(edge_cost) = context.segment_cost(current, end, current_layer)
         {
             let heading = direction_of(current, end);
@@ -1307,7 +1355,7 @@ fn astar_attempt(
         waypoints.push((end, final_layer));
     }
     (
-        Some(make_route(connection.clone(), waypoints, config)),
+        make_route(connection.clone(), waypoints, config, &mut context),
         expanded.min(budget),
     )
 }
@@ -1372,9 +1420,13 @@ fn grid_point(origin_x: i64, origin_y: i64, x: i32, y: i32, step: i64) -> NmPoin
 
 fn make_route(
     connection: Connection,
-    waypoints: Vec<(NmPoint, BoardSide)>,
+    mut waypoints: Vec<(NmPoint, BoardSide)>,
     config: &AutorouteConfig,
-) -> RoutedConnection {
+    context: &mut SearchContext<'_>,
+) -> Option<RoutedConnection> {
+    if !trim_drilled_pad_approaches(&connection, &mut waypoints, config, context) {
+        return None;
+    }
     let mut segments: Vec<Segment> = Vec::new();
     let mut vias = Vec::new();
     for pair in waypoints.windows(2) {
@@ -1420,13 +1472,102 @@ fn make_route(
     let quality = length_nm
         + vias.len() as f64 * config.via_penalty_nm as f64
         + bends as f64 * config.bend_penalty_nm as f64;
-    RoutedConnection {
+    Some(RoutedConnection {
         connection,
         segments,
         vias,
         length_nm,
         quality,
+    })
+}
+
+fn trim_drilled_pad_approaches(
+    connection: &Connection,
+    waypoints: &mut Vec<(NmPoint, BoardSide)>,
+    config: &AutorouteConfig,
+    context: &mut SearchContext<'_>,
+) -> bool {
+    if waypoints.len() < 2 {
+        return false;
     }
+
+    let start_radius = connection.start.drill_radius_nm.map(|drill_radius| {
+        drill_radius
+            .saturating_add(config.track_width_nm / 2)
+            .saturating_add(50_000)
+    });
+    if let Some(radius_nm) = start_radius {
+        let Some(join_index) =
+            waypoints
+                .iter()
+                .enumerate()
+                .skip(1)
+                .find_map(|(index, (join, layer))| {
+                    let distance = point_distance(connection.start.position, *join);
+                    (distance > radius_nm as f64
+                        && connection.start.layers & layer_bit(*layer) != 0
+                        && context
+                            .segment_cost(connection.start.position, *join, layer_bit(*layer))
+                            .is_some())
+                    .then_some(index)
+                })
+        else {
+            return false;
+        };
+        let (join, layer) = waypoints[join_index];
+        let entry = radial_entry_point(connection.start.position, join, radius_nm);
+        let mut trimmed = Vec::with_capacity(waypoints.len() + 1);
+        trimmed.push((entry, layer));
+        trimmed.extend_from_slice(&waypoints[join_index..]);
+        *waypoints = trimmed;
+    }
+
+    if waypoints.len() < 2 {
+        return false;
+    }
+    let end_radius = connection.end.drill_radius_nm.map(|drill_radius| {
+        drill_radius
+            .saturating_add(config.track_width_nm / 2)
+            .saturating_add(50_000)
+    });
+    if let Some(radius_nm) = end_radius {
+        let Some(join_index) =
+            waypoints
+                .iter()
+                .enumerate()
+                .rev()
+                .skip(1)
+                .find_map(|(index, (join, layer))| {
+                    let distance = point_distance(connection.end.position, *join);
+                    (distance > radius_nm as f64
+                        && connection.end.layers & layer_bit(*layer) != 0
+                        && context
+                            .segment_cost(connection.end.position, *join, layer_bit(*layer))
+                            .is_some())
+                    .then_some(index)
+                })
+        else {
+            return false;
+        };
+        let (join, layer) = waypoints[join_index];
+        let entry = radial_entry_point(connection.end.position, join, radius_nm);
+        waypoints.truncate(join_index + 1);
+        waypoints.push((entry, layer));
+    }
+    true
+}
+
+fn radial_entry_point(center: NmPoint, toward: NmPoint, radius_nm: i64) -> NmPoint {
+    let dx = (toward.x - center.x) as f64;
+    let dy = (toward.y - center.y) as f64;
+    let distance = dx.hypot(dy);
+    if distance <= 0.0 {
+        return center;
+    }
+    NmPoint::new(
+        center.x + (dx * radius_nm as f64 / distance).round() as i64,
+        center.y + (dy * radius_nm as f64 / distance).round() as i64,
+    )
 }
 
 fn collinear_forward(a: NmPoint, b: NmPoint, c: NmPoint) -> bool {
@@ -1446,6 +1587,12 @@ fn direction_of(start: NmPoint, end: NmPoint) -> u8 {
         .iter()
         .position(|candidate| *candidate == (dx, dy))
         .map_or(8, |index| index as u8)
+}
+
+fn octilinear_or_short(start: NmPoint, end: NmPoint, max_stub_nm: i64) -> bool {
+    let dx = start.x.abs_diff(end.x);
+    let dy = start.y.abs_diff(end.y);
+    dx == 0 || dy == 0 || dx == dy || point_distance(start, end) <= max_stub_nm as f64
 }
 
 fn segment_inside_board(board: &Board, start: NmPoint, end: NmPoint, radius_nm: i64) -> bool {

@@ -2,7 +2,7 @@
 
 <p align="center"><img src="assets/protocraft-logo.png" alt="ProtoCraft ant on a microchip" width="240"></p>
 
-<p align="center"><a href="README.pt-BR.md">Português</a> · <a href="README.en.md">English</a></p>
+<p align="center"><a href="README.md">Main README · English</a> · <a href="README.pt-BR.md">Português · tradução</a></p>
 
 ProtoCraft is a Rust desktop application for electronic design. It brings together a schematic editor, original circuit simulation engines, manual and initial automatic two-layer PCB routing, physical STM32/ESP32 device data, a CLI, and an experimental Proteus project importer.
 
@@ -21,6 +21,15 @@ ProtoCraft is a Rust desktop application for electronic design. It brings togeth
 - Native JSON `.protocraft` format with migrations and recovery backups.
 - Experimental Proteus ISIS 8 import for selected `.pdsprj` and `.dsn` project data, with import reports and preservation of unsupported model information.
 - Headless CLI sharing the application’s project, connectivity, and simulation code.
+- Headless MCP stdio server with typed atomic edits, expected revisions, faceted physical-device search, PCB checks, and autorouting.
+
+## Example board built with ProtoCraft: 555 LED blinker
+
+<p align="center"><img src="docs/screenshots/protocraft-555-led-1hz-board.png" alt="Complete two-layer 555 LED blinker PCB designed and routed in ProtoCraft" width="1000"></p>
+
+<p align="center"><img src="docs/screenshots/protocraft-555-led-1hz-routing-detail.png" alt="Close-up of the 555 timer and its routed through-hole pads" width="720"></p>
+
+This two-layer astable 555 board was laid out and routed in ProtoCraft. It has 45 track segments, one via, 0.35 mm tracks, and 15 completed connections. Tracks approach the centers of the through-hole pads while keeping the drill openings clear. Open the [native project](examples/555-led-1hz-pcb.protocraft) or read the [board and fabrication notes](docs/555-led-1hz-pcb.md).
 
 ## Windows quick start
 
@@ -63,10 +72,11 @@ simulate examples/divisor.protocraft
 simulate examples/rc.protocraft --engine dynamic --transient 0.00001 0.005 --csv rc.csv
 simulate examples/555-astavel.protocraft --engine mixed --transient 0.00001 0.01 --csv timer.csv
 spice examples/rc.protocraft --transient 0.00001 0.005 --output rc.cir
+mcp --project examples/555-astavel.protocraft
 protocraft-cli import-proteus circuit.pdsprj --output circuit.protocraft --report import.json
 ```
 
-For example, run `cargo run -p eda-cli -- simulate examples/rc.protocraft`. The `--transient` option takes a time step and duration in seconds. `run` applies typed project actions atomically in headless mode. See the [CLI guide](docs/cli.md) for details.
+For example, run `cargo run -p eda-cli -- simulate examples/rc.protocraft`. The `--transient` option takes a time step and duration in seconds. `run` applies typed project actions atomically in headless mode. Start MCP with `cargo run -p eda-cli -- mcp --project examples/555-astavel.protocraft`; it owns a separate headless session and does not control an open desktop project. See the [CLI guide](docs/cli.md) and [MCP guide](docs/mcp.md) for details.
 
 The desktop application also accepts a project path and analysis options, such as `protocraft.exe examples/rc.protocraft --analysis transient --engine dynamic`, or `protocraft.exe --settings` to open settings.
 
@@ -91,6 +101,8 @@ Imported projects with partial connectivity remain blocked from simulation. Revi
 ## Project documentation
 
 - [Architecture](docs/architecture.md) and [contracts](docs/contracts.md)
+- [Craft architecture compatibility study](docs/craft-compatibility.md)
+- [MCP server and tools](docs/mcp.md)
 - [File format and recovery](docs/file-format.md)
 - [CLI actions and examples](docs/cli.md)
 - [555 LED blinker starter template](docs/555-led-1hz.md)

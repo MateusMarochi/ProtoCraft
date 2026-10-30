@@ -11,7 +11,8 @@ Dependências diretas adotadas:
 | serde / serde_json | Serialização JSON | MIT OU Apache-2.0 |
 | thiserror | Erros tipados | MIT OU Apache-2.0 |
 | tempfile | Gravação atômica | MIT OU Apache-2.0 |
-| egui / eframe 0.33 | Interface desktop e renderização | MIT OU Apache-2.0 |
+| egui / eframe 0.36 | Interface desktop e renderização | MIT OU Apache-2.0 |
+| craft-ui 0.1.0 | Ajuste de abas e estados visuais reutilizáveis | MIT OU Apache-2.0 |
 | rfd 0.15 | Diálogos nativos de arquivos | MIT |
 | png 0.18 | Capturas de validação do renderer | MIT OU Apache-2.0 |
 | zip 9.0.5 | Leitura limitada do contêiner em memória | MIT |
@@ -21,7 +22,9 @@ O importador usa a série zip 9, com correções dos avisos RustSec RUSTSEC-2026
 
 As dependências transitivas e versões exatas são registradas em `Cargo.lock`; o arquivo `docs/dependencies.json` gerado durante a entrega contém os metadados de licença e proveniência resolvidos pelo Cargo. Os textos de licença encontrados nos pacotes estão reunidos em `docs/THIRD_PARTY_LICENSES.txt`, incluindo OFL e UFL das fontes padrão de egui. Algumas dependências opcionais/plataformas podem constar no lockfile e no conjunto de avisos sem serem vinculadas ao executável Windows.
 
-Fontes primárias consultadas: https://rust-lang.org/tools/install/ ; https://docs.rs/eframe/0.33.3/eframe/ ; https://docs.rs/rfd/0.15.4/rfd/ ; https://docs.rs/tempfile/3.27.0/tempfile/ . O Cargo verifica os checksums dos pacotes publicados.
+O `craft-ui` é consumido diretamente de <https://github.com/storytold/craft-libs> no commit `1aa81a773aa9198a0e4c0daeda954d622475af38`, declarado MIT ou Apache-2.0. Seus avisos estão em `docs/THIRD_PARTY_LICENSES.txt`; o código e assets GPL da PCBCraft não foram incorporados. As dependências e versões efetivamente resolvidas estão em `Cargo.lock` e `docs/dependencies.json`.
+
+Fontes primárias consultadas: https://rust-lang.org/tools/install/ ; https://docs.rs/eframe/0.36.2/eframe/ ; https://docs.rs/rfd/0.15.4/rfd/ ; https://docs.rs/tempfile/3.27.0/tempfile/ . O Cargo verifica os checksums dos pacotes publicados.
 
 Os materiais originais do ProtoCraft — incluindo código-fonte, documentação e exemplos de circuitos distribuídos com o projeto — são licenciados sob **MIT ou Apache-2.0, à escolha de quem recebe o material**. Consulte `LICENSE-MIT` e `LICENSE-APACHE`; o titular pode escolher qualquer uma dessas licenças para usar, modificar e redistribuir esses materiais. Copyright © 2026 Mateus Marochi e contribuidores do ProtoCraft.
 

@@ -1,10 +1,21 @@
 param(
-    [string]$Compiler = "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",
+    [string]$Compiler,
     [string]$Version
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
+if ([string]::IsNullOrWhiteSpace($Compiler)) {
+    $candidates = @(
+        (Join-Path $env:ProgramFiles 'Inno Setup 7\ISCC.exe'),
+        (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 7\ISCC.exe'),
+        (Join-Path $env:LOCALAPPDATA 'Programs\Inno Setup 7\ISCC.exe'),
+        (Join-Path $env:LOCALAPPDATA 'Programs\Inno Setup 6\ISCC.exe'),
+        (Join-Path $env:ProgramFiles 'Inno Setup 6\ISCC.exe'),
+        (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe')
+    )
+    $Compiler = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+}
 $package = Join-Path $root 'dist\ProtoCraft'
 $definition = Join-Path $root 'installer\ProtoCraft.iss'
 if (-not (Test-Path -LiteralPath $Compiler)) { throw "Inno Setup compiler não encontrado: $Compiler" }

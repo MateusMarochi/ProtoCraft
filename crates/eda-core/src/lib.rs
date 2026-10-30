@@ -214,6 +214,8 @@ pub enum CoreError {
     MissingObject,
     #[error("Limite de objetos ou identificadores atingido.")]
     Limit,
+    #[error("Revisão desatualizada: esperada {expected}, atual {actual}.")]
+    RevisionConflict { expected: u64, actual: u64 },
 }
 impl Project {
     pub fn empty(name: impl Into<String>) -> Self {
@@ -756,6 +758,7 @@ pub enum Command {
 
 pub struct Engine {
     project: Project,
+    next_id_high_water: u64,
     revision: u64,
     undo: Vec<Project>,
     redo: Vec<Project>,
@@ -763,8 +766,10 @@ pub struct Engine {
 impl Engine {
     pub fn new(project: Project) -> Result<Self, CoreError> {
         project.validate()?;
+        let next_id_high_water = project.next_id;
         Ok(Self {
             project,
+            next_id_high_water,
             revision: 0,
             undo: Vec::new(),
             redo: Vec::new(),
@@ -785,9 +790,11 @@ impl Engine {
     pub fn execute(&mut self, command: Command) -> Result<(), CoreError> {
         // O snapshot só é criado ao confirmar uma edição, nunca durante desenho/hover.
         let mut candidate = self.project.clone();
+        candidate.next_id = candidate.next_id.max(self.next_id_high_water);
         candidate.apply(command, 0)?;
         candidate.validate()?;
         if candidate != self.project {
+            self.next_id_high_water = self.next_id_high_water.max(candidate.next_id);
             self.undo
                 .push(std::mem::replace(&mut self.project, candidate));
             if self.undo.len() > 100 {
@@ -798,8 +805,23 @@ impl Engine {
         }
         Ok(())
     }
+    /// Executa a edição somente se o chamador ainda estiver trabalhando sobre a revisão lida.
+    pub fn execute_at_revision(
+        &mut self,
+        expected_revision: u64,
+        command: Command,
+    ) -> Result<(), CoreError> {
+        if self.revision != expected_revision {
+            return Err(CoreError::RevisionConflict {
+                expected: expected_revision,
+                actual: self.revision,
+            });
+        }
+        self.execute(command)
+    }
     pub fn undo(&mut self) -> bool {
-        if let Some(project) = self.undo.pop() {
+        if let Some(mut project) = self.undo.pop() {
+            project.next_id = project.next_id.max(self.next_id_high_water);
             self.redo
                 .push(std::mem::replace(&mut self.project, project));
             self.revision = self.revision.saturating_add(1);
@@ -809,7 +831,9 @@ impl Engine {
         }
     }
     pub fn redo(&mut self) -> bool {
-        if let Some(project) = self.redo.pop() {
+        if let Some(mut project) = self.redo.pop() {
+            project.next_id = project.next_id.max(self.next_id_high_water);
+            self.next_id_high_water = self.next_id_high_water.max(project.next_id);
             self.undo
                 .push(std::mem::replace(&mut self.project, project));
             self.revision = self.revision.saturating_add(1);

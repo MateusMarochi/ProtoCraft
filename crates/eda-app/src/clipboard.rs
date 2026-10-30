@@ -410,7 +410,7 @@ impl ProtoCraft {
         }
     }
     pub(crate) fn clipboard_shortcuts(&mut self, ctx: &egui::Context) -> bool {
-        if self.pending.is_some() || ctx.wants_keyboard_input() {
+        if self.pending.is_some() || ctx.egui_wants_keyboard_input() {
             return false;
         }
         let actions = ctx.input_mut(|input| {

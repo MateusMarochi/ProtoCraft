@@ -11,6 +11,8 @@ name = "protocraft-cli"
 path = "src/main.rs"
 
 [dependencies]
+eda-automation.workspace = true
+eda-mcp.workspace = true
 eda-i18n.workspace = true
 eda-library.workspace = true
 eda-pcb.workspace = true

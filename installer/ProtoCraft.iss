@@ -1,6 +1,6 @@
 #define AppName "ProtoCraft"
 #ifndef AppVersion
-#define AppVersion "0.7.0"
+#define AppVersion "0.8.0"
 #endif
 #define AppPublisher "MateusMarochi"
 #define AppURL "https://github.com/MateusMarochi/ProtoCraft"
@@ -29,6 +29,7 @@ Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 DisableProgramGroupPage=yes
+ChangesAssociations=yes
 
 [Languages]
 Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
@@ -47,6 +48,12 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "..\dist\ProtoCraft\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[Registry]
+Root: HKCR; Subkey: ".protocraft"; ValueType: string; ValueName: ""; ValueData: "ProtoCraft.Project"; Flags: uninsdeletevalue
+Root: HKCR; Subkey: "ProtoCraft.Project"; ValueType: string; ValueName: ""; ValueData: "ProtoCraft Project"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "ProtoCraft.Project\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\protocraft.exe,0"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "ProtoCraft.Project\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\protocraft.exe"" ""%1"""; Flags: uninsdeletekey
 
 [Icons]
 Name: "{autoprograms}\ProtoCraft"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\{#AppExeName}"

@@ -6,19 +6,22 @@ ProtoCraft uses an original implementation and a native `.protocraft` project fo
 
 ## Start here
 
-- [Repository overview](README.md): concise project summary, capabilities, limitations, quick start, and search vocabulary.
-- [English documentation](README.en.md): full build instructions, features, usage, and known limits.
-- [Documentação em português](README.pt-BR.md): visão geral, instalação, CLI e limitações.
+- [Main README in English](README.md): primary project overview, capabilities, quick start, and search vocabulary.
+- [Extended English guide](README.en.md): detailed build instructions, features, usage, and known limits.
+- [Tradução para português](README.pt-BR.md): visão geral, instalação, CLI e limitações.
 
 ## Technical references
 
 - [Architecture and crate boundaries](docs/architecture.md)
+- [Craft architecture compatibility and PCBCraft analysis](docs/craft-compatibility.md)
 - [Project format and migrations](docs/file-format.md)
 - [CLI and automation](docs/cli.md)
+- [MCP stdio server, tools, schemas, and revision-safe editing](docs/mcp.md)
 - [Simulation engines](docs/simulation-engines.md)
 - [Mixed analog/digital simulation](docs/mixed-simulation.md)
 - [Simulation validation and limits](docs/simulation-validation.md)
 - [PCB editing, routing, DRC, Gerber, and Excellon](docs/manual-routing.md)
+- [Complete 555 LED circuit and routed PCB fabrication example](docs/555-led-1hz-pcb.md)
 - [STM32/ESP32 physical catalog](docs/mcu-pcb.md)
 - [Proteus import behavior and limitations](docs/proteus-import.md)
 - [Roadmap](docs/roadmap.md)
@@ -36,7 +39,9 @@ ProtoCraft uses an original implementation and a native `.protocraft` project fo
 - `crates/eda-i18n`: locale selection, translation catalogs, fallback, and JSON overlays.
 - `crates/eda-app`: desktop application.
 - `crates/eda-cli`: headless command-line application.
+- `crates/eda-automation`: shared typed JSON command registry and action schemas.
+- `crates/eda-mcp`: headless MCP stdio server using the same project Engine.
 
 ## Search vocabulary
 
-Rust EDA, electronic design automation, circuit simulator, schematic capture, PCB design, PCB layout, PCB routing, PCB autorouter, Gerber RS-274X, Excellon drill files, SPICE netlist, STM32, ESP32, Proteus project importer, `.protocraft`, headless CLI, EDA em Rust, automação de circuitos eletrônicos, roteamento de PCB.
+Rust EDA, electronic design automation, circuit simulator, schematic capture, PCB design, PCB layout, PCB routing, PCB autorouter, Model Context Protocol, MCP server, Gerber RS-274X, Excellon drill files, SPICE netlist, STM32, ESP32, Proteus project importer, `.protocraft`, headless CLI, EDA em Rust, automação de circuitos eletrônicos, roteamento de PCB.

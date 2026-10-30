@@ -2,7 +2,7 @@
 
 <p align="center"><img src="assets/protocraft-logo.png" alt="Formiga sobre um microchip, marca do ProtoCraft" width="240"></p>
 
-<p align="center"><a href="README.pt-BR.md">Português</a> · <a href="README.en.md">English</a></p>
+<p align="center"><strong>Português · tradução</strong> · <a href="README.md">English · README principal</a></p>
 
 Editor de circuitos eletrônicos para desktop, feito em Rust. Reúne editor de esquemas, motores próprios de simulação, roteamento manual e autorroteamento inicial de PCB em duas camadas, dados físicos de dispositivos STM32/ESP32, CLI e importador experimental de projetos Proteus.
 
@@ -16,8 +16,17 @@ Editor de circuitos eletrônicos para desktop, feito em Rust. Reúne editor de e
 - Exportação Gerber/Excellon com preset JLCPCB e validação pelo KiCad CLI externo.
 - Catálogo físico offline com 2.283 entradas STM32 e 48 Espressif.
 - CLI para validação, netlists, simulação, exportação SPICE, autorroteamento, ações de projeto e importação Proteus.
+- Servidor MCP headless por stdio com comandos tipados, busca física facetada, DRC e autorroteamento com revisão esperada.
 - Interface e CLI em português do Brasil e inglês, com seleção pelo idioma do sistema e fallback para inglês; os catálogos JSON podem ser substituídos sem recompilar.
 - Formato nativo de projeto `.protocraft`.
+
+## Placa construída no ProtoCraft: pisca-pisca com 555
+
+<p align="center"><img src="docs/screenshots/protocraft-555-led-1hz-board.png" alt="PCB completa de duas camadas do pisca-pisca com 555, projetada e roteada no ProtoCraft" width="1000"></p>
+
+<p align="center"><img src="docs/screenshots/protocraft-555-led-1hz-routing-detail.png" alt="Detalhe do temporizador 555 e das trilhas nos pads passantes" width="720"></p>
+
+Esta placa astável de duas camadas foi posicionada e roteada no ProtoCraft. Ela tem 45 segmentos de trilha, uma via, trilhas de 0,35 mm e 15 conexões concluídas. As trilhas chegam na direção do centro dos pads passantes, mantendo as furações livres. Abra o [projeto nativo](examples/555-led-1hz-pcb.protocraft) ou consulte as [notas da placa e da fabricação](docs/555-led-1hz-pcb.md).
 
 ## Início rápido
 
@@ -27,7 +36,7 @@ No Windows, execute `Iniciar-ProtoCraft.cmd`. Para compilar o código-fonte, ins
 cargo run -p eda-app
 ```
 
-Consulte o [README em português](README.pt-BR.md) para instruções completas ou o [README em inglês](README.en.md).
+Consulte o [README principal em inglês](README.md) ou o [guia completo de build e CLI em inglês](README.en.md).
 
 ## CLI
 
@@ -38,9 +47,10 @@ cargo run -p eda-cli -- --help
 cargo run -p eda-cli -- templates
 cargo run -p eda-cli -- new --output pisca.protocraft --template 555-led-1hz --frequency-hz 1
 cargo run -p eda-cli -- simulate pisca.protocraft --engine mixed --transient 0.00025 3 --csv pisca.csv
+cargo run -p eda-cli -- mcp --project pisca.protocraft
 ```
 
-Consulte o [guia da CLI](docs/cli.md) para os comandos de inspeção, validação, autorroteamento, fabricação e importação.
+Consulte o [guia da CLI](docs/cli.md) e o [guia do MCP](docs/mcp.md) para inspeção, edição atômica, validação, autorroteamento, fabricação e importação. O MCP mantém uma sessão headless própria do arquivo indicado; ainda não controla a janela desktop aberta.
 
 ## Escopo e limitações
 

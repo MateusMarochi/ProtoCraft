@@ -36,13 +36,16 @@ fn ctrl(key: Key) -> egui::Event {
     }
 }
 fn frame(app: &mut ProtoCraft, ctx: &egui::Context, events: Vec<egui::Event>) -> egui::FullOutput {
-    ctx.run(
+    ctx.run_ui(
         egui::RawInput {
             screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1000.0, 700.0))),
             events,
             ..Default::default()
         },
-        |ctx| app.shortcuts(ctx),
+        |ui| {
+            let ctx = ui.ctx().clone();
+            app.shortcuts(&ctx);
+        },
     )
 }
 fn copied(output: &egui::FullOutput) -> String {
@@ -336,22 +339,23 @@ fn focused_text_editor_owns_copy_cut_paste() {
     let id = egui::Id::new("clipboard_text");
     let mut text = "texto normal".to_owned();
     let before = app.engine.project().clone();
-    let _ = ctx.run(Default::default(), |ctx| {
-        egui::CentralPanel::default().show(ctx, |ui| {
+    let _ = ctx.run_ui(Default::default(), |ui| {
+        egui::CentralPanel::default().show(ui, |ui| {
             ui.add(egui::TextEdit::singleline(&mut text).id(id))
                 .request_focus();
         });
     });
-    assert!(ctx.wants_keyboard_input());
+    assert!(ctx.egui_wants_keyboard_input());
     let mut text_frame = |events| {
-        ctx.run(
+        ctx.run_ui(
             egui::RawInput {
                 events,
                 ..Default::default()
             },
-            |ctx| {
-                app.shortcuts(ctx);
-                egui::CentralPanel::default().show(ctx, |ui| {
+            |root_ui| {
+                let ctx = root_ui.ctx().clone();
+                app.shortcuts(&ctx);
+                egui::CentralPanel::default().show(root_ui, |ui| {
                     ui.add(egui::TextEdit::singleline(&mut text).id(id));
                 });
             },
@@ -499,12 +503,15 @@ fn paste_uses_cursor_in_each_canvas_instead_of_fallback() {
     );
     let mut pcb = pcb_app();
     let ctx = egui::Context::default();
-    let _ = ctx.run(
+    let _ = ctx.run_ui(
         egui::RawInput {
             screen_rect: Some(rect),
             ..Default::default()
         },
-        |ctx| pcb.pcb_canvas(ctx),
+        |ui| {
+            let ctx = ui.ctx().clone();
+            pcb.pcb_canvas(ui, &ctx);
+        },
     );
     let text = copied(&frame(&mut pcb, &ctx, vec![egui::Event::Copy]));
     frame(

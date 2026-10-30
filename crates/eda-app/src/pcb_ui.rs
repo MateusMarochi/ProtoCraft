@@ -186,7 +186,7 @@ impl ProtoCraft {
         );
     }
     pub(super) fn pcb_shortcuts(&mut self, ctx: &egui::Context) {
-        if ctx.wants_keyboard_input() || self.pending.is_some() {
+        if ctx.egui_wants_keyboard_input() || self.pending.is_some() {
             return;
         }
         if ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
@@ -285,7 +285,7 @@ impl ProtoCraft {
             }
         }
     }
-    pub(super) fn pcb_tools(&mut self, ctx: &egui::Context) {
+    pub(super) fn pcb_tools(&mut self, root_ui: &mut egui::Ui, ctx: &egui::Context) {
         let autoroute_result =
             self.pcb
                 .autorouting
@@ -352,11 +352,11 @@ impl ProtoCraft {
         } else {
             egui::Color32::from_rgb(225, 236, 242)
         };
-        egui::SidePanel::left("pcb_tools")
-            .default_width(160.0)
-            .width_range(140.0..=250.0)
+        egui::Panel::left("pcb_tools")
+            .default_size(160.0)
+            .size_range(140.0..=250.0)
             .frame(egui::Frame::new().fill(panel_fill))
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     ui.add_space(5.0);
                     ui.heading(egui::RichText::new(tr!("Componentes")).strong());
@@ -549,17 +549,17 @@ impl ProtoCraft {
                 });
             });
     }
-    pub(super) fn pcb_mode_strip(&mut self, ctx: &egui::Context) {
+    pub(super) fn pcb_mode_strip(&mut self, root_ui: &mut egui::Ui, _ctx: &egui::Context) {
         let strip_fill = if self.dark {
             egui::Color32::from_rgb(36, 47, 54)
         } else {
             egui::Color32::from_rgb(212, 228, 237)
         };
-        egui::SidePanel::left("pcb_mode_strip")
-            .exact_width(46.0)
+        egui::Panel::left("pcb_mode_strip")
+            .exact_size(46.0)
             .resizable(false)
             .frame(egui::Frame::new().fill(strip_fill))
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 ui.add_space(8.0);
                 let tools = [
                     (
@@ -648,15 +648,15 @@ impl ProtoCraft {
             });
     }
 
-    pub(super) fn pcb_inspector(&mut self, ctx: &egui::Context) {
+    pub(super) fn pcb_inspector(&mut self, root_ui: &mut egui::Ui, ctx: &egui::Context) {
         let theme = Palette::new(ctx);
         let Some(board) = self.engine.project().board.as_deref().cloned() else {
             return;
         };
-        egui::SidePanel::right("pcb_inspector")
-            .default_width(265.0)
-            .width_range(220.0..=380.0)
-            .show(ctx, |ui| {
+        egui::Panel::right("pcb_inspector")
+            .default_size(265.0)
+            .size_range(220.0..=380.0)
+            .show(root_ui, |ui| {
                 ui.add_space(8.0);
                 ui.heading(tr!("Explorador da PCB"));
                 ui.horizontal(|ui| {
@@ -1080,10 +1080,10 @@ impl ProtoCraft {
             Err(e) => self.message(e.to_string(), true),
         }
     }
-    pub(super) fn pcb_canvas(&mut self, ctx: &egui::Context) {
+    pub(super) fn pcb_canvas(&mut self, root_ui: &mut egui::Ui, ctx: &egui::Context) {
         egui::CentralPanel::default()
             .frame(egui::Frame::NONE)
-            .show(ctx, |ui| {
+            .show(root_ui, |ui| {
                 let (response, painter) =
                     ui.allocate_painter(ui.available_size(), Sense::click_and_drag());
                 let rect = response.rect;
@@ -1327,18 +1327,28 @@ impl ProtoCraft {
                     }
                 }
                 for t in board.tracks.values() {
+                    let color = if self.pcb.selected_track == Some(t.id) {
+                        Color32::WHITE
+                    } else if t.layer == BoardSide::Top {
+                        Color32::from_rgb(232, 101, 107)
+                    } else {
+                        Color32::from_rgb(90, 151, 230)
+                    };
+                    let width = (t.width_nm as f32 / 1e6 * zoom).max(1.0);
                     painter.line_segment(
                         [screen(t.start), screen(t.end)],
-                        Stroke::new(
-                            (t.width_nm as f32 / 1e6 * zoom).max(1.0),
-                            if self.pcb.selected_track == Some(t.id) {
-                                Color32::WHITE
-                            } else if t.layer == BoardSide::Top {
-                                Color32::from_rgb(232, 101, 107)
-                            } else {
-                                Color32::from_rgb(90, 151, 230)
-                            },
-                        ),
+                        Stroke::new(width, color),
+                    );
+                    painter.circle_filled(screen(t.start), width * 0.5, color);
+                    painter.circle_filled(screen(t.end), width * 0.5, color);
+                }
+                // Repaint the bore above copper so tracks cannot visually fill the holes.
+                for pad in pads.iter().filter(|pad| pad.pad.drill.is_some()) {
+                    let drill = pad.pad.drill.expect("filtered pad has a drill");
+                    painter.circle_filled(
+                        screen(pad.position),
+                        drill.x.max(drill.y) as f32 / 2e6 * zoom,
+                        Color32::from_gray(20),
                     );
                 }
                 for v in board.vias.values() {
@@ -1666,14 +1676,17 @@ mod tests {
         let ctx = egui::Context::default();
         let rect = Rect::from_min_size(Pos2::ZERO, Vec2::new(1200.0, 800.0));
         let frame = |app: &mut ProtoCraft, events, time| {
-            let _ = ctx.run(
+            let _ = ctx.run_ui(
                 egui::RawInput {
                     screen_rect: Some(rect),
                     events,
                     time: Some(time),
                     ..Default::default()
                 },
-                |ctx| app.pcb_canvas(ctx),
+                |ui| {
+                    let ctx = ui.ctx().clone();
+                    app.pcb_canvas(ui, &ctx);
+                },
             );
         };
         frame(&mut app, vec![], 0.0);

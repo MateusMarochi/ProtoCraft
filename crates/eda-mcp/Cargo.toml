@@ -1,0 +1,17 @@
+[package]
+name = "eda-mcp"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+eda-automation.workspace = true
+eda-core.workspace = true
+eda-i18n.workspace = true
+eda-netlist.workspace = true
+eda-library.workspace = true
+eda-pcb.workspace = true
+eda-storage.workspace = true
+serde.workspace = true
+serde_json.workspace = true

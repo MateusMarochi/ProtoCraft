@@ -1,0 +1,4640 @@
+{
+  "format_version": 6,
+  "name": "ProtoCraft — pisca-pisca 555 de 1 Hz",
+  "components": {
+    "1": {
+      "id": 1,
+      "reference": "J1",
+      "kind": "VoltageSource",
+      "value": 5.0,
+      "position": {
+        "x": -24,
+        "y": -8
+      },
+      "rotation": 1,
+      "footprint": {
+        "id": "ProtoCraft_THT:Terminal_2P_5.08mm",
+        "description": "Power terminal 2P, 5.08 mm pitch",
+        "body_layer": "F.Fab",
+        "body_bounds": {
+          "min": {
+            "x": -4040000,
+            "y": -1500000
+          },
+          "max": {
+            "x": 4040000,
+            "y": 1500000
+          }
+        },
+        "pads": [
+          {
+            "number": "1",
+            "position": {
+              "x": -2540000,
+              "y": 0
+            },
+            "size": {
+              "x": 1800000,
+              "y": 1800000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "2",
+            "position": {
+              "x": 2540000,
+              "y": 0
+            },
+            "size": {
+              "x": 1800000,
+              "y": 1800000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          }
+        ],
+        "lines": [
+          {
+            "start": {
+              "x": -4400000,
+              "y": -3600000
+            },
+            "end": {
+              "x": 4400000,
+              "y": -3600000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 4400000,
+              "y": -3600000
+            },
+            "end": {
+              "x": 4400000,
+              "y": 3600000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 4400000,
+              "y": 3600000
+            },
+            "end": {
+              "x": -4400000,
+              "y": 3600000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -4400000,
+              "y": 3600000
+            },
+            "end": {
+              "x": -4400000,
+              "y": -3600000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -4200000,
+              "y": -3400000
+            },
+            "end": {
+              "x": 4200000,
+              "y": -3400000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 4200000,
+              "y": -3400000
+            },
+            "end": {
+              "x": 4200000,
+              "y": 3400000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 4200000,
+              "y": 3400000
+            },
+            "end": {
+              "x": -4200000,
+              "y": 3400000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -4200000,
+              "y": 3400000
+            },
+            "end": {
+              "x": -4200000,
+              "y": -3400000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -5200000,
+              "y": -4200000
+            },
+            "end": {
+              "x": 5200000,
+              "y": -4200000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 5200000,
+              "y": -4200000
+            },
+            "end": {
+              "x": 5200000,
+              "y": 4200000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 5200000,
+              "y": 4200000
+            },
+            "end": {
+              "x": -5200000,
+              "y": 4200000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -5200000,
+              "y": 4200000
+            },
+            "end": {
+              "x": -5200000,
+              "y": -4200000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          }
+        ],
+        "keepouts": [],
+        "source": {
+          "project": "ProtoCraft example",
+          "revision": "1",
+          "url": "",
+          "license": "CC0-1.0"
+        }
+      }
+    },
+    "4": {
+      "id": 4,
+      "reference": "U1",
+      "kind": "Timer555",
+      "value": 0.0,
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "footprint": {
+        "id": "Package_DIP:DIP-8_W7.62mm",
+        "description": "8-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)",
+        "body_layer": "F.Fab",
+        "body_bounds": {
+          "min": {
+            "x": 635000,
+            "y": -1270000
+          },
+          "max": {
+            "x": 6985000,
+            "y": 8890000
+          }
+        },
+        "pads": [
+          {
+            "number": "1",
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "size": {
+              "x": 1600000,
+              "y": 1600000
+            },
+            "rotation_mdeg": 0,
+            "shape": "RoundRect",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "*.Mask"
+            ],
+            "roundrect_ratio_ppm": 156250,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "2",
+            "position": {
+              "x": 0,
+              "y": 2540000
+            },
+            "size": {
+              "x": 1600000,
+              "y": 1600000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "*.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "3",
+            "position": {
+              "x": 0,
+              "y": 5080000
+            },
+            "size": {
+              "x": 1600000,
+              "y": 1600000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "*.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "4",
+            "position": {
+              "x": 0,
+              "y": 7620000
+            },
+            "size": {
+              "x": 1600000,
+              "y": 1600000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "*.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "5",
+            "position": {
+              "x": 7620000,
+              "y": 7620000
+            },
+            "size": {
+              "x": 1600000,
+              "y": 1600000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "*.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "6",
+            "position": {
+              "x": 7620000,
+              "y": 5080000
+            },
+            "size": {
+              "x": 1600000,
+              "y": 1600000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "*.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "7",
+            "position": {
+              "x": 7620000,
+              "y": 2540000
+            },
+            "size": {
+              "x": 1600000,
+              "y": 1600000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "*.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "8",
+            "position": {
+              "x": 7620000,
+              "y": 0
+            },
+            "size": {
+              "x": 1600000,
+              "y": 1600000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "*.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          }
+        ],
+        "lines": [
+          {
+            "start": {
+              "x": 1160000,
+              "y": -1330000
+            },
+            "end": {
+              "x": 1160000,
+              "y": 8950000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1160000,
+              "y": 8950000
+            },
+            "end": {
+              "x": 6460000,
+              "y": 8950000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 2810000,
+              "y": -1330000
+            },
+            "end": {
+              "x": 1160000,
+              "y": -1330000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 6460000,
+              "y": -1330000
+            },
+            "end": {
+              "x": 4810000,
+              "y": -1330000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 6460000,
+              "y": 8950000
+            },
+            "end": {
+              "x": 6460000,
+              "y": -1330000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1060000,
+              "y": -1520000
+            },
+            "end": {
+              "x": 8670000,
+              "y": -1520000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 8670000,
+              "y": -1520000
+            },
+            "end": {
+              "x": 8670000,
+              "y": 9140000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 8670000,
+              "y": 9140000
+            },
+            "end": {
+              "x": -1060000,
+              "y": 9140000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -1060000,
+              "y": 9140000
+            },
+            "end": {
+              "x": -1060000,
+              "y": -1520000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 635000,
+              "y": -270000
+            },
+            "end": {
+              "x": 1635000,
+              "y": -1270000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 635000,
+              "y": 8890000
+            },
+            "end": {
+              "x": 635000,
+              "y": -270000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1635000,
+              "y": -1270000
+            },
+            "end": {
+              "x": 6985000,
+              "y": -1270000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 6985000,
+              "y": -1270000
+            },
+            "end": {
+              "x": 6985000,
+              "y": 8890000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 6985000,
+              "y": 8890000
+            },
+            "end": {
+              "x": 635000,
+              "y": 8890000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          }
+        ],
+        "keepouts": [],
+        "source": {
+          "project": "KiCad Libraries",
+          "revision": "819223b66f96508feaeaa305301b5e6bb5c1038b",
+          "url": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/819223b66f96508feaeaa305301b5e6bb5c1038b/Package_DIP.pretty/DIP-8_W7.62mm.kicad_mod",
+          "license": "CC-BY-SA-4.0 WITH KiCad-library-exception"
+        }
+      }
+    },
+    "13": {
+      "id": 13,
+      "reference": "RA",
+      "kind": "Resistor",
+      "value": 47000.0,
+      "position": {
+        "x": 20,
+        "y": -8
+      },
+      "rotation": 1,
+      "footprint": {
+        "id": "ProtoCraft_THT:R_Axial_7.62mm",
+        "description": "Resistor axial through-hole, pitch 7.62 mm",
+        "body_layer": "F.Fab",
+        "body_bounds": {
+          "min": {
+            "x": -5310000,
+            "y": -1500000
+          },
+          "max": {
+            "x": 5310000,
+            "y": 1500000
+          }
+        },
+        "pads": [
+          {
+            "number": "1",
+            "position": {
+              "x": -3810000,
+              "y": 0
+            },
+            "size": {
+              "x": 1800000,
+              "y": 1800000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "2",
+            "position": {
+              "x": 3810000,
+              "y": 0
+            },
+            "size": {
+              "x": 1800000,
+              "y": 1800000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          }
+        ],
+        "lines": [
+          {
+            "start": {
+              "x": -3000000,
+              "y": -1000000
+            },
+            "end": {
+              "x": 3000000,
+              "y": -1000000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 3000000,
+              "y": -1000000
+            },
+            "end": {
+              "x": 3000000,
+              "y": 1000000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 3000000,
+              "y": 1000000
+            },
+            "end": {
+              "x": -3000000,
+              "y": 1000000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -3000000,
+              "y": 1000000
+            },
+            "end": {
+              "x": -3000000,
+              "y": -1000000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -5000000,
+              "y": -1500000
+            },
+            "end": {
+              "x": 5000000,
+              "y": -1500000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 5000000,
+              "y": -1500000
+            },
+            "end": {
+              "x": 5000000,
+              "y": 1500000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 5000000,
+              "y": 1500000
+            },
+            "end": {
+              "x": -5000000,
+              "y": 1500000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -5000000,
+              "y": 1500000
+            },
+            "end": {
+              "x": -5000000,
+              "y": -1500000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          }
+        ],
+        "keepouts": [],
+        "source": {
+          "project": "ProtoCraft example",
+          "revision": "1",
+          "url": "",
+          "license": "CC0-1.0"
+        }
+      }
+    },
+    "16": {
+      "id": 16,
+      "reference": "RB",
+      "kind": "Resistor",
+      "value": 48700.0,
+      "position": {
+        "x": 20,
+        "y": 3
+      },
+      "rotation": 1,
+      "footprint": {
+        "id": "ProtoCraft_THT:R_Axial_7.62mm",
+        "description": "Resistor axial through-hole, pitch 7.62 mm",
+        "body_layer": "F.Fab",
+        "body_bounds": {
+          "min": {
+            "x": -5310000,
+            "y": -1500000
+          },
+          "max": {
+            "x": 5310000,
+            "y": 1500000
+          }
+        },
+        "pads": [
+          {
+            "number": "1",
+            "position": {
+              "x": -3810000,
+              "y": 0
+            },
+            "size": {
+              "x": 1800000,
+              "y": 1800000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "2",
+            "position": {
+              "x": 3810000,
+              "y": 0
+            },
+            "size": {
+              "x": 1800000,
+              "y": 1800000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          }
+        ],
+        "lines": [
+          {
+            "start": {
+              "x": -3000000,
+              "y": -1000000
+            },
+            "end": {
+              "x": 3000000,
+              "y": -1000000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 3000000,
+              "y": -1000000
+            },
+            "end": {
+              "x": 3000000,
+              "y": 1000000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 3000000,
+              "y": 1000000
+            },
+            "end": {
+              "x": -3000000,
+              "y": 1000000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -3000000,
+              "y": 1000000
+            },
+            "end": {
+              "x": -3000000,
+              "y": -1000000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -5000000,
+              "y": -1500000
+            },
+            "end": {
+              "x": 5000000,
+              "y": -1500000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 5000000,
+              "y": -1500000
+            },
+            "end": {
+              "x": 5000000,
+              "y": 1500000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 5000000,
+              "y": 1500000
+            },
+            "end": {
+              "x": -5000000,
+              "y": 1500000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -5000000,
+              "y": 1500000
+            },
+            "end": {
+              "x": -5000000,
+              "y": -1500000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          }
+        ],
+        "keepouts": [],
+        "source": {
+          "project": "ProtoCraft example",
+          "revision": "1",
+          "url": "",
+          "license": "CC0-1.0"
+        }
+      }
+    },
+    "19": {
+      "id": 19,
+      "reference": "C1",
+      "kind": "Capacitor",
+      "value": 0.00001,
+      "position": {
+        "x": 20,
+        "y": 14
+      },
+      "rotation": 1,
+      "footprint": {
+        "id": "ProtoCraft_THT:C_Radial_Electrolytic_2.50mm",
+        "description": "Electrolytic capacitor radial 10 uF, 2.50 mm pitch; pin 1 positive",
+        "body_layer": "F.Fab",
+        "body_bounds": {
+          "min": {
+            "x": -2600000,
+            "y": -6700000
+          },
+          "max": {
+            "x": 2600000,
+            "y": 900000
+          }
+        },
+        "pads": [
+          {
+            "number": "1",
+            "position": {
+              "x": -1250000,
+              "y": 0
+            },
+            "size": {
+              "x": 1800000,
+              "y": 1800000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "2",
+            "position": {
+              "x": 1250000,
+              "y": 0
+            },
+            "size": {
+              "x": 1800000,
+              "y": 1800000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          }
+        ],
+        "lines": [
+          {
+            "start": {
+              "x": 2250000,
+              "y": -4100000
+            },
+            "end": {
+              "x": 2206767,
+              "y": -3661047
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 2206767,
+              "y": -3661047
+            },
+            "end": {
+              "x": 2078729,
+              "y": -3238962
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 2078729,
+              "y": -3238962
+            },
+            "end": {
+              "x": 1870807,
+              "y": -2849967
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1870807,
+              "y": -2849967
+            },
+            "end": {
+              "x": 1590990,
+              "y": -2509010
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1590990,
+              "y": -2509010
+            },
+            "end": {
+              "x": 1250033,
+              "y": -2229193
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1250033,
+              "y": -2229193
+            },
+            "end": {
+              "x": 861038,
+              "y": -2021271
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 861038,
+              "y": -2021271
+            },
+            "end": {
+              "x": 438953,
+              "y": -1893233
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 438953,
+              "y": -1893233
+            },
+            "end": {
+              "x": 0,
+              "y": -1850000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 0,
+              "y": -1850000
+            },
+            "end": {
+              "x": -438953,
+              "y": -1893233
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -438953,
+              "y": -1893233
+            },
+            "end": {
+              "x": -861038,
+              "y": -2021271
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -861038,
+              "y": -2021271
+            },
+            "end": {
+              "x": -1250033,
+              "y": -2229193
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1250033,
+              "y": -2229193
+            },
+            "end": {
+              "x": -1590990,
+              "y": -2509010
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1590990,
+              "y": -2509010
+            },
+            "end": {
+              "x": -1870807,
+              "y": -2849967
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1870807,
+              "y": -2849967
+            },
+            "end": {
+              "x": -2078729,
+              "y": -3238962
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -2078729,
+              "y": -3238962
+            },
+            "end": {
+              "x": -2206767,
+              "y": -3661047
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -2206767,
+              "y": -3661047
+            },
+            "end": {
+              "x": -2250000,
+              "y": -4100000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -2250000,
+              "y": -4100000
+            },
+            "end": {
+              "x": -2206767,
+              "y": -4538953
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -2206767,
+              "y": -4538953
+            },
+            "end": {
+              "x": -2078729,
+              "y": -4961038
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -2078729,
+              "y": -4961038
+            },
+            "end": {
+              "x": -1870807,
+              "y": -5350033
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1870807,
+              "y": -5350033
+            },
+            "end": {
+              "x": -1590990,
+              "y": -5690990
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1590990,
+              "y": -5690990
+            },
+            "end": {
+              "x": -1250033,
+              "y": -5970807
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1250033,
+              "y": -5970807
+            },
+            "end": {
+              "x": -861038,
+              "y": -6178729
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -861038,
+              "y": -6178729
+            },
+            "end": {
+              "x": -438953,
+              "y": -6306767
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -438953,
+              "y": -6306767
+            },
+            "end": {
+              "x": 0,
+              "y": -6350000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 0,
+              "y": -6350000
+            },
+            "end": {
+              "x": 438953,
+              "y": -6306767
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 438953,
+              "y": -6306767
+            },
+            "end": {
+              "x": 861038,
+              "y": -6178729
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 861038,
+              "y": -6178729
+            },
+            "end": {
+              "x": 1250033,
+              "y": -5970807
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1250033,
+              "y": -5970807
+            },
+            "end": {
+              "x": 1590990,
+              "y": -5690990
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1590990,
+              "y": -5690990
+            },
+            "end": {
+              "x": 1870807,
+              "y": -5350033
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1870807,
+              "y": -5350033
+            },
+            "end": {
+              "x": 2078729,
+              "y": -4961038
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 2078729,
+              "y": -4961038
+            },
+            "end": {
+              "x": 2206767,
+              "y": -4538953
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 2206767,
+              "y": -4538953
+            },
+            "end": {
+              "x": 2250000,
+              "y": -4100000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 2250000,
+              "y": -4100000
+            },
+            "end": {
+              "x": 2206767,
+              "y": -3661047
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 2206767,
+              "y": -3661047
+            },
+            "end": {
+              "x": 2078729,
+              "y": -3238962
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 2078729,
+              "y": -3238962
+            },
+            "end": {
+              "x": 1870807,
+              "y": -2849967
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1870807,
+              "y": -2849967
+            },
+            "end": {
+              "x": 1590990,
+              "y": -2509010
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1590990,
+              "y": -2509010
+            },
+            "end": {
+              "x": 1250033,
+              "y": -2229193
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1250033,
+              "y": -2229193
+            },
+            "end": {
+              "x": 861038,
+              "y": -2021271
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 861038,
+              "y": -2021271
+            },
+            "end": {
+              "x": 438953,
+              "y": -1893233
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 438953,
+              "y": -1893233
+            },
+            "end": {
+              "x": 0,
+              "y": -1850000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 0,
+              "y": -1850000
+            },
+            "end": {
+              "x": -438953,
+              "y": -1893233
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -438953,
+              "y": -1893233
+            },
+            "end": {
+              "x": -861038,
+              "y": -2021271
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -861038,
+              "y": -2021271
+            },
+            "end": {
+              "x": -1250033,
+              "y": -2229193
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1250033,
+              "y": -2229193
+            },
+            "end": {
+              "x": -1590990,
+              "y": -2509010
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1590990,
+              "y": -2509010
+            },
+            "end": {
+              "x": -1870807,
+              "y": -2849967
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1870807,
+              "y": -2849967
+            },
+            "end": {
+              "x": -2078729,
+              "y": -3238962
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -2078729,
+              "y": -3238962
+            },
+            "end": {
+              "x": -2206767,
+              "y": -3661047
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -2206767,
+              "y": -3661047
+            },
+            "end": {
+              "x": -2250000,
+              "y": -4100000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -2250000,
+              "y": -4100000
+            },
+            "end": {
+              "x": -2206767,
+              "y": -4538953
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -2206767,
+              "y": -4538953
+            },
+            "end": {
+              "x": -2078729,
+              "y": -4961038
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -2078729,
+              "y": -4961038
+            },
+            "end": {
+              "x": -1870807,
+              "y": -5350033
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1870807,
+              "y": -5350033
+            },
+            "end": {
+              "x": -1590990,
+              "y": -5690990
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1590990,
+              "y": -5690990
+            },
+            "end": {
+              "x": -1250033,
+              "y": -5970807
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1250033,
+              "y": -5970807
+            },
+            "end": {
+              "x": -861038,
+              "y": -6178729
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -861038,
+              "y": -6178729
+            },
+            "end": {
+              "x": -438953,
+              "y": -6306767
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -438953,
+              "y": -6306767
+            },
+            "end": {
+              "x": 0,
+              "y": -6350000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 0,
+              "y": -6350000
+            },
+            "end": {
+              "x": 438953,
+              "y": -6306767
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 438953,
+              "y": -6306767
+            },
+            "end": {
+              "x": 861038,
+              "y": -6178729
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 861038,
+              "y": -6178729
+            },
+            "end": {
+              "x": 1250033,
+              "y": -5970807
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1250033,
+              "y": -5970807
+            },
+            "end": {
+              "x": 1590990,
+              "y": -5690990
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1590990,
+              "y": -5690990
+            },
+            "end": {
+              "x": 1870807,
+              "y": -5350033
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1870807,
+              "y": -5350033
+            },
+            "end": {
+              "x": 2078729,
+              "y": -4961038
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 2078729,
+              "y": -4961038
+            },
+            "end": {
+              "x": 2206767,
+              "y": -4538953
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 2206767,
+              "y": -4538953
+            },
+            "end": {
+              "x": 2250000,
+              "y": -4100000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -2700000,
+              "y": -6800000
+            },
+            "end": {
+              "x": 2700000,
+              "y": -6800000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 2700000,
+              "y": -6800000
+            },
+            "end": {
+              "x": 2700000,
+              "y": 900000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 2700000,
+              "y": 900000
+            },
+            "end": {
+              "x": -2700000,
+              "y": 900000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -2700000,
+              "y": 900000
+            },
+            "end": {
+              "x": -2700000,
+              "y": -6800000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -1650000,
+              "y": -4100000
+            },
+            "end": {
+              "x": -950000,
+              "y": -4100000
+            },
+            "width_nm": 150000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1300000,
+              "y": -4450000
+            },
+            "end": {
+              "x": -1300000,
+              "y": -3750000
+            },
+            "width_nm": 150000,
+            "layer": "F.SilkS"
+          }
+        ],
+        "keepouts": [],
+        "source": {
+          "project": "ProtoCraft example",
+          "revision": "1",
+          "url": "",
+          "license": "CC0-1.0"
+        }
+      }
+    },
+    "22": {
+      "id": 22,
+      "reference": "D1",
+      "kind": "Led",
+      "value": 2.0,
+      "position": {
+        "x": -16,
+        "y": 12
+      },
+      "rotation": 1,
+      "footprint": {
+        "id": "ProtoCraft_THT:LED_D5.0mm",
+        "description": "LED THT 5 mm, pin 1 anode/round pad; pin 2 cathode/square pad at flat side, 2.54 mm pitch",
+        "body_layer": "F.Fab",
+        "body_bounds": {
+          "min": {
+            "x": -3250000,
+            "y": -3250000
+          },
+          "max": {
+            "x": 3250000,
+            "y": 3250000
+          }
+        },
+        "pads": [
+          {
+            "number": "1",
+            "position": {
+              "x": 1270000,
+              "y": 0
+            },
+            "size": {
+              "x": 1800000,
+              "y": 1800000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "2",
+            "position": {
+              "x": -1270000,
+              "y": 0
+            },
+            "size": {
+              "x": 1800000,
+              "y": 1800000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Rect",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          }
+        ],
+        "lines": [
+          {
+            "start": {
+              "x": -2000000,
+              "y": -1500000
+            },
+            "end": {
+              "x": -1742424,
+              "y": -1792752
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1742424,
+              "y": -1792752
+            },
+            "end": {
+              "x": -1442462,
+              "y": -2041887
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1442462,
+              "y": -2041887
+            },
+            "end": {
+              "x": -1107409,
+              "y": -2241349
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1107409,
+              "y": -2241349
+            },
+            "end": {
+              "x": -745416,
+              "y": -2386285
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -745416,
+              "y": -2386285
+            },
+            "end": {
+              "x": -365289,
+              "y": -2473169
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -365289,
+              "y": -2473169
+            },
+            "end": {
+              "x": 23725,
+              "y": -2499887
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 23725,
+              "y": -2499887
+            },
+            "end": {
+              "x": 412162,
+              "y": -2465790
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 412162,
+              "y": -2465790
+            },
+            "end": {
+              "x": 790572,
+              "y": -2371708
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 790572,
+              "y": -2371708
+            },
+            "end": {
+              "x": 1149749,
+              "y": -2219927
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1149749,
+              "y": -2219927
+            },
+            "end": {
+              "x": 1480956,
+              "y": -2014142
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1480956,
+              "y": -2014142
+            },
+            "end": {
+              "x": 1776135,
+              "y": -1759359
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1776135,
+              "y": -1759359
+            },
+            "end": {
+              "x": 2028106,
+              "y": -1461775
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 2028106,
+              "y": -1461775
+            },
+            "end": {
+              "x": 2230739,
+              "y": -1128630
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 2230739,
+              "y": -1128630
+            },
+            "end": {
+              "x": 2379103,
+              "y": -768028
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 2379103,
+              "y": -768028
+            },
+            "end": {
+              "x": 2469591,
+              "y": -388743
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 2469591,
+              "y": -388743
+            },
+            "end": {
+              "x": 2500000,
+              "y": 0
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 2500000,
+              "y": 0
+            },
+            "end": {
+              "x": 2469591,
+              "y": 388743
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 2469591,
+              "y": 388743
+            },
+            "end": {
+              "x": 2379103,
+              "y": 768028
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 2379103,
+              "y": 768028
+            },
+            "end": {
+              "x": 2230739,
+              "y": 1128630
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 2230739,
+              "y": 1128630
+            },
+            "end": {
+              "x": 2028106,
+              "y": 1461775
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 2028106,
+              "y": 1461775
+            },
+            "end": {
+              "x": 1776135,
+              "y": 1759359
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1776135,
+              "y": 1759359
+            },
+            "end": {
+              "x": 1480956,
+              "y": 2014142
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1480956,
+              "y": 2014142
+            },
+            "end": {
+              "x": 1149749,
+              "y": 2219927
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1149749,
+              "y": 2219927
+            },
+            "end": {
+              "x": 790572,
+              "y": 2371708
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 790572,
+              "y": 2371708
+            },
+            "end": {
+              "x": 412162,
+              "y": 2465790
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 412162,
+              "y": 2465790
+            },
+            "end": {
+              "x": 23725,
+              "y": 2499887
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 23725,
+              "y": 2499887
+            },
+            "end": {
+              "x": -365289,
+              "y": 2473169
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -365289,
+              "y": 2473169
+            },
+            "end": {
+              "x": -745416,
+              "y": 2386285
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -745416,
+              "y": 2386285
+            },
+            "end": {
+              "x": -1107409,
+              "y": 2241349
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1107409,
+              "y": 2241349
+            },
+            "end": {
+              "x": -1442462,
+              "y": 2041887
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1442462,
+              "y": 2041887
+            },
+            "end": {
+              "x": -1742424,
+              "y": 1792752
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1742424,
+              "y": 1792752
+            },
+            "end": {
+              "x": -2000000,
+              "y": -1500000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -3250000,
+              "y": -3250000
+            },
+            "end": {
+              "x": 3250000,
+              "y": -3250000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 3250000,
+              "y": -3250000
+            },
+            "end": {
+              "x": 3250000,
+              "y": 3250000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 3250000,
+              "y": 3250000
+            },
+            "end": {
+              "x": -3250000,
+              "y": 3250000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -3250000,
+              "y": 3250000
+            },
+            "end": {
+              "x": -3250000,
+              "y": -3250000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          }
+        ],
+        "keepouts": [],
+        "source": {
+          "project": "ProtoCraft example",
+          "revision": "1",
+          "url": "",
+          "license": "CC0-1.0"
+        }
+      }
+    },
+    "25": {
+      "id": 25,
+      "reference": "GND1",
+      "kind": "Ground",
+      "value": 0.0,
+      "position": {
+        "x": -20,
+        "y": 18
+      },
+      "rotation": 0
+    },
+    "27": {
+      "id": 27,
+      "reference": "RLED",
+      "kind": "Resistor",
+      "value": 680.0,
+      "position": {
+        "x": -32,
+        "y": 12
+      },
+      "rotation": 1,
+      "footprint": {
+        "id": "ProtoCraft_THT:R_Axial_7.62mm",
+        "description": "Resistor axial through-hole, pitch 7.62 mm",
+        "body_layer": "F.Fab",
+        "body_bounds": {
+          "min": {
+            "x": -5310000,
+            "y": -1500000
+          },
+          "max": {
+            "x": 5310000,
+            "y": 1500000
+          }
+        },
+        "pads": [
+          {
+            "number": "1",
+            "position": {
+              "x": -3810000,
+              "y": 0
+            },
+            "size": {
+              "x": 1800000,
+              "y": 1800000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "2",
+            "position": {
+              "x": 3810000,
+              "y": 0
+            },
+            "size": {
+              "x": 1800000,
+              "y": 1800000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          }
+        ],
+        "lines": [
+          {
+            "start": {
+              "x": -3000000,
+              "y": -1000000
+            },
+            "end": {
+              "x": 3000000,
+              "y": -1000000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 3000000,
+              "y": -1000000
+            },
+            "end": {
+              "x": 3000000,
+              "y": 1000000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 3000000,
+              "y": 1000000
+            },
+            "end": {
+              "x": -3000000,
+              "y": 1000000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -3000000,
+              "y": 1000000
+            },
+            "end": {
+              "x": -3000000,
+              "y": -1000000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -5000000,
+              "y": -1500000
+            },
+            "end": {
+              "x": 5000000,
+              "y": -1500000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 5000000,
+              "y": -1500000
+            },
+            "end": {
+              "x": 5000000,
+              "y": 1500000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 5000000,
+              "y": 1500000
+            },
+            "end": {
+              "x": -5000000,
+              "y": 1500000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -5000000,
+              "y": 1500000
+            },
+            "end": {
+              "x": -5000000,
+              "y": -1500000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          }
+        ],
+        "keepouts": [],
+        "source": {
+          "project": "ProtoCraft example",
+          "revision": "1",
+          "url": "",
+          "license": "CC0-1.0"
+        }
+      }
+    },
+    "30": {
+      "id": 30,
+      "reference": "C2",
+      "kind": "Capacitor",
+      "value": 1e-8,
+      "position": {
+        "x": 4,
+        "y": 10
+      },
+      "rotation": 1,
+      "footprint": {
+        "id": "ProtoCraft_THT:C_Radial_Ceramic_2.50mm",
+        "description": "Ceramic bypass capacitor radial, 2.50 mm pitch",
+        "body_layer": "F.Fab",
+        "body_bounds": {
+          "min": {
+            "x": -1800000,
+            "y": -4300000
+          },
+          "max": {
+            "x": 1800000,
+            "y": 900000
+          }
+        },
+        "pads": [
+          {
+            "number": "1",
+            "position": {
+              "x": -1250000,
+              "y": 0
+            },
+            "size": {
+              "x": 1800000,
+              "y": 1800000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          },
+          {
+            "number": "2",
+            "position": {
+              "x": 1250000,
+              "y": 0
+            },
+            "size": {
+              "x": 1800000,
+              "y": 1800000
+            },
+            "rotation_mdeg": 0,
+            "shape": "Circle",
+            "technology": "ThroughHole",
+            "drill": {
+              "x": 800000,
+              "y": 800000
+            },
+            "layers": [
+              "*.Cu",
+              "F.Mask"
+            ],
+            "roundrect_ratio_ppm": 0,
+            "mask_margin_nm": 0,
+            "paste_margin_nm": 0,
+            "paste_ratio_ppm": 0,
+            "polygons": []
+          }
+        ],
+        "lines": [
+          {
+            "start": {
+              "x": 1500000,
+              "y": -2800000
+            },
+            "end": {
+              "x": 1471178,
+              "y": -2507365
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1471178,
+              "y": -2507365
+            },
+            "end": {
+              "x": 1385819,
+              "y": -2225975
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1385819,
+              "y": -2225975
+            },
+            "end": {
+              "x": 1247204,
+              "y": -1966645
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1247204,
+              "y": -1966645
+            },
+            "end": {
+              "x": 1060660,
+              "y": -1739340
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1060660,
+              "y": -1739340
+            },
+            "end": {
+              "x": 833355,
+              "y": -1552796
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 833355,
+              "y": -1552796
+            },
+            "end": {
+              "x": 574025,
+              "y": -1414181
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 574025,
+              "y": -1414181
+            },
+            "end": {
+              "x": 292635,
+              "y": -1328822
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 292635,
+              "y": -1328822
+            },
+            "end": {
+              "x": 0,
+              "y": -1300000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 0,
+              "y": -1300000
+            },
+            "end": {
+              "x": -292635,
+              "y": -1328822
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -292635,
+              "y": -1328822
+            },
+            "end": {
+              "x": -574025,
+              "y": -1414181
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -574025,
+              "y": -1414181
+            },
+            "end": {
+              "x": -833355,
+              "y": -1552796
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -833355,
+              "y": -1552796
+            },
+            "end": {
+              "x": -1060660,
+              "y": -1739340
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1060660,
+              "y": -1739340
+            },
+            "end": {
+              "x": -1247204,
+              "y": -1966645
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1247204,
+              "y": -1966645
+            },
+            "end": {
+              "x": -1385819,
+              "y": -2225975
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1385819,
+              "y": -2225975
+            },
+            "end": {
+              "x": -1471178,
+              "y": -2507365
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1471178,
+              "y": -2507365
+            },
+            "end": {
+              "x": -1500000,
+              "y": -2800000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1500000,
+              "y": -2800000
+            },
+            "end": {
+              "x": -1471178,
+              "y": -3092635
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1471178,
+              "y": -3092635
+            },
+            "end": {
+              "x": -1385819,
+              "y": -3374025
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1385819,
+              "y": -3374025
+            },
+            "end": {
+              "x": -1247204,
+              "y": -3633355
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1247204,
+              "y": -3633355
+            },
+            "end": {
+              "x": -1060660,
+              "y": -3860660
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -1060660,
+              "y": -3860660
+            },
+            "end": {
+              "x": -833355,
+              "y": -4047204
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -833355,
+              "y": -4047204
+            },
+            "end": {
+              "x": -574025,
+              "y": -4185819
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -574025,
+              "y": -4185819
+            },
+            "end": {
+              "x": -292635,
+              "y": -4271178
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": -292635,
+              "y": -4271178
+            },
+            "end": {
+              "x": 0,
+              "y": -4300000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 0,
+              "y": -4300000
+            },
+            "end": {
+              "x": 292635,
+              "y": -4271178
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 292635,
+              "y": -4271178
+            },
+            "end": {
+              "x": 574025,
+              "y": -4185819
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 574025,
+              "y": -4185819
+            },
+            "end": {
+              "x": 833355,
+              "y": -4047204
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 833355,
+              "y": -4047204
+            },
+            "end": {
+              "x": 1060660,
+              "y": -3860660
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1060660,
+              "y": -3860660
+            },
+            "end": {
+              "x": 1247204,
+              "y": -3633355
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1247204,
+              "y": -3633355
+            },
+            "end": {
+              "x": 1385819,
+              "y": -3374025
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1385819,
+              "y": -3374025
+            },
+            "end": {
+              "x": 1471178,
+              "y": -3092635
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1471178,
+              "y": -3092635
+            },
+            "end": {
+              "x": 1500000,
+              "y": -2800000
+            },
+            "width_nm": 120000,
+            "layer": "F.SilkS"
+          },
+          {
+            "start": {
+              "x": 1500000,
+              "y": -2800000
+            },
+            "end": {
+              "x": 1471178,
+              "y": -2507365
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1471178,
+              "y": -2507365
+            },
+            "end": {
+              "x": 1385819,
+              "y": -2225975
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1385819,
+              "y": -2225975
+            },
+            "end": {
+              "x": 1247204,
+              "y": -1966645
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1247204,
+              "y": -1966645
+            },
+            "end": {
+              "x": 1060660,
+              "y": -1739340
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1060660,
+              "y": -1739340
+            },
+            "end": {
+              "x": 833355,
+              "y": -1552796
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 833355,
+              "y": -1552796
+            },
+            "end": {
+              "x": 574025,
+              "y": -1414181
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 574025,
+              "y": -1414181
+            },
+            "end": {
+              "x": 292635,
+              "y": -1328822
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 292635,
+              "y": -1328822
+            },
+            "end": {
+              "x": 0,
+              "y": -1300000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 0,
+              "y": -1300000
+            },
+            "end": {
+              "x": -292635,
+              "y": -1328822
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -292635,
+              "y": -1328822
+            },
+            "end": {
+              "x": -574025,
+              "y": -1414181
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -574025,
+              "y": -1414181
+            },
+            "end": {
+              "x": -833355,
+              "y": -1552796
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -833355,
+              "y": -1552796
+            },
+            "end": {
+              "x": -1060660,
+              "y": -1739340
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1060660,
+              "y": -1739340
+            },
+            "end": {
+              "x": -1247204,
+              "y": -1966645
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1247204,
+              "y": -1966645
+            },
+            "end": {
+              "x": -1385819,
+              "y": -2225975
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1385819,
+              "y": -2225975
+            },
+            "end": {
+              "x": -1471178,
+              "y": -2507365
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1471178,
+              "y": -2507365
+            },
+            "end": {
+              "x": -1500000,
+              "y": -2800000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1500000,
+              "y": -2800000
+            },
+            "end": {
+              "x": -1471178,
+              "y": -3092635
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1471178,
+              "y": -3092635
+            },
+            "end": {
+              "x": -1385819,
+              "y": -3374025
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1385819,
+              "y": -3374025
+            },
+            "end": {
+              "x": -1247204,
+              "y": -3633355
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1247204,
+              "y": -3633355
+            },
+            "end": {
+              "x": -1060660,
+              "y": -3860660
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1060660,
+              "y": -3860660
+            },
+            "end": {
+              "x": -833355,
+              "y": -4047204
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -833355,
+              "y": -4047204
+            },
+            "end": {
+              "x": -574025,
+              "y": -4185819
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -574025,
+              "y": -4185819
+            },
+            "end": {
+              "x": -292635,
+              "y": -4271178
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -292635,
+              "y": -4271178
+            },
+            "end": {
+              "x": 0,
+              "y": -4300000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 0,
+              "y": -4300000
+            },
+            "end": {
+              "x": 292635,
+              "y": -4271178
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 292635,
+              "y": -4271178
+            },
+            "end": {
+              "x": 574025,
+              "y": -4185819
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 574025,
+              "y": -4185819
+            },
+            "end": {
+              "x": 833355,
+              "y": -4047204
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 833355,
+              "y": -4047204
+            },
+            "end": {
+              "x": 1060660,
+              "y": -3860660
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1060660,
+              "y": -3860660
+            },
+            "end": {
+              "x": 1247204,
+              "y": -3633355
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1247204,
+              "y": -3633355
+            },
+            "end": {
+              "x": 1385819,
+              "y": -3374025
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1385819,
+              "y": -3374025
+            },
+            "end": {
+              "x": 1471178,
+              "y": -3092635
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": 1471178,
+              "y": -3092635
+            },
+            "end": {
+              "x": 1500000,
+              "y": -2800000
+            },
+            "width_nm": 100000,
+            "layer": "F.Fab"
+          },
+          {
+            "start": {
+              "x": -1900000,
+              "y": -4500000
+            },
+            "end": {
+              "x": 1900000,
+              "y": -4500000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 1900000,
+              "y": -4500000
+            },
+            "end": {
+              "x": 1900000,
+              "y": 900000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": 1900000,
+              "y": 900000
+            },
+            "end": {
+              "x": -1900000,
+              "y": 900000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          },
+          {
+            "start": {
+              "x": -1900000,
+              "y": 900000
+            },
+            "end": {
+              "x": -1900000,
+              "y": -4500000
+            },
+            "width_nm": 50000,
+            "layer": "F.CrtYd"
+          }
+        ],
+        "keepouts": [],
+        "source": {
+          "project": "ProtoCraft example",
+          "revision": "1",
+          "url": "",
+          "license": "CC0-1.0"
+        }
+      }
+    }
+  },
+  "wires": {},
+  "junctions": {},
+  "labels": {
+    "2": {
+      "id": 2,
+      "position": {
+        "x": -24,
+        "y": -11
+      },
+      "name": "VCC"
+    },
+    "3": {
+      "id": 3,
+      "position": {
+        "x": -24,
+        "y": -5
+      },
+      "name": "0"
+    },
+    "5": {
+      "id": 5,
+      "position": {
+        "x": -6,
+        "y": -3
+      },
+      "name": "0"
+    },
+    "6": {
+      "id": 6,
+      "position": {
+        "x": -6,
+        "y": -1
+      },
+      "name": "CAP"
+    },
+    "7": {
+      "id": 7,
+      "position": {
+        "x": -6,
+        "y": 1
+      },
+      "name": "VOUT"
+    },
+    "8": {
+      "id": 8,
+      "position": {
+        "x": -6,
+        "y": 3
+      },
+      "name": "VCC"
+    },
+    "9": {
+      "id": 9,
+      "position": {
+        "x": 6,
+        "y": 3
+      },
+      "name": "CTRL"
+    },
+    "10": {
+      "id": 10,
+      "position": {
+        "x": 6,
+        "y": 1
+      },
+      "name": "CAP"
+    },
+    "11": {
+      "id": 11,
+      "position": {
+        "x": 6,
+        "y": -1
+      },
+      "name": "DIS"
+    },
+    "12": {
+      "id": 12,
+      "position": {
+        "x": 6,
+        "y": -3
+      },
+      "name": "VCC"
+    },
+    "14": {
+      "id": 14,
+      "position": {
+        "x": 20,
+        "y": -11
+      },
+      "name": "VCC"
+    },
+    "15": {
+      "id": 15,
+      "position": {
+        "x": 20,
+        "y": -5
+      },
+      "name": "DIS"
+    },
+    "17": {
+      "id": 17,
+      "position": {
+        "x": 20,
+        "y": 0
+      },
+      "name": "DIS"
+    },
+    "18": {
+      "id": 18,
+      "position": {
+        "x": 20,
+        "y": 6
+      },
+      "name": "CAP"
+    },
+    "20": {
+      "id": 20,
+      "position": {
+        "x": 20,
+        "y": 11
+      },
+      "name": "CAP"
+    },
+    "21": {
+      "id": 21,
+      "position": {
+        "x": 20,
+        "y": 17
+      },
+      "name": "0"
+    },
+    "23": {
+      "id": 23,
+      "position": {
+        "x": -16,
+        "y": 9
+      },
+      "name": "VOUT"
+    },
+    "24": {
+      "id": 24,
+      "position": {
+        "x": -16,
+        "y": 15
+      },
+      "name": "LED_K"
+    },
+    "26": {
+      "id": 26,
+      "position": {
+        "x": -20,
+        "y": 18
+      },
+      "name": "0"
+    },
+    "28": {
+      "id": 28,
+      "position": {
+        "x": -32,
+        "y": 9
+      },
+      "name": "LED_K"
+    },
+    "29": {
+      "id": 29,
+      "position": {
+        "x": -32,
+        "y": 15
+      },
+      "name": "0"
+    },
+    "31": {
+      "id": 31,
+      "position": {
+        "x": 4,
+        "y": 7
+      },
+      "name": "CTRL"
+    },
+    "32": {
+      "id": 32,
+      "position": {
+        "x": 4,
+        "y": 13
+      },
+      "name": "0"
+    }
+  },
+  "next_id": 33,
+  "board": {
+    "width_nm": 65000000,
+    "height_nm": 45000000,
+    "thickness_nm": 1600000,
+    "clearance_nm": 250000,
+    "edge_clearance_nm": 500000,
+    "placements": {
+      "1": {
+        "position": {
+          "x": 10000000,
+          "y": 16000000
+        },
+        "rotation": 0,
+        "side": "Top"
+      },
+      "4": {
+        "position": {
+          "x": 26000000,
+          "y": 16000000
+        },
+        "rotation": 0,
+        "side": "Top"
+      },
+      "13": {
+        "position": {
+          "x": 40000000,
+          "y": 13000000
+        },
+        "rotation": 1,
+        "side": "Top"
+      },
+      "16": {
+        "position": {
+          "x": 47000000,
+          "y": 22000000
+        },
+        "rotation": 1,
+        "side": "Top"
+      },
+      "19": {
+        "position": {
+          "x": 55000000,
+          "y": 31000000
+        },
+        "rotation": 1,
+        "side": "Top"
+      },
+      "22": {
+        "position": {
+          "x": 17000000,
+          "y": 24000000
+        },
+        "rotation": 0,
+        "side": "Top"
+      },
+      "27": {
+        "position": {
+          "x": 16000000,
+          "y": 33000000
+        },
+        "rotation": 1,
+        "side": "Top"
+      },
+      "30": {
+        "position": {
+          "x": 40000000,
+          "y": 31000000
+        },
+        "rotation": 1,
+        "side": "Top"
+      }
+    },
+    "tracks": {
+      "1": {
+        "id": 1,
+        "start": {
+          "x": 25200000,
+          "y": 15200000
+        },
+        "end": {
+          "x": 30200000,
+          "y": 20200000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 1,
+          "pin": 1
+        }
+      },
+      "2": {
+        "id": 2,
+        "start": {
+          "x": 30200000,
+          "y": 20200000
+        },
+        "end": {
+          "x": 30200000,
+          "y": 22200000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 1,
+          "pin": 1
+        }
+      },
+      "3": {
+        "id": 3,
+        "start": {
+          "x": 30200000,
+          "y": 22200000
+        },
+        "end": {
+          "x": 39700000,
+          "y": 31700000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 1,
+          "pin": 1
+        }
+      },
+      "4": {
+        "id": 4,
+        "start": {
+          "x": 39700000,
+          "y": 31700000
+        },
+        "end": {
+          "x": 39700717,
+          "y": 31701315
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 1,
+          "pin": 1
+        }
+      },
+      "5": {
+        "id": 5,
+        "start": {
+          "x": 6560000,
+          "y": 15100000
+        },
+        "end": {
+          "x": 7000000,
+          "y": 14600000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 1,
+          "pin": 0
+        }
+      },
+      "6": {
+        "id": 6,
+        "start": {
+          "x": 7000000,
+          "y": 14600000
+        },
+        "end": {
+          "x": 16500000,
+          "y": 14600000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 1,
+          "pin": 0
+        }
+      },
+      "7": {
+        "id": 7,
+        "start": {
+          "x": 16500000,
+          "y": 14600000
+        },
+        "end": {
+          "x": 25000000,
+          "y": 23100000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 1,
+          "pin": 0
+        }
+      },
+      "8": {
+        "id": 8,
+        "start": {
+          "x": 25000000,
+          "y": 23100000
+        },
+        "end": {
+          "x": 25445489,
+          "y": 23331655
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 1,
+          "pin": 0
+        }
+      },
+      "9": {
+        "id": 9,
+        "start": {
+          "x": 12540000,
+          "y": 16625000
+        },
+        "end": {
+          "x": 12540000,
+          "y": 33000000
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 1,
+          "pin": 1
+        }
+      },
+      "10": {
+        "id": 10,
+        "start": {
+          "x": 12540000,
+          "y": 33000000
+        },
+        "end": {
+          "x": 15540000,
+          "y": 36000000
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 1,
+          "pin": 1
+        }
+      },
+      "11": {
+        "id": 11,
+        "start": {
+          "x": 15540000,
+          "y": 36000000
+        },
+        "end": {
+          "x": 15691359,
+          "y": 36266524
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 1,
+          "pin": 1
+        }
+      },
+      "12": {
+        "id": 12,
+        "start": {
+          "x": 40625000,
+          "y": 32250000
+        },
+        "end": {
+          "x": 54375000,
+          "y": 32250000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 1,
+          "pin": 1
+        }
+      },
+      "13": {
+        "id": 13,
+        "start": {
+          "x": 34245000,
+          "y": 21080000
+        },
+        "end": {
+          "x": 41620000,
+          "y": 21080000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 4,
+          "pin": 1
+        }
+      },
+      "14": {
+        "id": 14,
+        "start": {
+          "x": 41620000,
+          "y": 21080000
+        },
+        "end": {
+          "x": 46120000,
+          "y": 25580000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 4,
+          "pin": 1
+        }
+      },
+      "15": {
+        "id": 15,
+        "start": {
+          "x": 46120000,
+          "y": 25580000
+        },
+        "end": {
+          "x": 46395312,
+          "y": 25651957
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 4,
+          "pin": 1
+        }
+      },
+      "16": {
+        "id": 16,
+        "start": {
+          "x": 13138641,
+          "y": 15820408
+        },
+        "end": {
+          "x": 13540000,
+          "y": 15700000
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 1,
+          "pin": 1
+        }
+      },
+      "17": {
+        "id": 17,
+        "start": {
+          "x": 13540000,
+          "y": 15700000
+        },
+        "end": {
+          "x": 24540000,
+          "y": 15700000
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 1,
+          "pin": 1
+        }
+      },
+      "18": {
+        "id": 18,
+        "start": {
+          "x": 24540000,
+          "y": 15700000
+        },
+        "end": {
+          "x": 25200000,
+          "y": 15200000
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 1,
+          "pin": 1
+        }
+      },
+      "19": {
+        "id": 19,
+        "start": {
+          "x": 26441942,
+          "y": 23178058
+        },
+        "end": {
+          "x": 33178058,
+          "y": 16441942
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 1,
+          "pin": 0
+        }
+      },
+      "20": {
+        "id": 20,
+        "start": {
+          "x": 47441942,
+          "y": 26251942
+        },
+        "end": {
+          "x": 47500000,
+          "y": 26310000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 4,
+          "pin": 1
+        }
+      },
+      "21": {
+        "id": 21,
+        "start": {
+          "x": 47500000,
+          "y": 26310000
+        },
+        "end": {
+          "x": 52500000,
+          "y": 26310000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 4,
+          "pin": 1
+        }
+      },
+      "22": {
+        "id": 22,
+        "start": {
+          "x": 52500000,
+          "y": 26310000
+        },
+        "end": {
+          "x": 55000000,
+          "y": 28810000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 4,
+          "pin": 1
+        }
+      },
+      "23": {
+        "id": 23,
+        "start": {
+          "x": 55000000,
+          "y": 28810000
+        },
+        "end": {
+          "x": 55900000,
+          "y": 28850000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 4,
+          "pin": 1
+        }
+      },
+      "24": {
+        "id": 24,
+        "start": {
+          "x": 34061942,
+          "y": 15558058
+        },
+        "end": {
+          "x": 39620000,
+          "y": 10000000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 1,
+          "pin": 0
+        }
+      },
+      "25": {
+        "id": 25,
+        "start": {
+          "x": 39620000,
+          "y": 10000000
+        },
+        "end": {
+          "x": 39734550,
+          "y": 9755828
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 1,
+          "pin": 0
+        }
+      },
+      "26": {
+        "id": 26,
+        "start": {
+          "x": 34061942,
+          "y": 24061942
+        },
+        "end": {
+          "x": 39120000,
+          "y": 29120000
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 4,
+          "pin": 4
+        }
+      },
+      "27": {
+        "id": 27,
+        "start": {
+          "x": 39120000,
+          "y": 29120000
+        },
+        "end": {
+          "x": 39491807,
+          "y": 29386180
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 4,
+          "pin": 4
+        }
+      },
+      "28": {
+        "id": 28,
+        "start": {
+          "x": 25484356,
+          "y": 21433181
+        },
+        "end": {
+          "x": 25270000,
+          "y": 21580000
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 4,
+          "pin": 2
+        }
+      },
+      "29": {
+        "id": 29,
+        "start": {
+          "x": 25270000,
+          "y": 21580000
+        },
+        "end": {
+          "x": 20770000,
+          "y": 21580000
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 4,
+          "pin": 2
+        }
+      },
+      "30": {
+        "id": 30,
+        "start": {
+          "x": 20770000,
+          "y": 21580000
+        },
+        "end": {
+          "x": 18770000,
+          "y": 23580000
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 4,
+          "pin": 2
+        }
+      },
+      "31": {
+        "id": 31,
+        "start": {
+          "x": 18770000,
+          "y": 23580000
+        },
+        "end": {
+          "x": 18748566,
+          "y": 23598005
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 4,
+          "pin": 2
+        }
+      },
+      "32": {
+        "id": 32,
+        "start": {
+          "x": 26441942,
+          "y": 18098058
+        },
+        "end": {
+          "x": 26500000,
+          "y": 18040000
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 4,
+          "pin": 1
+        }
+      },
+      "33": {
+        "id": 33,
+        "start": {
+          "x": 26500000,
+          "y": 18040000
+        },
+        "end": {
+          "x": 30500000,
+          "y": 18040000
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 4,
+          "pin": 1
+        }
+      },
+      "34": {
+        "id": 34,
+        "start": {
+          "x": 30500000,
+          "y": 18040000
+        },
+        "end": {
+          "x": 33000000,
+          "y": 20540000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 4,
+          "pin": 1
+        }
+      },
+      "35": {
+        "id": 35,
+        "start": {
+          "x": 33000000,
+          "y": 20540000
+        },
+        "end": {
+          "x": 33148699,
+          "y": 20669512
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 4,
+          "pin": 1
+        }
+      },
+      "36": {
+        "id": 36,
+        "start": {
+          "x": 40441942,
+          "y": 17251942
+        },
+        "end": {
+          "x": 40500000,
+          "y": 17310000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 4,
+          "pin": 6
+        }
+      },
+      "37": {
+        "id": 37,
+        "start": {
+          "x": 40500000,
+          "y": 17310000
+        },
+        "end": {
+          "x": 46000000,
+          "y": 17310000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 4,
+          "pin": 6
+        }
+      },
+      "38": {
+        "id": 38,
+        "start": {
+          "x": 46000000,
+          "y": 17310000
+        },
+        "end": {
+          "x": 46500000,
+          "y": 17810000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 4,
+          "pin": 6
+        }
+      },
+      "39": {
+        "id": 39,
+        "start": {
+          "x": 46500000,
+          "y": 17810000
+        },
+        "end": {
+          "x": 46502399,
+          "y": 17811823
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 4,
+          "pin": 6
+        }
+      },
+      "40": {
+        "id": 40,
+        "start": {
+          "x": 34124804,
+          "y": 18171493
+        },
+        "end": {
+          "x": 34620000,
+          "y": 17810000
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 4,
+          "pin": 6
+        }
+      },
+      "41": {
+        "id": 41,
+        "start": {
+          "x": 34620000,
+          "y": 17810000
+        },
+        "end": {
+          "x": 35620000,
+          "y": 16810000
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 4,
+          "pin": 6
+        }
+      },
+      "42": {
+        "id": 42,
+        "start": {
+          "x": 35620000,
+          "y": 16810000
+        },
+        "end": {
+          "x": 39375000,
+          "y": 16810000
+        },
+        "width_nm": 350000,
+        "layer": "Bottom",
+        "net": {
+          "component": 4,
+          "pin": 6
+        }
+      },
+      "43": {
+        "id": 43,
+        "start": {
+          "x": 14830000,
+          "y": 23100000
+        },
+        "end": {
+          "x": 14830000,
+          "y": 27600000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 22,
+          "pin": 1
+        }
+      },
+      "44": {
+        "id": 44,
+        "start": {
+          "x": 14830000,
+          "y": 27600000
+        },
+        "end": {
+          "x": 15330000,
+          "y": 28100000
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 22,
+          "pin": 1
+        }
+      },
+      "45": {
+        "id": 45,
+        "start": {
+          "x": 15330000,
+          "y": 28100000
+        },
+        "end": {
+          "x": 15672712,
+          "y": 28657546
+        },
+        "width_nm": 350000,
+        "layer": "Top",
+        "net": {
+          "component": 22,
+          "pin": 1
+        }
+      }
+    },
+    "vias": {
+      "1": {
+        "id": 1,
+        "position": {
+          "x": 30500000,
+          "y": 18040000
+        },
+        "diameter_nm": 600000,
+        "drill_nm": 300000,
+        "net": {
+          "component": 4,
+          "pin": 1
+        }
+      }
+    },
+    "holes": {}
+  }
+}

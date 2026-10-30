@@ -70,6 +70,14 @@ Próxima prioridade de importação: geradores, outros terminais/probes, reconci
 - Organização de menus, abas, ferramentas e painéis aproximada do fluxo de trabalho de CAD eletrônico, com temas claro e escuro.
 - Marca renderizada com mipmaps para reduzir serrilhamento e perda de forma em tamanhos pequenos.
 
+## Próxima fase: arquitetura Craft e automação
+
+- Camada headless, UI e CLI usam o mesmo `Engine`; comandos em lote são validados e confirmados atomicamente.
+- Revisão esperada protege edições automatizadas; undo/redo avançam a revisão e a alocação de IDs não volta ao desfazer.
+- `eda-automation` publica esquemas JSON por comando; `eda-mcp` oferece sessão stdio com inspeção, validação, busca física, DRC e autorroteamento.
+- `craft-ui` está fixado em revisão MIT/Apache compatível com egui 0.36; os avisos independentes foram adicionados.
+- A sessão MCP é headless e separada do projeto aberto no desktop. Ponte para a UI e frontend WebAssembly seguem pendentes.
+
 ## Autorroteador inicial no estado atual
 
 - Motor original em Rust com busca octilinear A* em duas camadas, índice espacial de obstáculos, custo de curvas/vias/congestionamento e refinamento limitado.
@@ -90,7 +98,7 @@ Próxima prioridade de importação: geradores, outros terminais/probes, reconci
 - PCB avançada: contornos não retangulares, zonas de cobre, regras por netclass, pares diferenciais, rip-up e reroute, tolerâncias, montagem, 3D e verificação fabril mais abrangente.
 - Ampliação da simulação digital e primeira arquitetura MCU, com licença de emulador, tempo virtual, GPIO e testes determinísticos.
 - Interoperabilidade: ampliar os parsers ISIS 8 restritos para outros perfis, tipos de objetos e formatos abertos, com validação elétrica independente. Não há compatibilidade geral com Proteus.
-- 3D, autorroteamento, grandes bibliotecas, múltiplas folhas e integrações online conforme casos concretos.
+- 3D, roteamento avançado, grandes bibliotecas, múltiplas folhas e integrações online conforme casos concretos.
 
 Nenhum item futuro deve ser anunciado como funcional antes de implementação e validação.
 

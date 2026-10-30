@@ -1,0 +1,12 @@
+[package]
+name = "eda-automation"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+eda-core.workspace = true
+eda-library.workspace = true
+serde.workspace = true
+serde_json.workspace = true
