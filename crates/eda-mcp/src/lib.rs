@@ -135,15 +135,11 @@ impl Server {
             });
         }
         if method == "initialize" {
-            let Some(request_id) = id else {
-                return None;
-            };
+            let request_id = id?;
             return Some(self.initialize(request_id, &params));
         }
         if method == "server/discover" {
-            let Some(request_id) = id else {
-                return None;
-            };
+            let request_id = id?;
             return Some(match protocol_version(&params) {
                 Some(MODERN_VERSION) if has_client_capabilities(&params) => {
                     rpc_response(request_id, self.discover(), true)
