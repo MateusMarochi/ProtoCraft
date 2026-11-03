@@ -8,6 +8,7 @@ license.workspace = true
 [dependencies]
 eda-pcb.workspace = true
 eda-core.workspace = true
+eda-i18n.workspace = true
 eda-simulation.workspace = true
 serde_json.workspace = true
 serde.workspace = true

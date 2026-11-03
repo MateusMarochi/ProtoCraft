@@ -23,6 +23,101 @@ fn path_text(path: &Path) -> &str {
 }
 
 #[test]
+fn pcb_route_rejects_repeated_options_without_creating_output() {
+    let dir = tempfile::tempdir().unwrap();
+    let input = dir.path().join("input.protocraft");
+    let output = dir.path().join("output.protocraft");
+    success(cli(&["new", "--output", path_text(&input)]));
+    for option in ["--grid-mm", "--track-width-mm", "--max-expansions"] {
+        let result = cli(&[
+            "pcb-route",
+            path_text(&input),
+            "--output",
+            path_text(&output),
+            option,
+            "1",
+            option,
+            "2",
+        ]);
+        assert!(!result.status.success(), "{option}");
+        assert!(!output.exists());
+    }
+    let result = cli(&[
+        "pcb-route",
+        path_text(&input),
+        "--output",
+        path_text(&output),
+        "--no-optimize",
+        "--no-optimize",
+    ]);
+    assert!(!result.status.success());
+    assert!(!output.exists());
+}
+
+#[test]
+fn pcb_route_accepts_valid_options_and_preserves_routed_board() {
+    let dir = tempfile::tempdir().unwrap();
+    let input =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/555-led-1hz-pcb.protocraft");
+    let original = std::fs::read(&input).unwrap();
+    let output = dir.path().join("routed.protocraft");
+    let report: serde_json::Value = serde_json::from_str(&success(cli(&[
+        "pcb-route",
+        path_text(&input),
+        "--output",
+        path_text(&output),
+        "--grid-mm",
+        "0.25",
+        "--track-width-mm",
+        "0.35",
+        "--no-optimize",
+    ])))
+    .unwrap();
+    assert_eq!(report["stats"]["remaining_airwires"], 0);
+    assert_eq!(std::fs::read(input).unwrap(), original);
+    let info: serde_json::Value =
+        serde_json::from_str(&success(cli(&["pcb-info", path_text(&output)]))).unwrap();
+    assert!(info["board"].is_object());
+    success(cli(&["pcb-check", path_text(&output)]));
+}
+
+#[test]
+fn pcb_check_reports_short_with_zero_clearance() {
+    use eda_core::{Command as Edit, Engine};
+    let dir = tempfile::tempdir().unwrap();
+    let source =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/555-led-1hz-pcb.protocraft");
+    let mut engine = Engine::new(eda_storage::load(source).unwrap()).unwrap();
+    let mut board = *engine.project().board.clone().unwrap();
+    board.clearance_nm = 0;
+    let first = board.tracks.values().next().unwrap().clone();
+    let other = board
+        .tracks
+        .values()
+        .find(|track| track.net != first.net)
+        .unwrap()
+        .net;
+    let id = board.tracks.keys().max().unwrap() + 1;
+    engine.execute(Edit::SetBoard { board }).unwrap();
+    let mut overlap = first;
+    overlap.id = id;
+    overlap.net = other;
+    engine.execute(Edit::AddTrack { track: overlap }).unwrap();
+    let path = dir.path().join("short.protocraft");
+    eda_storage::save(&path, engine.project()).unwrap();
+    let output = cli(&["pcb-check", path_text(&path)]);
+    assert!(!output.status.success());
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(
+        report["diagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|item| item["code"] == "COPPER_SHORT")
+    );
+}
+
+#[test]
 fn real_cli_workflow() {
     let dir = tempfile::tempdir().unwrap();
     success(cli(&["examples", path_text(dir.path())]));

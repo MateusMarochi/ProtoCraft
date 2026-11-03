@@ -8,6 +8,8 @@ Foram examinados README, roadmap, arquitetura, guias de importação, roteamento
 
 Prioridades: **P0** confiabilidade e preservação; **P1** completar fluxo básico; **P2** recursos ampliados; **P3** avançado e dependente de decisão. P3 não antecipa MCU sobre as bases. Itens não marcados indicam trabalho pendente ou necessidade de investigação, inclusive onde há implementação parcial.
 
+O sequenciamento de implementação está em [plano-pcb.md](docs/plano-pcb.md). Avanços parciais: o DRC identifica contato entre redes mesmo com folga zero, inclusive pela CLI; a substituição individual de backups usa escrita atômica e há testes para dez gerações e falha; a CLI recusa opções de roteamento repetidas. Os itens abrangentes abaixo permanecem abertos, pois esses testes não cobrem todas as situações descritas.
+
 ## Estado observado
 
 | Área | Existe no repositório | Limite principal |
@@ -20,9 +22,21 @@ Prioridades: **P0** confiabilidade e preservação; **P1** completar fluxo bási
 | Importação | Perfil restrito Proteus, com bloqueio de simulação | Não prova equivalência elétrica nem importa todos os objetos |
 | Automação | CLI e MCP headless | Sessão MCP não controla documento desktop aberto |
 
+## Entregas verificadas em 03/11/2026
+
+- [x] Sincronizar footprints não posicionados pela CLI e pelo mesmo serviço do desktop, preservando cobre e posições existentes; recusar falta de espaço sem mutação.
+- [x] Transladar footprints com extremidades de trilhas conectadas, com validação DRC, undo/redo e recusa conservadora de contatos ambíguos/vias/ramificações.
+- [x] Remover trilhas exatamente duplicadas como lote reversível, no desktop e na CLI.
+- [x] Exportar BOM e posições em CSV/JSON, agrupando dispositivo/valor/unidade/footprint e registrando pendências; incluir relatórios separados no pacote de fabricação.
+- [x] Relatar comprimento geométrico por rede/face e quantidades de segmentos/vias, sem alegar controle de impedância.
+- [x] Corrigir contato de cobre e furos em folga zero; testar camadas e tolerância do DRC.
+- [x] Validar autorroteamento real pela CLI e ajuda/erros em pt-BR e inglês, com preferência de idioma isolada por processo.
+
+Essas entregas são partes dos itens amplos abaixo. Não implementam zonas, contorno arbitrário, netclasses ou roteamento profissional. Uso e limitações em [pcb-workflows.md](docs/pcb-workflows.md); evidências em [validation.md](docs/validation.md).
+
 ## P0 — Integridade e confiança
 
-- [ ] **P0-01 Histórico:** decidir profundidade configurável; a alteração local fixa 20 snapshots, enquanto `docs/architecture.md` registra 100. Testar limite, sequência de undo/redo, ramificações, IDs e consumo de memória.
+- [ ] **P0-01 Histórico:** decidir profundidade configurável; o limite atual é 20 snapshots. O teste cobre limite, ramificação e IDs; faltam medição de memória e decisão sobre configuração.
 - [ ] **P0-02 Backups:** revisar rotação local de dez gerações: cópias e remoções não são uma transação; uma falha intermediária pode deixar gerações inconsistentes. Testar falhas de I/O, arquivo ausente, permissões, interrupção e recuperação, sem sobrescrever projeto inválido. Documentar retenção real.
 - [ ] **P0-03 Autosave e recuperação:** arquivo separado, identificação de revisão e escolha explícita de recuperação; testar falha de energia, colisões e múltiplas instâncias. Não sobrescrever projeto válido silenciosamente.
 - [ ] **P0-04 Conectividade ao editar:** mover/rotacionar/excluir componentes e fios sem criar ou manter conexões indevidas; especificar política de arraste, junções, T, cruzamentos, rótulos e pinos. Cobrir undo/redo, salvamento e netlist antes/depois.
@@ -30,7 +44,7 @@ Prioridades: **P0** confiabilidade e preservação; **P1** completar fluxo bási
 - [ ] **P0-06 Segurança de fabricação:** ampliar testes geométricos para folgas, furos, anel, contorno, pads e conexão elétrica, confrontando DRC e arquivos com ferramenta independente; bloquear saída em erros e explicar limites. Confirmar que terminação de trilha próxima a furo metalizado representa cobre conectado na saída real.
 - [ ] **P0-07 Entradas e persistência:** fuzzing e limites de contagem, profundidade, tamanho e trabalho para projetos e importadores; arquivos truncados, versões futuras, migrações e round-trip elétrico; escrita atômica testada no Windows.
 - [ ] **P0-08 Regressões das mudanças pendentes:** testes específicos para limite de histórico, dez backups e falhas, sufixo CLI e captura; corrigir divergências de documentação e formatação. Confirmar se reduzir histórico e remover backups antigos é comportamento desejado.
-- [ ] **P0-09 Comunicação de escopo:** alinhar ajuda da interface e roadmap: MCU não precede as bases por decisão implícita; não afirmar integração 3D externa sem contrato aprovado. Revisar strings e fallback de idiomas.
+- [ ] **P0-09 Comunicação de escopo:** a ajuda foi alinhada à prioridade de PCB; falta verificar visualmente a alteração e revisar as demais strings e fallback de idiomas.
 
 ## P1 — Editor de esquemas e conectividade
 

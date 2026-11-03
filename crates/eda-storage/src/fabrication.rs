@@ -76,6 +76,27 @@ fn run(tool: &Path, args: &[&std::ffi::OsStr], log: &Path) -> Result<(), String>
 pub fn generate(project: &Project, destination: &Path, tool: &Path) -> Result<PathBuf, String> {
     generate_with_preset(project, destination, tool, ManufacturingPreset::Standard)
 }
+
+/// Gera relatórios de montagem em diretório novo, usando a convenção do domínio.
+/// O JSON inclui componentes sem footprint ou posicionamento como pendências.
+pub fn write_assembly_reports(project: &Project, destination: &Path) -> Result<(), String> {
+    project.validate().map_err(|error| error.to_string())?;
+    let report = eda_pcb::assembly::assembly_report(project);
+    let json = serde_json::to_vec_pretty(&report).map_err(|error| error.to_string())?;
+    fs::create_dir(destination).map_err(|error| error.to_string())?;
+    fs::write(
+        destination.join("bom.csv"),
+        eda_pcb::assembly::bom_csv(&report),
+    )
+    .map_err(|error| error.to_string())?;
+    fs::write(
+        destination.join("placements.csv"),
+        eda_pcb::assembly::placements_csv(&report),
+    )
+    .map_err(|error| error.to_string())?;
+    fs::write(destination.join("assembly.json"), json).map_err(|error| error.to_string())?;
+    Ok(())
+}
 pub fn generate_with_preset(
     project: &Project,
     destination: &Path,
@@ -101,6 +122,7 @@ pub fn generate_with_preset(
         .filter(|p| !p.as_os_str().is_empty())
         .unwrap_or(Path::new("."));
     let stage = tempfile::tempdir_in(parent).map_err(|e| e.to_string())?;
+    write_assembly_reports(project, &stage.path().join("montagem"))?;
     let board = stage.path().join("projeto.kicad_pcb");
     fs::write(&board, eda_pcb::export_kicad(project)?).map_err(|e| e.to_string())?;
     fs::write(
@@ -191,7 +213,7 @@ pub fn generate_with_preset(
     if preset == ManufacturingPreset::Jlcpcb {
         jlcpcb::package(stage.path(), project)?;
     }
-    fs::write(stage.path().join("LEIA-ME.txt"),"Gerado pelo ProtoCraft com KiCad CLI externo.\nDRC nativo e DRC externo sem erros de severidade error.\nConfira avisos, empilhamento, máscara, pasta, furos, antena e regras do fabricante antes de produzir a placa.\nNão há aprovação automática de engenharia ou teste físico.\n").map_err(|e|e.to_string())?;
+    fs::write(stage.path().join("LEIA-ME.txt"),eda_i18n::text("Gerado pelo ProtoCraft com KiCad CLI externo.\nDRC nativo e DRC externo sem erros de severidade error.\nA pasta montagem contém relatórios informativos; coordenadas em nanômetros e rotação na convenção do projeto, sem conversão para fabricante. Confira pendências em assembly.json.\nConfira avisos, empilhamento, máscara, pasta, furos, antena e regras do fabricante antes de produzir a placa.\nNão há aprovação automática de engenharia ou teste físico.\n")).map_err(|e|e.to_string())?;
     let stage = stage.keep();
     fs::rename(stage, destination).map_err(|e| e.to_string())?;
     Ok(destination.to_path_buf())

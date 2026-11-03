@@ -379,3 +379,56 @@ fn nc_pads_are_preserved_without_creating_phantom_nets_or_routes() {
             .any(|d| d.code == "INCOMPLETE_IMPORT")
     );
 }
+
+#[test]
+fn touching_different_nets_is_short_even_with_zero_clearance() {
+    let mut e = fixture();
+    let mut board = *e.project().board.clone().unwrap();
+    board.clearance_nm = 0;
+    e.execute(Command::SetBoard { board }).unwrap();
+    for (id, y, pin) in [(1, 10_000_000, 0), (2, 10_250_000, 1)] {
+        e.execute(Command::AddTrack {
+            track: Track {
+                id,
+                start: NmPoint::new(10_000_000, y),
+                end: NmPoint::new(15_000_000, y),
+                width_nm: 250_000,
+                layer: BoardSide::Top,
+                net: PinRef {
+                    component: ComponentId(1),
+                    pin,
+                },
+            },
+        })
+        .unwrap();
+    }
+    assert!(
+        check(e.project())
+            .unwrap()
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "COPPER_SHORT")
+    );
+    assert!(e.undo());
+    e.execute(Command::AddTrack {
+        track: Track {
+            id: 2,
+            start: NmPoint::new(10_000_000, 10_250_001),
+            end: NmPoint::new(15_000_000, 10_250_001),
+            width_nm: 250_000,
+            layer: BoardSide::Top,
+            net: PinRef {
+                component: ComponentId(1),
+                pin: 1,
+            },
+        },
+    })
+    .unwrap();
+    assert!(
+        !check(e.project())
+            .unwrap()
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "COPPER_SHORT")
+    );
+}

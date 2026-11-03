@@ -127,3 +127,7 @@ protocraft-cli pcb-check placa-com-furo.protocraft
 ## Servidor MCP
 
 Para conectar um cliente compatível com MCP, inicie `protocraft-cli mcp --project <arquivo.protocraft>`. O processo atende um projeto headless por stdio e encerra quando o cliente fecha o pipe. Ferramentas, schemas, protocolo, controle por revisão e limites da sessão estão no [guia MCP](mcp.md).
+
+## Fluxos ampliados de construção PCB
+
+Consulte [Construção de PCB e relatórios de montagem](pcb-workflows.md) para `pcb-sync`, `pcb-sync-report`, `pcb-move`, `pcb-cleanup` e `pcb-assembly`, incluindo unidades e limitações. `pcb-info` agora inclui métricas geométricas por net. A fabricação gera a subpasta `montagem/` com BOM, posições e JSON de pendências, fora do ZIP de fabricação. A preferência `PROTOCRAFT_LANGUAGE=en|pt-BR|system` controla apenas o processo CLI.

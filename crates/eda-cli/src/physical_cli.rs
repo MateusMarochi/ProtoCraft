@@ -13,6 +13,7 @@ pub fn handles(cmd: &str) -> bool {
             | "pcb-route"
             | "pcb-export"
             | "pcb-manufacture"
+            | "pcb-assembly"
     )
 }
 fn json(value: &impl serde::Serialize) -> Result<(), Box<dyn Error>> {
@@ -21,6 +22,15 @@ fn json(value: &impl serde::Serialize) -> Result<(), Box<dyn Error>> {
 }
 pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
     let cmd = &args[0];
+    if cmd == "pcb-assembly" && args.get(1).is_some_and(|a| a == "--help") {
+        println!(
+            "{}",
+            tr!(
+                "Uso: protocraft-cli pcb-assembly <projeto> [--format json|bom-csv|placements-csv] [--output arquivo-novo]\nAs posições usam nanômetros e a rotação do projeto; confira a convenção do fabricante."
+            )
+        );
+        return Ok(());
+    }
     if args.get(1).is_some_and(|a| a == "--help") {
         println!(
             "{}",
@@ -99,12 +109,53 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
         );
     }
     let project = eda_storage::load(input)?;
+    if cmd == "pcb-assembly" {
+        let mut format = None;
+        let mut output = None;
+        let mut index = 2;
+        while index < args.len() {
+            let value = args.get(index + 1).ok_or("Opção sem valor")?;
+            match args[index].as_str() {
+                "--format" if format.is_none() => format = Some(value.as_str()),
+                "--output" if output.is_none() => output = Some(value),
+                _ => return Err("Opção desconhecida ou repetida".into()),
+            }
+            index += 2;
+        }
+        let report = eda_pcb::assembly::assembly_report(&project);
+        let contents = match format.unwrap_or("json") {
+            "json" => serde_json::to_string_pretty(&report)?,
+            "bom-csv" => eda_pcb::assembly::bom_csv(&report),
+            "placements-csv" => eda_pcb::assembly::placements_csv(&report),
+            _ => return Err(tr!("Use --format json, bom-csv ou placements-csv.").into()),
+        };
+        if let Some(output) = output {
+            let destination = Path::new(output);
+            if same_path(
+                &fs::canonicalize(input)?,
+                &resolved_destination(destination)?,
+            ) {
+                return Err("A exportação deve preservar o projeto de entrada".into());
+            }
+            let mut file = fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(destination)?;
+            file.write_all(contents.as_bytes())?;
+            file.sync_all()?;
+            return json(
+                &serde_json::json!({"output": destination, "format": format.unwrap_or("json")}),
+            );
+        }
+        print!("{contents}");
+        return Ok(());
+    }
     if cmd == "pcb-info" {
         if args.len() != 2 {
             return Err("Opções inesperadas".into());
         }
         return json(
-            &serde_json::json!({"board":project.board,"pin_map":eda_pcb::pin_map(&project)?}),
+            &serde_json::json!({"board":project.board,"pin_map":eda_pcb::pin_map(&project)?,"routing_metrics":eda_pcb::metrics::routing_metrics(&project)?}),
         );
     }
     if cmd == "pcb-check" {
@@ -121,8 +172,12 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
     if cmd == "pcb-route" {
         let mut output = None;
         let mut config = eda_pcb::AutorouteConfig::default();
+        let mut seen = std::collections::HashSet::new();
         let mut i = 2;
         while i < args.len() {
+            if !seen.insert(args[i].as_str()) {
+                return Err("Opção desconhecida ou repetida em pcb-route".into());
+            }
             match args[i].as_str() {
                 "--output" if output.is_none() => {
                     output = Some(args.get(i + 1).ok_or("Informe o arquivo de saída")?)

@@ -18,7 +18,7 @@ O formato nativo versionado é o contrato compartilhado entre o editor e a CLI. 
 
 O `Engine` é o único ponto que confirma mutações. Ele clona o documento candidato, aplica um comando ou lote, valida as invariantes e só então atualiza o snapshot e a revisão. Um erro descarta o candidato sem alterar o projeto ou o histórico. CLI e MCP reutilizam `eda-automation::Action` para converter JSON em comandos tipados; a interface chama o mesmo `Engine`.
 
-As edições aceitam uma revisão esperada para recusar mutações feitas sobre dados desatualizados. Undo e redo também avançam a revisão. O alocador mantém um limite superior monotônico de IDs, de modo que ramificações depois de undo não reutilizem IDs já emitidos. O histórico guarda até 100 snapshots.
+As edições aceitam uma revisão esperada para recusar mutações feitas sobre dados desatualizados. Undo e redo também avançam a revisão. O alocador mantém um limite superior monotônico de IDs, de modo que ramificações depois de undo não reutilizem IDs já emitidos. O histórico guarda até 20 snapshots; o limite ainda não é configurável.
 
 `eda-automation` publica o catálogo de comandos, valida objetos JSON sem campos desconhecidos e fornece JSON Schema por comando, além do esquema discriminado para lotes. A validação final do documento continua no `Engine`; o schema ajuda clientes a formar chamadas válidas sem substituir as regras de domínio.
 

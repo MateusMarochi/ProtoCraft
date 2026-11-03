@@ -102,3 +102,17 @@ Próxima prioridade de importação: geradores, outros terminais/probes, reconci
 
 Nenhum item futuro deve ser anunciado como funcional antes de implementação e validação.
 
+
+## Entrega de PCB — 03/11/2026
+
+Executado o ciclo inicial do [plano de PCB](plano-pcb.md), com detalhes de uso em [pcb-workflows.md](pcb-workflows.md):
+
+- Sincronização headless de footprints ausentes, compartilhada com o desktop, preservando posições e cobre; recusa por falta de espaço.
+- Translação conservadora de componentes acompanhando extremidades de trilhas, via CLI e arraste no desktop; contatos ambíguos, vias e ramificações recusados.
+- Remoção reversível de trilhas exatamente duplicadas, pelo Engine, desktop e CLI.
+- BOM por dispositivo/valor/unidade/footprint, posições na convenção do domínio e listas explícitas de peças incompletas; CSV/JSON e relatórios externos ao ZIP de fabricação.
+- Comprimento geométrico por rede e face, sem inferir impedância ou atraso.
+- Correções de DRC para contato de cobre/furos com folga zero e regressões de camadas e tolerâncias.
+- CLI com preferência de idioma por processo e testes isolados nos dois idiomas.
+
+Permanecem pendentes zonas de cobre, contornos arbitrários, netclasses, multicamadas, rotação conectada, atualização avançada de footprints e roteamento profissional. As funcionalidades acima não concluem os itens abrangentes do backlog.

@@ -96,7 +96,8 @@ pub(super) fn check_drills(
             if work > 2_000_000 {
                 return Err("DRC de furação excedeu o orçamento de geometria.".into());
             }
-            if distance(&circle, atom) < board.clearance_nm as f64 - 1.0 {
+            let gap = distance(&circle, atom);
+            if gap <= 0.0 || gap < board.clearance_nm as f64 - 1.0 {
                 add(
                     "HOLE_COPPER",
                     format!(
@@ -117,7 +118,7 @@ pub(super) fn check_drills(
                 .hypot((d.position.y - other.position.y) as f64)
                 - d.radius
                 - other.radius;
-            if gap < board.clearance_nm as f64 - 1.0 {
+            if gap <= 0.0 || gap < board.clearance_nm as f64 - 1.0 {
                 add(
                     "HOLE_CLEARANCE",
                     format!(

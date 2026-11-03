@@ -851,6 +851,38 @@ impl Engine {
 mod tests {
     use super::*;
     #[test]
+    fn history_limit_and_branching_keep_ids_unique() {
+        let mut engine = Engine::new(Project::empty("Histórico")).unwrap();
+        for i in 0..(MAX_UNDO_LEVELS + 3) {
+            engine
+                .execute(Command::PlaceComponent {
+                    kind: ComponentKind::Resistor,
+                    position: Point::new(i as i32 * 10, 0),
+                })
+                .unwrap();
+        }
+        for _ in 0..MAX_UNDO_LEVELS {
+            assert!(engine.undo());
+        }
+        assert!(!engine.undo());
+        assert_eq!(engine.project().components.len(), 3);
+        assert!(engine.redo());
+        assert!(engine.undo());
+        engine
+            .execute(Command::PlaceComponent {
+                kind: ComponentKind::Resistor,
+                position: Point::new(500, 0),
+            })
+            .unwrap();
+        assert!(!engine.can_redo());
+        assert!(
+            engine
+                .project()
+                .components
+                .contains_key(&ComponentId((MAX_UNDO_LEVELS + 4) as u64))
+        );
+    }
+    #[test]
     fn pasted_component_gets_fresh_id_reference_and_undoable_position() {
         let mut engine = Engine::new(Project::empty("Colar")).unwrap();
         engine

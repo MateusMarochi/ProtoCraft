@@ -71,3 +71,7 @@ ProtoCraft-CLI.cmd simulate pisca.protocraft --engine mixed --transient 0.00025 
 ```
 
 O projeto inicial usa RA=47 kΩ, RB=47 kΩ, LED com resistor limitador de 680 Ω e capacitor de bypass de 10 nF. O comando calcula C1 para a frequência informada, grava o `.protocraft`, abre o editor e permite salvar os sinais da simulação em CSV. Use `--c-farads` no lugar de `--frequency-hz` para definir diretamente o capacitor. Consulte o [guia da CLI](docs/cli.md) para criar projetos vazios, listar os outros modelos e ver os limites.
+
+## Construção de PCB: ferramentas adicionais
+
+A [documentação dos fluxos PCB](docs/pcb-workflows.md) explica a sincronização de footprints, movimento com trilhas conectadas, remoção de duplicatas, métricas por rede e relatórios de materiais/posições de montagem. Esses fluxos usam o mesmo domínio pelo desktop e pela CLI e conservam as limitações descritas no guia.

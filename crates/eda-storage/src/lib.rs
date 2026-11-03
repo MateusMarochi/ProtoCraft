@@ -83,7 +83,16 @@ fn rotate_backups(path: &Path) -> Result<(), StorageError> {
         };
         let destination = numbered_backup_path(path, generation);
         if source.exists() {
-            fs::copy(source, destination)?;
+            let file = fs::File::open(source)?;
+            if file.metadata()?.len() > MAX_FILE_BYTES {
+                return Err(StorageError::TooLarge);
+            }
+            let mut bytes = Vec::new();
+            file.take(MAX_FILE_BYTES + 1).read_to_end(&mut bytes)?;
+            if bytes.len() as u64 > MAX_FILE_BYTES {
+                return Err(StorageError::TooLarge);
+            }
+            atomic_write(&destination, &bytes)?;
         } else if destination.exists() {
             fs::remove_file(destination)?;
         }
@@ -175,6 +184,58 @@ fn quote(text: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn oversized_backup_is_rejected_without_replacing_current_project() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("board.protocraft");
+        let project = Project::empty("board");
+        save(&path, &project).unwrap();
+        let before = fs::read(&path).unwrap();
+        let backup = fs::File::create(backup_path(&path)).unwrap();
+        backup.set_len(MAX_FILE_BYTES + 1).unwrap();
+        assert!(matches!(save(&path, &project), Err(StorageError::TooLarge)));
+        assert_eq!(fs::read(&path).unwrap(), before);
+        assert_eq!(
+            fs::metadata(backup_path(&path)).unwrap().len(),
+            MAX_FILE_BYTES + 1
+        );
+    }
+    #[test]
+    fn backup_rotation_retains_ten_previous_versions() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("board.protocraft");
+        for revision in 0..12 {
+            save(&path, &Project::empty(format!("rev-{revision}"))).unwrap();
+        }
+        let expected = encode(&Project::empty("rev-11")).unwrap();
+        assert_eq!(fs::read(&path).unwrap(), expected);
+        assert_eq!(
+            fs::read(backup_path(&path)).unwrap(),
+            encode(&Project::empty("rev-10")).unwrap()
+        );
+        for generation in 1..MAX_BACKUP_GENERATIONS {
+            let expected = encode(&Project::empty(format!("rev-{}", 10 - generation))).unwrap();
+            assert_eq!(
+                fs::read(numbered_backup_path(&path, generation)).unwrap(),
+                expected
+            );
+        }
+        assert!(!numbered_backup_path(&path, MAX_BACKUP_GENERATIONS).exists());
+    }
+    #[test]
+    fn failed_backup_rotation_preserves_existing_project() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("board.protocraft");
+        let project = Project::empty("board");
+        save(&path, &project).unwrap();
+        save(&path, &project).unwrap();
+        let before = fs::read(&path).unwrap();
+        let backup = fs::read(backup_path(&path)).unwrap();
+        fs::create_dir(numbered_backup_path(&path, 1)).unwrap();
+        assert!(save(&path, &project).is_err());
+        assert_eq!(fs::read(&path).unwrap(), before);
+        assert_eq!(fs::read(backup_path(&path)).unwrap(), backup);
+    }
     #[test]
     fn migrates_v1_without_changing_ids_and_keeps_original_backup() {
         let dir = tempfile::tempdir().unwrap();

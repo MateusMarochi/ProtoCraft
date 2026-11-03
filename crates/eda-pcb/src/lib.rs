@@ -3,10 +3,15 @@ use eda_core::*;
 use eda_netlist::{NetId, Netlist, build_netlist};
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
+pub mod assembly;
 mod autoroute;
+pub mod cleanup;
 mod drilling;
 mod export;
+pub mod metrics;
+pub mod placement;
 mod routing;
+pub mod sync;
 pub use autoroute::{AutorouteConfig, AutorouteFailure, AutoroutePlan, AutorouteStats, autoroute};
 pub use export::{export_kicad, export_svg};
 pub use routing::{RouteMode, RoutingTarget, check_edit, manual_path, routing_target};
@@ -468,7 +473,7 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
                 if gap <= 1.0 {
                     union(&mut parents, *i, *j);
                 }
-            } else if gap < (board.clearance_nm as f64) - 1.0 {
+            } else if gap <= 0.0 || gap < (board.clearance_nm as f64) - 1.0 {
                 add(
                     if gap <= 0.0 {
                         "COPPER_SHORT"

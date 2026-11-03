@@ -278,6 +278,18 @@ impl ProtoCraft {
         }
     }
     pub(super) fn pcb_edit_controls(&mut self, ui: &mut egui::Ui, board: &Board) {
+        if ui.button(tr!("Remover trilhas duplicadas")).clicked() {
+            match eda_pcb::cleanup::plan(self.engine.project()) {
+                Ok(commands) if commands.is_empty() => {
+                    self.message(tr!("Nenhuma trilha duplicada encontrada."), false)
+                }
+                Ok(commands) => {
+                    self.pcb.finish_route();
+                    self.pcb_checked_command(Command::Batch(commands));
+                }
+                Err(error) => self.message(error, true),
+            }
+        }
         ui.horizontal(|ui| {
             if ui
                 .selectable_label(!self.pcb.routing && !self.pcb.hole_tool, tr!("Selecionar"))

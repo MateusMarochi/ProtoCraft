@@ -3,6 +3,8 @@ use eda_core::{
     Board, BoardSide, ComponentId, MountingHole, NM_PER_MM, NmPoint, PinRef, Placement, Track, Via,
 };
 mod edit;
+#[cfg(test)]
+mod workflow_tests;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum GeometrySelection {
     Track(u64),
@@ -58,6 +60,8 @@ pub(super) struct PcbUi {
     clearance_mm: f64,
     dimensions_revision: u64,
     show_airwires: bool,
+    preserve_connections: bool,
+    routing_metrics: Option<(u64, eda_pcb::metrics::RoutingMetrics)>,
     fabrication: Option<mpsc::Receiver<Result<PathBuf, String>>>,
     autorouting: Option<mpsc::Receiver<Result<eda_pcb::AutoroutePlan, String>>>,
     autorouting_revision: u64,
@@ -105,6 +109,8 @@ impl Default for PcbUi {
             clearance_mm: 0.2,
             dimensions_revision: u64::MAX,
             show_airwires: true,
+            preserve_connections: true,
+            routing_metrics: None,
             fabrication: None,
             autorouting: None,
             autorouting_revision: u64::MAX,
@@ -121,69 +127,39 @@ fn point_distance(p: NmPoint, a: NmPoint, b: NmPoint) -> f64 {
     ((p.x - a.x) as f64 - t * x).hypot((p.y - a.y) as f64 - t * y)
 }
 impl ProtoCraft {
+    fn move_board_component(&mut self, id: ComponentId, placement: Placement) {
+        if !self.pcb.preserve_connections {
+            self.pcb_checked_command(Command::PlaceOnBoard { id, placement });
+            return;
+        }
+        match eda_pcb::placement::plan_placement(self.engine.project(), id, placement) {
+            Ok(commands) => {
+                self.pcb_checked_command(Command::Batch(commands));
+            }
+            Err(error) => self.message(eda_i18n::text(&error), true),
+        }
+    }
     pub(super) fn pcb_zoom_percent(&self) -> f32 {
         self.pcb.zoom / 8.0 * 100.0
     }
 
     pub(super) fn sync_board(&mut self) {
         self.pcb.finish_route();
-        let board = self
-            .engine
-            .project()
-            .board
-            .as_deref()
-            .cloned()
-            .unwrap_or_default();
-        let mut commands = vec![Command::SetBoard {
-            board: board.clone(),
-        }];
-        let (mut x, mut y, mut row_height) = (5_000_000, 5_000_000, 0);
-        // Preserva posições existentes; novos footprints entram em uma prateleira livre abaixo delas.
-        for (id, p) in &board.placements {
-            if let Some(f) = self
-                .engine
-                .project()
-                .components
-                .get(id)
-                .and_then(|c| c.footprint.as_ref())
-            {
-                y = y.max(p.position.y + f.body_bounds.height() + 5_000_000);
-            }
-        }
-        for c in self.engine.project().components.values() {
-            if board.placements.contains_key(&c.id) {
-                continue;
-            }
-            if let Some(f) = &c.footprint {
-                let w = f.body_bounds.width() + 6_000_000;
-                let h = f.body_bounds.height() + 6_000_000;
-                if x + w > board.width_nm {
-                    x = 5_000_000;
-                    y += row_height;
-                    row_height = 0;
+        match eda_pcb::sync::plan(self.engine.project()) {
+            Ok(plan) => {
+                if let Err(error) = self.engine.execute(Command::Batch(plan.commands)) {
+                    self.message(error.to_string(), true);
+                    return;
                 }
-                commands.push(Command::PlaceOnBoard {
-                    id: c.id,
-                    placement: Placement {
-                        position: NmPoint::new(
-                            x - f.body_bounds.min.x + 3_000_000,
-                            y - f.body_bounds.min.y + 3_000_000,
-                        ),
-                        rotation: 0,
-                        side: BoardSide::Top,
-                    },
-                });
-                x += w;
-                row_height = row_height.max(h);
+                self.pcb.fit = true;
+                self.pcb.report = None;
+                self.message(
+                    "PCB sincronizada. Posições existentes preservadas; confira o DRC.",
+                    false,
+                );
             }
+            Err(error) => self.message(error.to_string(), true),
         }
-        self.command(Command::Batch(commands));
-        self.pcb.fit = true;
-        self.pcb.report = None;
-        self.message(
-            "PCB sincronizada. Posições existentes preservadas; confira o DRC.",
-            false,
-        );
     }
     pub(super) fn pcb_shortcuts(&mut self, ctx: &egui::Context) {
         if ctx.egui_wants_keyboard_input() || self.pending.is_some() {
@@ -517,6 +493,8 @@ impl ProtoCraft {
                     if ui.button(tr!("Enquadrar · F")).clicked() {
                         self.pcb.fit = true;
                     }
+                    ui.checkbox(&mut self.pcb.preserve_connections, tr!("Manter trilhas conectadas ao arrastar"))
+                        .on_hover_text(tr!("Translação na mesma face. Vias, ramificações e contatos ambíguos são recusados."));
                     egui::CollapsingHeader::new(tr!("Fabricação")).show(ui, |ui| {
                         self.pcb_fabrication_controls(ui);
                         if ui.button(tr!("Exportar PCB KiCad…")).clicked() {
@@ -962,6 +940,45 @@ impl ProtoCraft {
     fn pcb_fabrication_controls(&mut self, ui: &mut egui::Ui) {
         ui.separator();
         ui.strong(tr!("Fabricação"));
+        if ui.button(tr!("Exportar lista de materiais CSV…")).clicked() {
+            self.export_assembly_dialog(false);
+        }
+        if ui
+            .button(tr!("Exportar posições de montagem CSV…"))
+            .clicked()
+        {
+            self.export_assembly_dialog(true);
+        }
+        if ui.button(tr!("Calcular comprimentos por rede")).clicked() {
+            match eda_pcb::metrics::routing_metrics(self.engine.project()) {
+                Ok(metrics) => self.pcb.routing_metrics = Some((self.engine.revision(), metrics)),
+                Err(error) => self.message(error, true),
+            }
+        }
+        if let Some((revision, metrics)) = &self.pcb.routing_metrics {
+            if *revision != self.engine.revision() {
+                ui.label(tr!(
+                    "Métricas desatualizadas; calcule novamente após editar."
+                ));
+            } else {
+                ui.small(tr!(
+                    "Soma geométrica dos segmentos; exclui o comprimento vertical de vias."
+                ));
+                egui::ScrollArea::vertical()
+                    .id_salt("routing_metrics")
+                    .max_height(180.0)
+                    .show(ui, |ui| {
+                        for net in &metrics.nets {
+                            ui.label(trf!(
+                                "{name}: {length} mm · {vias} vias",
+                                name = &net.name,
+                                length = format!("{:.3}", net.length_mm),
+                                vias = net.vias
+                            ));
+                        }
+                    });
+            }
+        }
         let before = self.settings.fabrication_preset;
         ui.add_enabled_ui(
             self.pcb.fabrication.is_none() && self.pcb.autorouting.is_none(),
@@ -1012,6 +1029,39 @@ impl ProtoCraft {
             ui.label(tr!("Validando e gerando arquivos em segundo plano…"));
         }
         ui.separator();
+    }
+    fn export_assembly_dialog(&mut self, placements: bool) {
+        let report = eda_pcb::assembly::assembly_report(self.engine.project());
+        let contents = if placements {
+            eda_pcb::assembly::placements_csv(&report)
+        } else {
+            eda_pcb::assembly::bom_csv(&report)
+        };
+        let Some(path) = rfd::FileDialog::new()
+            .set_title(tr!("Salvar relatório de montagem em arquivo novo"))
+            .add_filter("CSV", &["csv"])
+            .set_file_name(if placements {
+                "placements.csv"
+            } else {
+                "bom.csv"
+            })
+            .save_file()
+        else {
+            return;
+        };
+        let result = (|| -> std::io::Result<()> {
+            use std::io::Write;
+            let mut file = std::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(path)?;
+            file.write_all(contents.as_bytes())?;
+            file.sync_all()
+        })();
+        match result {
+            Ok(()) => self.message(tr!("Relatório exportado. Confira unidades, rotação e componentes pendentes antes de montar."), false),
+            Err(error) => self.message(error.to_string(), true),
+        }
     }
     fn start_fabrication_dialog(&mut self) {
         match eda_pcb::check(self.engine.project()) {
@@ -1642,8 +1692,7 @@ impl ProtoCraft {
                         let end = world(pos);
                         p.position =
                             NmPoint::new(start.x + end.x - press.x, start.y + end.y - press.y);
-                        self.command(Command::PlaceOnBoard { id, placement: p });
-                        self.pcb.report = None;
+                        self.move_board_component(id, p);
                     }
                 }
                 painter.text(

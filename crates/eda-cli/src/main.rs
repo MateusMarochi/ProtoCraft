@@ -13,6 +13,9 @@ macro_rules! trf {
     };
 }
 
+mod pcb_cleanup_cli;
+mod pcb_move_cli;
+mod pcb_sync_cli;
 mod physical_cli;
 
 use eda_automation::{Action, COMMANDS, parse_action, parse_actions};
@@ -27,10 +30,24 @@ use std::{
 };
 
 fn main() {
-    if let Err(error) = run() {
+    if let Err(error) = configure_language().and_then(|()| run()) {
         eprintln!("{}: {}", tr!("Erro"), eda_i18n::text(&error.to_string()));
         std::process::exit(1);
     }
+}
+fn configure_language() -> Result<(), Box<dyn Error>> {
+    use eda_i18n::LanguagePreference;
+    let Some(value) = env::var_os("PROTOCRAFT_LANGUAGE") else {
+        return Ok(());
+    };
+    let preference = match value.to_str() {
+        Some("en") => LanguagePreference::English,
+        Some("pt-BR") => LanguagePreference::PortugueseBr,
+        Some("system") => LanguagePreference::System,
+        _ => return Err("Idioma inválido em PROTOCRAFT_LANGUAGE; use en, pt-BR ou system.".into()),
+    };
+    eda_i18n::set_preference(preference);
+    Ok(())
 }
 fn help() {
     println!(
@@ -42,6 +59,12 @@ fn help() {
     println!(
         "{}",
         tr!("Servidor MCP stdio: protocraft-cli mcp --project projeto.protocraft")
+    );
+    println!(
+        "{}",
+        tr!(
+            "PCB: pcb-sync adiciona footprints; pcb-sync-report inspeciona pendências; pcb-move translada componentes com trilhas conectadas; pcb-assembly exporta BOM e posições. Use <comando> --help."
+        )
     );
 }
 fn run_mcp(args: &[String]) -> Result<(), Box<dyn Error>> {
@@ -110,6 +133,15 @@ fn run() -> Result<(), Box<dyn Error>> {
     }
     if command == "mcp" {
         return run_mcp(&args[1..]);
+    }
+    if command == "pcb-sync-report" || command == "pcb-sync" {
+        return pcb_sync_cli::run(command, &args[1..]);
+    }
+    if command == "pcb-move" {
+        return pcb_move_cli::run(&args[1..]);
+    }
+    if command == "pcb-cleanup" {
+        return pcb_cleanup_cli::run(&args[1..]);
     }
     if physical_cli::handles(command) {
         return physical_cli::run(&args);

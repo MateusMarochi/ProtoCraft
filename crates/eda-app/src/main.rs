@@ -2426,14 +2426,14 @@ impl ProtoCraft {
                     ui.label(tr!("Valores SI: 1k, 2.2M, 1m, 1u, 1n, 1p ou notação científica. M = mega; m = mili."));
                     ui.label(tr!("Escolha os motores Estável, Dinâmico ou Misto em Configurações. A simulação cobre DC, transiente e lógica mista com modelos genéricos; veja abaixo o que ainda falta."));
                     ui.separator();
-                    ui.strong(tr!("Comparativo com o Proteus — lacunas atuais (3D fica no SolidCraft)"));
+                    ui.strong(tr!("Comparativo com o Proteus — lacunas atuais"));
                     ui.label(tr!("O ProtoCraft já oferece esquemas, netlist, ERC básico, simulação DC/transiente/mista e uma PCB inicial com roteamento e exportação. Ainda não tem paridade total com o Proteus."));
                     ui.label(tr!("Maior lacuna: firmware de microcontrolador. STM32/ESP32 entram como componentes físicos, mas não executam firmware nem simulam periféricos; faltam também depuração e co-simulação."));
                     ui.label(tr!("Simulação avançada: faltam AC de pequenos sinais e análises de frequência, varredura, ruído e Fourier. Hoje há DC, transiente e lógica mista limitada."));
                     ui.label(tr!("PCB profissional: faltam zonas de cobre, regras por classe de rede, pares diferenciais, controle de comprimento/impedância, multicamada e validação de fabricação mais ampla."));
                     ui.label(tr!("Bibliotecas e produtividade: o catálogo e os modelos são mais limitados; faltam lista de materiais e saídas de montagem completas, além de ferramentas avançadas de análise e navegação do projeto."));
                     ui.label(tr!("Importação: só há um perfil restrito do Proteus, de uma folha. Hierarquia, barramentos, scripts, modelos, firmware, instrumentos, probes e geradores podem não ser preservados."));
-                    ui.label(tr!("Prioridade sugerida: firmware de MCU e análises avançadas; depois, bibliotecas/importação e PCB profissional. O 3D seguirá pelo SolidCraft."));
+                    ui.label(tr!("Prioridade: construção e validação de PCB; depois, simulação e instrumentos. Firmware e 3D ficam para o futuro."));
                     ui.label(tr!("Contínua mantém o estado elétrico entre avanços. Dois cliques alternam chave/entrada lógica. Mudança de topologia reinicia o tempo; mudanças de parâmetros preservam o estado."));
                     ui.label(tr!("Mover/rotacionar componente não acompanha fios: confira os pinos e ERC após cada edição. Importação Proteus experimental em Arquivo; salve o resultado em .protocraft."));
                 }); }
