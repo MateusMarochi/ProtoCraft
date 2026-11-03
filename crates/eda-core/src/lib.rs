@@ -756,6 +756,9 @@ pub enum Command {
     Batch(Vec<Command>),
 }
 
+/// Default undo depth mirrored from PDS.EXE's "Undo Levels" setting.
+pub const MAX_UNDO_LEVELS: usize = 20;
+
 pub struct Engine {
     project: Project,
     next_id_high_water: u64,
@@ -797,7 +800,7 @@ impl Engine {
             self.next_id_high_water = self.next_id_high_water.max(candidate.next_id);
             self.undo
                 .push(std::mem::replace(&mut self.project, candidate));
-            if self.undo.len() > 100 {
+            if self.undo.len() > MAX_UNDO_LEVELS {
                 self.undo.remove(0);
             }
             self.redo.clear();

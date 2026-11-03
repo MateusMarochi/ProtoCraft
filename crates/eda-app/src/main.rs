@@ -559,6 +559,8 @@ struct ProtoCraft {
     capture_path: Option<PathBuf>,
     capture_requested: bool,
     capture_started: Instant,
+    capture_frames_remaining: Option<u16>,
+    exit_after_capture: bool,
     settings: settings::Settings,
     show_home: bool,
     show_settings: bool,
@@ -649,6 +651,8 @@ impl ProtoCraft {
             capture_path,
             capture_requested: false,
             capture_started: Instant::now(),
+            capture_frames_remaining: None,
+            exit_after_capture: false,
             settings: settings::Settings::default(),
             show_home,
             show_settings: false,
@@ -2420,7 +2424,16 @@ impl ProtoCraft {
                     ui.label(tr!("Ctrl+N novo · Ctrl+O abrir · Ctrl+S salvar · Ctrl+Shift+S salvar como · Ctrl+Z desfazer · Ctrl+Y refazer · F5 DC"));
                     ui.label(tr!("Ctrl+C copia · Ctrl+X recorta · Ctrl+V cola no cursor. Componentes preservam valor, rotação, pinagem e footprint. Em campos de texto os atalhos editam o texto."));
                     ui.label(tr!("Valores SI: 1k, 2.2M, 1m, 1u, 1n, 1p ou notação científica. M = mega; m = mili."));
-                    ui.label(tr!("Motores Estável e Dinâmico em Configurações. Modelos genéricos: RLC, fontes de ondas, chave, potenciômetro, LED/Zener, BJT, operacional e lógica combinacional. O motor Misto acrescenta eventos, atrasos, comparadores, 555 e lógica sequencial. Sem AC de pequenos sinais, parasitas, MCU ou PCB."));
+                    ui.label(tr!("Escolha os motores Estável, Dinâmico ou Misto em Configurações. A simulação cobre DC, transiente e lógica mista com modelos genéricos; veja abaixo o que ainda falta."));
+                    ui.separator();
+                    ui.strong(tr!("Comparativo com o Proteus — lacunas atuais (3D fica no SolidCraft)"));
+                    ui.label(tr!("O ProtoCraft já oferece esquemas, netlist, ERC básico, simulação DC/transiente/mista e uma PCB inicial com roteamento e exportação. Ainda não tem paridade total com o Proteus."));
+                    ui.label(tr!("Maior lacuna: firmware de microcontrolador. STM32/ESP32 entram como componentes físicos, mas não executam firmware nem simulam periféricos; faltam também depuração e co-simulação."));
+                    ui.label(tr!("Simulação avançada: faltam AC de pequenos sinais e análises de frequência, varredura, ruído e Fourier. Hoje há DC, transiente e lógica mista limitada."));
+                    ui.label(tr!("PCB profissional: faltam zonas de cobre, regras por classe de rede, pares diferenciais, controle de comprimento/impedância, multicamada e validação de fabricação mais ampla."));
+                    ui.label(tr!("Bibliotecas e produtividade: o catálogo e os modelos são mais limitados; faltam lista de materiais e saídas de montagem completas, além de ferramentas avançadas de análise e navegação do projeto."));
+                    ui.label(tr!("Importação: só há um perfil restrito do Proteus, de uma folha. Hierarquia, barramentos, scripts, modelos, firmware, instrumentos, probes e geradores podem não ser preservados."));
+                    ui.label(tr!("Prioridade sugerida: firmware de MCU e análises avançadas; depois, bibliotecas/importação e PCB profissional. O 3D seguirá pelo SolidCraft."));
                     ui.label(tr!("Contínua mantém o estado elétrico entre avanços. Dois cliques alternam chave/entrada lógica. Mudança de topologia reinicia o tempo; mudanças de parâmetros preservam o estado."));
                     ui.label(tr!("Mover/rotacionar componente não acompanha fios: confira os pinos e ERC após cada edição. Importação Proteus experimental em Arquivo; salve o resultado em .protocraft."));
                 }); }
@@ -3197,12 +3210,24 @@ impl eframe::App for ProtoCraft {
     fn ui(&mut self, root_ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = root_ui.ctx().clone();
         if self.capture_path.is_some() {
-            if !self.capture_requested
-                && self.simulation.is_none()
-                && self.capture_started.elapsed() > Duration::from_millis(600)
-            {
-                ctx.send_viewport_cmd(egui::ViewportCommand::Screenshot(egui::UserData::default()));
-                self.capture_requested = true;
+            if !self.capture_requested && self.simulation.is_none() {
+                let ready = if let Some(frames_remaining) = &mut self.capture_frames_remaining {
+                    if *frames_remaining > 0 {
+                        *frames_remaining -= 1;
+                        ctx.request_repaint();
+                        false
+                    } else {
+                        true
+                    }
+                } else {
+                    self.capture_started.elapsed() > Duration::from_millis(600)
+                };
+                if ready {
+                    ctx.send_viewport_cmd(egui::ViewportCommand::Screenshot(
+                        egui::UserData::default(),
+                    ));
+                    self.capture_requested = true;
+                }
             }
             let image = ctx.input(|input| {
                 input.events.iter().find_map(|event| {
@@ -3226,8 +3251,18 @@ impl eframe::App for ProtoCraft {
                         true,
                     ),
                 }
+                if self.exit_after_capture {
+                    self.close_allowed = true;
+                    ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                }
             }
-            ctx.request_repaint_after(Duration::from_millis(100));
+            if self.capture_path.is_some() {
+                if self.capture_frames_remaining.is_some() {
+                    ctx.request_repaint();
+                } else {
+                    ctx.request_repaint_after(Duration::from_millis(100));
+                }
+            }
         }
         if ctx.input(|i| i.viewport().close_requested()) && !self.close_allowed && self.dirty() {
             ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
@@ -3298,6 +3333,12 @@ fn save_screenshot(
     path: &std::path::Path,
     image: &egui::ColorImage,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    if let Some(parent) = path
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+    {
+        std::fs::create_dir_all(parent)?;
+    }
     let file = std::fs::File::create(path)?;
     let mut encoder = png::Encoder::new(
         std::io::BufWriter::new(file),
@@ -4109,6 +4150,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut smoke = false;
     let mut home_requested = false;
     let mut capture_path = None;
+    let mut screenshot_mode = false;
     let mut path = None;
     let mut light = false;
     let mut startup_analysis = None;
@@ -4152,6 +4194,12 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 return Err("Análise desconhecida. Use dc ou transient.".into());
             });
+        } else if arg == "--screenshot" {
+            screenshot_mode = true;
+            capture_path =
+                Some(PathBuf::from(args.next().ok_or_else(|| {
+                    tr!("Informe um caminho PNG após --screenshot.")
+                })?));
         } else if arg == "--capture" {
             capture_path = Some(PathBuf::from(
                 args.next()
@@ -4183,6 +4231,12 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                 "{}",
                 tr!(
                     "ProtoCraft [projeto.protocraft|projeto.pdsprj|esquema.dsn] [--home] [--analysis dc|transient] [--engine stable|dynamic|mixed] [--continuous] [--settings] [--pcb] [--light] [--capture captura.png] [--window-position X Y] [--window-size W H] [--smoke-exit]\n\n--home            Abre a página inicial quando nenhum projeto é informado.\n--analysis        Executa a análise ao abrir; transiente usa passo de 10 us e fim de 5 ms.\n--light           Abre com tema claro.\n--capture         Salva uma captura PNG após concluir a análise inicial.\n--window-position Define a posição inicial da janela em coordenadas da área de trabalho.\n--window-size     Define o tamanho inicial; mínimo de 1000 × 650 pixels.\n--smoke-exit      Fecha automaticamente após 3 s e conclusão da captura/análise (limite: 15 s)."
+                )
+            );
+            println!(
+                "{}",
+                tr!(
+                    "--screenshot <file.png> Salva a janela em PNG após renderizar 120 quadros e encerra."
                 )
             );
             return Ok(());
@@ -4266,6 +4320,10 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             };
             let mut app =
                 ProtoCraft::new(engine, logo, path, message, smoke, capture_path, show_home);
+            if screenshot_mode {
+                app.capture_frames_remaining = Some(120);
+                app.exit_after_capture = true;
+            }
             if let Some(report) = startup_import {
                 app.unsaved_import = true;
                 app.import_source = startup_source;

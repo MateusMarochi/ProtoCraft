@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "values": [
+    {
+      "name": "screenshot frames",
+      "group": "visual validation",
+      "value": 120,
+      "unit": "frames",
+      "source": "crates/eda-app/src/main.rs"
+    }
+  ]
+}

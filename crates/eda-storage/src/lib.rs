@@ -11,6 +11,8 @@ pub mod fabrication;
 
 pub const MAX_FILE_BYTES: u64 = 8 * 1024 * 1024;
 pub const FORMAT_VERSION: u32 = eda_core::FORMAT_VERSION;
+/// PDS.EXE's default number of retained project backup generations.
+pub const MAX_BACKUP_GENERATIONS: usize = 10;
 
 #[derive(Debug, Error)]
 pub enum StorageError {
@@ -66,6 +68,29 @@ pub fn backup_path(path: impl AsRef<Path>) -> PathBuf {
     PathBuf::from(name)
 }
 
+fn numbered_backup_path(path: &Path, generation: usize) -> PathBuf {
+    let mut name = path.as_os_str().to_owned();
+    name.push(format!(".bak.{generation}"));
+    PathBuf::from(name)
+}
+
+fn rotate_backups(path: &Path) -> Result<(), StorageError> {
+    for generation in (1..MAX_BACKUP_GENERATIONS).rev() {
+        let source = if generation == 1 {
+            backup_path(path)
+        } else {
+            numbered_backup_path(path, generation - 1)
+        };
+        let destination = numbered_backup_path(path, generation);
+        if source.exists() {
+            fs::copy(source, destination)?;
+        } else if destination.exists() {
+            fs::remove_file(destination)?;
+        }
+    }
+    Ok(())
+}
+
 pub fn save(path: impl AsRef<Path>, project: &Project) -> Result<(), StorageError> {
     let bytes = encode(project)?;
     let path = path.as_ref();
@@ -73,6 +98,7 @@ pub fn save(path: impl AsRef<Path>, project: &Project) -> Result<(), StorageErro
         // Não substituímos arquivo corrompido ou de versão que este programa desconhece.
         load(path)?;
         let previous = fs::read(path)?;
+        rotate_backups(path)?;
         atomic_write(&backup_path(path), &previous)?;
     }
     atomic_write(path, &bytes)

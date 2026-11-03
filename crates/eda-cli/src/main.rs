@@ -446,7 +446,10 @@ fn run_new_project(args: &[String]) -> Result<(), Box<dyn Error>> {
     }
 
     let template = template.unwrap_or_else(|| "empty".into());
-    let output = output.ok_or("Uso: protocraft-cli new --output projeto.protocraft")?;
+    let mut output = output.ok_or("Uso: protocraft-cli new --output projeto.protocraft")?;
+    if output.extension().is_none() {
+        output.set_extension("protocraft");
+    }
     if !output
         .extension()
         .is_some_and(|extension| extension.eq_ignore_ascii_case("protocraft"))
