@@ -62,6 +62,8 @@ O catálogo também oferece os modelos Raspberry Pi com header GPIO de 40 pinos,
 
 ## Escopo e limitações
 
+Os novos fluxos de CLI oferecem [tentativas alternativas de rota, limpeza colinear e revisão DFM](docs/pcb-optimization.md), com orçamento de trabalho, identificação de objetos e limites de fabricação configuráveis.
+
 O ProtoCraft implementa seus próprios motores e não incorpora código nem binários do Proteus. A importação `.pdsprj`/`.dsn` é experimental e parcial; não há garantia de compatibilidade com todos os projetos Proteus. Os dados de STM32/ESP32 servem ao projeto físico: firmware e periféricos internos não são emulados. Os modelos de simulação são genéricos e educacionais. A exportação para fabricação exige KiCad CLI e revisão independente da placa antes da produção.
 
 ## Termos de busca

@@ -766,6 +766,7 @@ name = "eda-pcb"
 version = "0.9.0"
 dependencies = [
  "eda-core",
+ "eda-i18n",
  "eda-library",
  "eda-netlist",
  "serde",

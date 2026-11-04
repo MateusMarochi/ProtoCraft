@@ -304,8 +304,6 @@ pub fn buck_pi4_project() -> Result<Project, String> {
             1_500_000,
             10_000_000,
         ),
-        Point::new(0, 0),
-        "J1-1 +12V",
     );
 
     let resistor_fp = catalog
@@ -344,8 +342,6 @@ pub fn buck_pi4_project() -> Result<Project, String> {
         "ProtoCraft_SMD:Jumper_0805",
         0.0,
         resistor_fp.clone(),
-        Point::new(0, 0),
-        "",
     );
     let mut add = |id: u64, reference: &str, kind: ComponentKind, value: f64, fp: Footprint| {
         add_component(
@@ -481,8 +477,6 @@ pub fn buck_pi4_project() -> Result<Project, String> {
         "ProtoCraft_THT:Terminal_2P_5.08mm",
         5.1,
         terminal_fp,
-        Point::new(0, 0),
-        "J_OUT-1 +5V1",
     );
 
     // A fixture de PCB posiciona componentes separadamente; o esquema também
@@ -689,7 +683,7 @@ fn add_input_capacitor_vin_bridge(project: &mut Project) -> Result<(), String> {
         .board
         .as_mut()
         .ok_or_else(|| eda_i18n::text("O projeto não tem PCB."))?;
-    let mut next_track_id = board
+    let next_track_id = board
         .tracks
         .keys()
         .copied()
@@ -697,7 +691,7 @@ fn add_input_capacitor_vin_bridge(project: &mut Project) -> Result<(), String> {
         .unwrap_or(0)
         .checked_add(1)
         .ok_or_else(|| eda_i18n::text("Limite de IDs de trilha atingido."))?;
-    let mut next_via_id = board
+    let next_via_id = board
         .vias
         .keys()
         .copied()
@@ -716,7 +710,13 @@ fn add_input_capacitor_vin_bridge(project: &mut Project) -> Result<(), String> {
         },
     ];
     let mut vias = Vec::new();
-    for pin in pins {
+    for (offset, pin) in pins.into_iter().enumerate() {
+        let track_id = next_track_id
+            .checked_add(offset as u64)
+            .ok_or_else(|| eda_i18n::text("Limite de IDs de trilha atingido."))?;
+        let via_id = next_via_id
+            .checked_add(offset as u64)
+            .ok_or_else(|| eda_i18n::text("Limite de IDs de via atingido."))?;
         let component = project
             .components
             .get(&pin.component)
@@ -734,9 +734,9 @@ fn add_input_capacitor_vin_bridge(project: &mut Project) -> Result<(), String> {
         let pad_position = placement.transform(pad.position);
         let via_position = NmPoint::new(pad_position.x, pad_position.y + 1_500_000);
         board.tracks.insert(
-            next_track_id,
+            track_id,
             Track {
-                id: next_track_id,
+                id: track_id,
                 start: pad_position,
                 end: via_position,
                 width_nm: 250_000,
@@ -744,18 +744,16 @@ fn add_input_capacitor_vin_bridge(project: &mut Project) -> Result<(), String> {
                 net: pin,
             },
         );
-        next_track_id += 1;
         board.vias.insert(
-            next_via_id,
+            via_id,
             eda_core::Via {
-                id: next_via_id,
+                id: via_id,
                 position: via_position,
                 diameter_nm: 400_000,
                 drill_nm: 200_000,
                 net: pin,
             },
         );
-        next_via_id += 1;
         vias.push((pin, via_position));
     }
     let [(first_pin, first), (second_pin, second)] = vias.as_slice() else {
@@ -766,6 +764,9 @@ fn add_input_capacitor_vin_bridge(project: &mut Project) -> Result<(), String> {
             "Os capacitores de entrada não compartilham VIN.",
         ));
     }
+    let next_track_id = next_track_id
+        .checked_add(pins.len() as u64)
+        .ok_or_else(|| eda_i18n::text("Limite de IDs de trilha atingido."))?;
     board.tracks.insert(
         next_track_id,
         Track {
@@ -1160,8 +1161,6 @@ fn add_two_pin_device(
     footprint_id: &str,
     value: f64,
     footprint: Footprint,
-    position: Point,
-    _label: &str,
 ) {
     let source = footprint.source.clone();
     let device = DeviceDefinition {
@@ -1190,7 +1189,15 @@ fn add_two_pin_device(
         ],
         source,
     };
-    add_device(project, id, reference, device, footprint, position, value);
+    add_device(
+        project,
+        id,
+        reference,
+        device,
+        footprint,
+        Point::new(0, 0),
+        value,
+    );
 }
 
 fn set_pin_label(

@@ -103,6 +103,29 @@ pub fn generate_with_preset(
     tool: &Path,
     preset: ManufacturingPreset,
 ) -> Result<PathBuf, String> {
+    generate_with_preset_and_limits(project, destination, tool, preset, None)
+}
+
+/// Recalcula o preflight no mesmo snapshot usado pela exportação e publica o
+/// relatório junto dos demais arquivos, fora do ZIP, em uma única renomeação.
+pub fn generate_with_preset_and_limits(
+    project: &Project,
+    destination: &Path,
+    tool: &Path,
+    preset: ManufacturingPreset,
+    limits: Option<&eda_pcb::dfm::ManufacturingLimits>,
+) -> Result<PathBuf, String> {
+    let dfm_report = limits
+        .map(|limits| eda_pcb::dfm::check(project, limits))
+        .transpose()?;
+    if dfm_report
+        .as_ref()
+        .is_some_and(|report| report.errors() > 0 || !report.complete)
+    {
+        return Err(eda_i18n::text(
+            "A revisão DFM encontrou pendências; consulte o relatório.",
+        ));
+    }
     if destination.exists() {
         return Err("Escolha uma pasta de saída nova; arquivos existentes são preservados.".into());
     }
@@ -123,6 +146,15 @@ pub fn generate_with_preset(
         .unwrap_or(Path::new("."));
     let stage = tempfile::tempdir_in(parent).map_err(|e| e.to_string())?;
     write_assembly_reports(project, &stage.path().join("montagem"))?;
+    if let Some(report) = &dfm_report {
+        let mut file = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(stage.path().join("dfm.json"))
+            .map_err(|error| error.to_string())?;
+        serde_json::to_writer_pretty(&mut file, report).map_err(|error| error.to_string())?;
+        file.sync_all().map_err(|error| error.to_string())?;
+    }
     let board = stage.path().join("projeto.kicad_pcb");
     fs::write(&board, eda_pcb::export_kicad(project)?).map_err(|e| e.to_string())?;
     fs::write(

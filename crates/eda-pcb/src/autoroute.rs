@@ -39,6 +39,7 @@ pub struct AutorouteConfig {
     pub congestion_penalty_nm: i64,
     pub max_vias_per_connection: u8,
     pub max_connections: usize,
+    pub max_routing_passes: usize,
     pub max_expansions_per_connection: usize,
     pub max_total_expansions: usize,
     pub max_optimization_connections: usize,
@@ -58,6 +59,7 @@ impl Default for AutorouteConfig {
             congestion_penalty_nm: 120_000,
             max_vias_per_connection: 4,
             max_connections: 256,
+            max_routing_passes: 1,
             max_expansions_per_connection: 128_000,
             max_total_expansions: 600_000,
             max_optimization_connections: 32,
@@ -77,6 +79,9 @@ pub struct AutorouteFailure {
 
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct AutorouteStats {
+    pub routing_passes_attempted: usize,
+    pub routing_passes_rejected: usize,
+    pub selected_pass: usize,
     pub initial_airwires: usize,
     pub routed_connections: usize,
     pub unrouted_connections: usize,
@@ -526,6 +531,90 @@ impl SearchContext<'_> {
 pub fn autoroute(project: &Project, config: &AutorouteConfig) -> Result<AutoroutePlan, String> {
     validate_config(config)?;
     let started = Instant::now();
+    let count = check(project)?.airwires.len();
+    let unique_orders = if count <= 2 {
+        count.max(1)
+    } else {
+        count.saturating_mul(2)
+    };
+    let pass_limit = config.max_routing_passes.min(unique_orders);
+    let mut remaining = config.max_total_expansions;
+    let mut total = 0;
+    let mut attempts = 0;
+    let mut rejected = 0;
+    let mut best: Option<AutoroutePlan> = None;
+    for pass in 0..pass_limit {
+        if remaining == 0 {
+            break;
+        }
+        let mut attempt = config.clone();
+        attempt.max_total_expansions = (remaining / (pass_limit - pass)).max(1);
+        let mut used = 0;
+        let candidate = autoroute_pass(project, &attempt, pass / 2, pass % 2 == 1, &mut used).map(
+            |mut plan| {
+                plan.stats.selected_pass = pass + 1;
+                plan
+            },
+        );
+        remaining = remaining.saturating_sub(used);
+        total += used;
+        attempts += 1;
+        if !select_candidate(&mut best, candidate, config.via_penalty_nm)? {
+            rejected += 1;
+        }
+        if best
+            .as_ref()
+            .is_some_and(|p| p.stats.remaining_airwires == 0)
+        {
+            break;
+        }
+    }
+    let mut plan = best
+        .ok_or_else(|| eda_i18n::text("Parâmetros de autorroteamento fora dos limites seguros."))?;
+    plan.stats.elapsed_ms = started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64;
+    plan.stats.search_expansions = total;
+    plan.stats.routing_passes_attempted = attempts;
+    plan.stats.routing_passes_rejected = rejected;
+    Ok(plan)
+}
+
+// Um candidato recusado pelo DRC não invalida uma tentativa já conferida.
+fn select_candidate(
+    best: &mut Option<AutoroutePlan>,
+    candidate: Result<AutoroutePlan, String>,
+    via_penalty_nm: i64,
+) -> Result<bool, String> {
+    let candidate = match candidate {
+        Ok(candidate) => candidate,
+        Err(error) if best.is_none() => return Err(error),
+        Err(_) => return Ok(false),
+    };
+    let score = |p: &AutoroutePlan| {
+        (
+            p.stats.remaining_airwires,
+            p.stats
+                .total_length_nm
+                .saturating_add((p.stats.via_count as u64).saturating_mul(via_penalty_nm as u64)),
+        )
+    };
+    if best
+        .as_ref()
+        .is_none_or(|current| score(&candidate) < score(current))
+    {
+        *best = Some(candidate);
+    }
+    Ok(true)
+}
+
+fn autoroute_pass(
+    project: &Project,
+    config: &AutorouteConfig,
+    rotation: usize,
+    reverse: bool,
+    consumed_expansions: &mut usize,
+) -> Result<AutoroutePlan, String> {
+    validate_config(config)?;
+    let started = Instant::now();
     let board = project.board.as_deref().ok_or("O projeto não tem PCB.")?;
     let before = check(project)?;
     let pads = placed_pads(project)?;
@@ -596,6 +685,13 @@ pub fn autoroute(project: &Project, config: &AutorouteConfig) -> Result<Autorout
         }
     });
 
+    if reverse {
+        connections.reverse();
+    }
+    if !connections.is_empty() {
+        let amount = rotation % connections.len();
+        connections.rotate_left(amount);
+    }
     let mut index = build_obstacle_index(project, &pads, &netlist, config)?;
     let mut routes = Vec::new();
     let mut expansions = 0usize;
@@ -627,6 +723,7 @@ pub fn autoroute(project: &Project, config: &AutorouteConfig) -> Result<Autorout
             budget,
         );
         expansions = expansions.saturating_add(result.expansions);
+        *consumed_expansions = expansions;
         match result.route {
             Some(route) => {
                 add_route_obstacles(&mut index, &route, connection.net, &route_config);
@@ -677,6 +774,7 @@ pub fn autoroute(project: &Project, config: &AutorouteConfig) -> Result<Autorout
                 remaining,
             );
             expansions = expansions.saturating_add(candidate.expansions);
+            *consumed_expansions = expansions;
             if let Some(candidate_route) = candidate.route
                 && candidate_route.quality + 1.0 < routes[route_index].quality
             {
@@ -787,6 +885,7 @@ fn validate_config(config: &AutorouteConfig) -> Result<(), String> {
         || !(100_000..=20 * NM_PER_MM).contains(&config.via_diameter_nm)
         || !(1_000..config.via_diameter_nm).contains(&config.via_drill_nm)
         || config.max_vias_per_connection > 16
+        || !(1..=8).contains(&config.max_routing_passes)
         || config.max_connections == 0
         || config.max_connections > MAX_ROUTE_LIMIT
         || config.max_expansions_per_connection == 0
@@ -1910,4 +2009,35 @@ fn validate_physical_delta(
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod pass_selection_tests {
+    use super::*;
+    fn plan(remaining: usize, selected_pass: usize) -> AutoroutePlan {
+        AutoroutePlan {
+            commands: vec![],
+            failures: vec![],
+            stats: AutorouteStats {
+                remaining_airwires: remaining,
+                selected_pass,
+                ..Default::default()
+            },
+        }
+    }
+    #[test]
+    fn invalid_later_pass_preserves_valid_result_and_first_error_is_reported() {
+        let mut best = None;
+        assert_eq!(
+            select_candidate(&mut best, Err("invalid".into()), 0),
+            Err("invalid".into())
+        );
+        assert!(select_candidate(&mut best, Ok(plan(2, 1)), 0).unwrap());
+        assert!(!select_candidate(&mut best, Err("drc".into()), 0).unwrap());
+        assert_eq!(best.as_ref().unwrap().stats.selected_pass, 1);
+        select_candidate(&mut best, Ok(plan(3, 2)), 0).unwrap();
+        assert_eq!(best.as_ref().unwrap().stats.selected_pass, 1);
+        select_candidate(&mut best, Ok(plan(1, 3)), 0).unwrap();
+        assert_eq!(best.as_ref().unwrap().stats.selected_pass, 3);
+    }
 }

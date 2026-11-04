@@ -14,6 +14,7 @@ macro_rules! trf {
 }
 
 mod pcb_cleanup_cli;
+mod pcb_dfm_cli;
 mod pcb_move_cli;
 mod pcb_sync_cli;
 mod physical_cli;
@@ -50,6 +51,12 @@ fn configure_language() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 fn help() {
+    println!(
+        "{}",
+        tr!(
+            "PCB: pcb-dfm revisa limites de fabricação; pcb-cleanup --merge-collinear une segmentos; pcb-route --passes 1..8 tenta ordens alternativas sob o mesmo orçamento."
+        )
+    );
     println!(
         "{}",
         tr!(
@@ -154,6 +161,9 @@ fn run() -> Result<(), Box<dyn Error>> {
     }
     if command == "pcb-cleanup" {
         return pcb_cleanup_cli::run(&args[1..]);
+    }
+    if command == "pcb-dfm" {
+        return pcb_dfm_cli::run(&args[1..]);
     }
     if physical_cli::handles(command) {
         return physical_cli::run(&args);
@@ -687,6 +697,10 @@ fn gui_executable() -> Result<PathBuf, Box<dyn Error>> {
 
 fn command_help(command: &str) -> Option<String> {
     match command {
+        "pcb-dfm" => Some(pcb_dfm_cli::help()),
+        "pcb-route" => Some(tr!(
+            "Uso: protocraft-cli pcb-route <projeto> --output novo.protocraft [--grid-mm 0.25] [--track-width-mm 0.25] [--max-expansions 600000] [--passes 1..8] [--no-optimize]\nO orçamento total inclui todas as tentativas e otimizações. O cobre existente é preservado; a saída pode manter conexões pendentes, detalhadas no relatório."
+        )),
         "templates" => Some(tr!(
             "Uso: protocraft-cli templates\nLista os modelos disponíveis em JSON."
         )),

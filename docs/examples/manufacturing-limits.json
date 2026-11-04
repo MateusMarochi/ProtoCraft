@@ -1,0 +1,9 @@
+{
+  "min_track_width_nm": 150000,
+  "min_clearance_nm": 150000,
+  "min_via_drill_nm": 300000,
+  "min_pth_drill_nm": 300000,
+  "min_npth_drill_nm": 500000,
+  "min_annular_ring_nm": 100000,
+  "min_copper_edge_clearance_nm": 250000
+}

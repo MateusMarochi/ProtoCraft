@@ -37,6 +37,8 @@ Essas entregas são partes dos itens amplos abaixo. Classes de rede ainda não i
 
 ## P0 — Integridade e confiança
 
+Avanços de 04/11/2026: autorroteamento com ordens alternativas e orçamento global explícito; limpeza colinear conservadora que protege escapes, pads, vias e ramificações; revisão DFM com limites do processo, objeto/medida/mínimo e bloqueio opcional antes da fabricação. São subconjuntos dos itens abaixo, sem encerrar DRC abrangente nem roteamento profissional. Uso e limites em [pcb-optimization.md](docs/pcb-optimization.md).
+
 - [ ] **P0-01 Histórico:** decidir profundidade configurável; o limite atual é 20 snapshots. O teste cobre limite, ramificação e IDs; faltam medição de memória e decisão sobre configuração.
 - [ ] **P0-02 Backups:** revisar rotação local de dez gerações: cópias e remoções não são uma transação; uma falha intermediária pode deixar gerações inconsistentes. Testar falhas de I/O, arquivo ausente, permissões, interrupção e recuperação, sem sobrescrever projeto inválido. Documentar retenção real.
 - [ ] **P0-03 Autosave e recuperação:** arquivo separado, identificação de revisão e escolha explícita de recuperação; testar falha de energia, colisões e múltiplas instâncias. Não sobrescrever projeto válido silenciosamente.

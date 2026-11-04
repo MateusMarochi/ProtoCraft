@@ -158,6 +158,8 @@ Consulte [Construção de PCB e relatórios de montagem](pcb-workflows.md) para 
 
 ### Fonte chaveada buck 12 V para Raspberry Pi 4
 
+Para roteamento com ordens alternativas (`pcb-route --passes`), união de segmentos (`pcb-cleanup --merge-collinear`), revisão DFM (`pcb-dfm`) e limites opcionais na fabricação (`pcb-manufacture --dfm-limits`), consulte [otimização e revisão de fabricação](pcb-optimization.md).
+
 O catálogo offline inclui o LM61460 e um cálculo de primeira ordem, ambos reutilizáveis em automações. O cálculo é restrito à faixa do controlador (entrada de 3–36 V, saída até 95% de VIN, corrente de saída dentro do limite de 6 A e frequência de 200 kHz–2,2 MHz). Valores de eficiência são hipóteses; não substituem simulação, protótipo ou medição. Os detalhes, critérios de seleção dos componentes e limites elétricos estão em [projeto do conversor buck](power-conversion.md).
 
 ```powershell

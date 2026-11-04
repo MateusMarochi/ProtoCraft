@@ -1174,6 +1174,12 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
                     config.max_expansions_per_connection =
                         config.max_expansions_per_connection.min(budget.max(1));
                 }
+                "--passes" => {
+                    config.max_routing_passes = args
+                        .get(i + 1)
+                        .ok_or_else(|| tr!("Informe o número de tentativas de rota (1 a 8)."))?
+                        .parse()?;
+                }
                 "--no-optimize" => {
                     config.optimize_routes = false;
                     i += 1;
@@ -1203,7 +1209,7 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
         let plan = eda_pcb::autoroute(&project, &config)?;
         let mut engine = Engine::new(project)?;
         engine.execute(Command::Batch(plan.commands))?;
-        eda_storage::save(destination, engine.project())?;
+        eda_storage::create_new(destination, engine.project())?;
         return json(&serde_json::json!({
             "output": destination,
             "stats": plan.stats,
@@ -1217,6 +1223,7 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
         let mut output = None;
         let mut tool = None;
         let mut preset = None;
+        let mut dfm_limits = None;
         let mut i = 2;
         while i < args.len() {
             match args[i].as_str() {
@@ -1233,6 +1240,12 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
                         _ => return Err("Use --preset jlcpcb ou standard".into()),
                     });
                 }
+                "--dfm-limits" if dfm_limits.is_none() => {
+                    dfm_limits = Some(super::pcb_dfm_cli::read_limits(Path::new(
+                        args.get(i + 1)
+                            .ok_or_else(|| tr!("Informe o arquivo de limites DFM."))?,
+                    ))?);
+                }
                 _ => return Err("Opção desconhecida ou repetida".into()),
             }
             i += 2;
@@ -1240,11 +1253,28 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
         let destination = Path::new(output.ok_or("Informe --output pasta-nova")?);
         let tool = Path::new(tool.ok_or("Informe --kicad caminho/kicad-cli.exe")?);
         let preset = preset.unwrap_or_default();
-        let path =
-            eda_storage::fabrication::generate_with_preset(&project, destination, tool, preset)?;
+        let dfm_report = if let Some(limits) = &dfm_limits {
+            let report = eda_pcb::dfm::check(&project, limits)?;
+            if report.errors() > 0 || !report.complete {
+                json(&report)?;
+                return Err(
+                    tr!("A revisão DFM encontrou pendências; consulte o relatório.").into(),
+                );
+            }
+            Some(report)
+        } else {
+            None
+        };
+        let path = eda_storage::fabrication::generate_with_preset_and_limits(
+            &project,
+            destination,
+            tool,
+            preset,
+            dfm_limits.as_ref(),
+        )?;
         let archive = preset.archive_name().map(|name| path.join(name));
         return json(
-            &serde_json::json!({"output":path,"preset":preset.id(),"archive":archive,"gerber":true,"excellon":true,"external_drc":true}),
+            &serde_json::json!({"output":path,"preset":preset.id(),"archive":archive,"gerber":true,"excellon":true,"external_drc":true,"dfm_review":dfm_report.is_some()}),
         );
     }
     if cmd == "pcb-export" {

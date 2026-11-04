@@ -6,6 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 pub mod assembly;
 mod autoroute;
 pub mod cleanup;
+pub mod dfm;
 mod drilling;
 mod export;
 pub mod metrics;

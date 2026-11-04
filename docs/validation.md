@@ -1,5 +1,25 @@
 # Validação da entrega 0.1
 
+## Rodada de PCB de 04/11/2026
+
+A rodada introduziu revisão DFM por limites explícitos, tentativas alternativas de autorroteamento e limpeza colinear com proteção de topologia e escapes de pads. Foram usados três agentes por módulo e uma revisão cruzada: ela identificou e corrigiu a união que invalidava um escape curto e a perda do melhor plano quando uma tentativa posterior era recusada pelo DRC.
+
+Validações executadas nesta rodada:
+
+- `cargo fmt --all -- --check` e `cargo check --workspace`: passaram.
+- `cargo clippy -p eda-pcb -p eda-cli --all-targets -- -D warnings`: passou. Dois avisos anteriores em `power.rs` foram resolvidos com remoção de argumentos redundantes e IDs calculados com `checked_add`, sem mudar valores/posições.
+- `cargo test -p eda-pcb`: 46 testes passaram, incluindo seleção de tentativas, limites globais, DRC, geometria, montagem, movimento conectado e as novas regressões DFM/limpeza com terminal de pad fora do centro.
+- `cargo test -p eda-cli --test pcb_advanced`: quatro testes reais de CLI passaram: perfil DFM e relatório identificável, recusa de arquivo existente/perfil inválido, bloqueio de fabricação antes de chamar a ferramenta, limpeza com entrada preservada e `pcb-route --passes` com orçamento global.
+- `cargo test -p eda-library --lib power`: cinco testes passaram após a refatoração mínima do gerador buck.
+- `cargo test -p eda-storage --lib --test dfm_preflight`: 10 testes de biblioteca e uma regressão de bloqueio DFM sem mutação passaram. O relatório DFM é escrito e sincronizado no diretório temporário antes de publicar o pacote.
+- Catálogos de idioma com o mesmo conjunto de 1.181 chaves; ajuda DFM em inglês exercitada pelo teste da CLI.
+
+O KiCad CLI portátil local respondeu `10.0.7`. A CLI executou `pcb-manufacture examples/555-led-1hz-pcb.protocraft` com `--dfm-limits docs/examples/manufacturing-limits.json`. Resultado: DFM com `complete: true` e nenhum diagnóstico; JSON externo KiCad com zero `violations` e zero `unconnected_items`; ZIP com 11 entradas (nove Gerbers e dois Excellon). A pasta também continha `dfm.json` com os sete limites aplicados, relatórios DRC e a subpasta de montagem. Esta execução verifica a fixture e o bloqueio/exportação por CLI, sem validar processo físico, EMI, temperatura ou segurança elétrica.
+
+Nenhum controle visual foi adicionado nesta rodada; as novas opções estão na CLI e nos serviços headless. As limitações de orçamento, tamanho de limpeza, geometria customizada e escopo DFM estão em [pcb-optimization.md](pcb-optimization.md). Zonas, multicamadas, push-and-shove, pares diferenciais e controle de impedância continuam pendentes.
+
+## Registro original da entrega 0.1
+
 Executada em 22/10/2026, Windows x64, Rust 1.99.1/MSVC, com ferramentas C++ do Visual Studio disponíveis na máquina. O Rust foi instalado pelo rustup oficial após conferir o checksum SHA-256 do instalador.
 
 ## Verificações automatizadas
