@@ -1,12 +1,11 @@
 # Publicar uma versão
 
-As publicações automáticas atuais geram os pacotes principais para Windows x64:
+As publicações automáticas geram pacotes para Windows x64 e Linux x86_64:
 
-- Instalador `.exe` criado com Inno Setup.
-- Arquivo `.zip` portátil com o aplicativo, a CLI, exemplos, documentação e bibliotecas.
-- Arquivo `SHA256SUMS.txt` com os hashes dos dois pacotes.
+- Windows: instalador `.exe`, `.zip` portátil com aplicativo, CLI, exemplos, documentação e bibliotecas; hashes em `SHA256SUMS-windows.txt`.
+- Linux: `.tar.gz` com aplicativo, CLI, exemplos, documentação e bibliotecas; hashes em `SHA256SUMS-linux.txt`.
 
-O workflow executa as verificações do workspace e compila em modo release antes de criar ou atualizar a release do GitHub. O título segue `ProtoCraft v<versão>` e os arquivos usam nomes em minúsculas: `protocraft-<versão>-windows-x64.exe` para o instalador e `protocraft-<versão>-windows-x64-portable.zip` para o pacote portátil, seguindo a convenção do PhotoCraft. Tags com hífen, como `v0.6.1-rc.2`, são pré-releases; tags sem hífen, como `v0.6.1`, são releases estáveis. A versão sem o `v` da tag é aplicada aos metadados e nomes dos pacotes.
+Ao receber uma tag, o workflow cria primeiro a entrada da release e depois compila Windows e Linux em paralelo. Cada pacote executa as verificações do workspace; quando ambos terminam, os arquivos e checksums são anexados à release. Assim, a página e a tag ficam disponíveis antes dos binários. O título segue `ProtoCraft v<versão>` e os nomes dos arquivos seguem `protocraft-<versão>-windows-x64.exe`, `protocraft-<versão>-windows-x64-portable.zip` e `protocraft-<versão>-linux-x86_64.tar.gz`. O pacote Linux é um tarball x86_64, não um AppImage ou pacote `.deb`, e depende das bibliotecas de desktop disponíveis no sistema. Tags com hífen, como `v0.10.0-rc.1`, são pré-releases; tags sem hífen, como `v0.10.0`, são releases estáveis. A versão sem o `v` da tag deve coincidir com `Cargo.toml`.
 
 ## Criar uma publicação
 
@@ -19,6 +18,6 @@ O workflow executa as verificações do workspace e compila em modo release ante
    git push origin v0.6.1
    ```
 
-O envio da tag inicia `.github/workflows/release-windows.yml`. A execução aparece na aba **Actions**; quando terminar, os pacotes e os hashes ficam anexados à release correspondente.
+O envio da tag inicia `.github/workflows/release.yml`. A entrada da release aparece primeiro; os dois pacotes são anexados quando os jobs de plataforma terminam na aba **Actions**.
 
 As atualizações são instaladas executando o novo instalador sobre a versão anterior, desde que a identidade e o caminho de instalação definidos em `installer/ProtoCraft.iss` continuem estáveis. O campo `AppUpdatesURL` leva à página de releases; o aplicativo ainda não possui verificação automática de atualizações.

@@ -2,6 +2,8 @@
 
 O executável `protocraft-cli` usa os mesmos crates de domínio que a interface desktop. `run` aplica comandos tipados pelo `Engine`, valida o projeto e pode salvar uma cópia em `.protocraft`, sem abrir janela.
 
+`conversion-formats` lista a matriz de conversão atual. `convert` importa/exporta os subconjuntos descritos, recusa perdas por padrão e pode gravar um relatório JSON; leia a [matriz de formatos e limitações](conversion-formats.md) antes de converter projetos externos.
+
 No Windows, `ProtoCraft-CLI.cmd` compila a versão release do workspace e encaminha os argumentos para a CLI. Ele pode ser chamado da raiz do repositório ou por outro terminal apontando para o caminho do `.cmd`.
 
 ## Criar e abrir projetos

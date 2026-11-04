@@ -19,7 +19,7 @@ const CASES: &[(&str, &str)] = &[
     ),
     (
         "pcb-cleanup",
-        "Uso: protocraft-cli pcb-cleanup <projeto.protocraft> --output <novo.protocraft>",
+        "Uso: protocraft-cli pcb-cleanup <projeto.protocraft> --output <novo.protocraft> [--merge-collinear]",
     ),
 ];
 
@@ -94,7 +94,7 @@ fn pcb_help_follows_child_locale_in_both_languages() {
                     "Uso: protocraft-cli pcb-move <projeto.protocraft> --component <id> --x-mm <x> --y-mm <y> --output <novo.protocraft>"
                 }
                 "pcb-cleanup" => {
-                    "Uso: protocraft-cli pcb-cleanup <projeto.protocraft> --output <novo.protocraft>"
+                    "Uso: protocraft-cli pcb-cleanup <projeto.protocraft> --output <novo.protocraft> [--merge-collinear]"
                 }
                 _ => unreachable!(),
             };

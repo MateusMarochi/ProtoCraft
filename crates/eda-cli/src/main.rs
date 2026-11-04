@@ -13,6 +13,7 @@ macro_rules! trf {
     };
 }
 
+mod conversion_cli;
 mod pcb_cleanup_cli;
 mod pcb_dfm_cli;
 mod pcb_move_cli;
@@ -85,6 +86,12 @@ fn help() {
             "Fontes chaveadas: power-design buck calcula parâmetros de primeira ordem; buck-pi4-12v gera a placa Raspberry Pi 4 de 12 V para 5,1 V / 3 A."
         )
     );
+    println!(
+        "{}",
+        tr!(
+            "Conversão: protocraft-cli conversion-formats lista capacidades; protocraft-cli convert <entrada> --output <destino> --to <formato> gera relatório de perdas e exige --allow-lossy quando necessário."
+        )
+    );
 }
 fn run_mcp(args: &[String]) -> Result<(), Box<dyn Error>> {
     if args == ["--help"] {
@@ -137,6 +144,9 @@ fn run() -> Result<(), Box<dyn Error>> {
     {
         println!("{details}");
         return Ok(());
+    }
+    if conversion_cli::handles(command) {
+        return conversion_cli::run(&args);
     }
     if command == "new" || command == "create" {
         return run_new_project(&args[1..]);
@@ -756,6 +766,12 @@ fn command_help(command: &str) -> Option<String> {
         "import-proteus" => Some(tr!(
             "Uso: protocraft-cli import-proteus <arquivo.pdsprj|arquivo.dsn> --output <arquivo.protocraft> [--report <relatorio.json>]\nImportação experimental e parcial; confira sempre os avisos."
         )),
+        "conversion-formats" => Some(tr!(
+            "Uso: protocraft-cli conversion-formats\nExibe em JSON os formatos e os limites atuais de leitura e gravação."
+        )),
+        "convert" => Some(tr!(
+            "Uso: protocraft-cli convert <entrada> --output <destino> --to <protocraft|kicad-pcb|kicad-sch> [--from auto|protocraft|proteus|kicad-pcb|kicad-sch] [--report <json>] [--allow-lossy]\nA conversão recusa perdas por padrão. Revise o relatório antes de autorizar --allow-lossy. Não substitui arquivos existentes."
+        )),
         _ => None,
     }
 }
@@ -1032,9 +1048,12 @@ fn run_proteus_import(args: &[String]) -> Result<(), Box<dyn Error>> {
             return Err("O relatório já existe; escolha um novo caminho para preservá-lo".into());
         }
     }
+    if output.try_exists()? {
+        return Err(tr!("O arquivo de saída já existe; ele foi preservado.").into());
+    }
     let imported = eda_import::import_proteus(input)?;
     let report_json = serde_json::to_vec_pretty(&imported.report)?;
-    eda_storage::save(output, &imported.project)?;
+    eda_storage::create_new(output, &imported.project)?;
     println!(
         "{}",
         trf!("Projeto importado salvo: {path}", path = output.display())
@@ -1091,4 +1110,27 @@ fn run_proteus_import(args: &[String]) -> Result<(), Box<dyn Error>> {
         println!("{}", trf!("Relatório salvo: {path}", path = path.display()));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod conversion_safety_tests {
+    use super::*;
+
+    #[test]
+    fn import_proteus_nao_substitui_saida_existente() {
+        let directory = tempfile::tempdir().unwrap();
+        let input = directory.path().join("source.dsn");
+        let output = directory.path().join("existing.protocraft");
+        fs::write(&input, b"entrada preservada").unwrap();
+        fs::write(&output, b"destino preservado").unwrap();
+        let input_before = fs::read(&input).unwrap();
+        let args = vec![
+            input.to_string_lossy().into_owned(),
+            "--output".into(),
+            output.to_string_lossy().into_owned(),
+        ];
+        assert!(run_proteus_import(&args).is_err());
+        assert_eq!(fs::read(&input).unwrap(), input_before);
+        assert_eq!(fs::read(&output).unwrap(), b"destino preservado");
+    }
 }

@@ -645,7 +645,7 @@ dependencies = [
 
 [[package]]
 name = "eda-app"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "craft-ui",
  "eda-core",
@@ -667,7 +667,7 @@ dependencies = [
 
 [[package]]
 name = "eda-automation"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "eda-core",
  "eda-library",
@@ -677,7 +677,7 @@ dependencies = [
 
 [[package]]
 name = "eda-cli"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "eda-automation",
  "eda-core",
@@ -697,7 +697,7 @@ dependencies = [
 
 [[package]]
 name = "eda-core"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -706,7 +706,7 @@ dependencies = [
 
 [[package]]
 name = "eda-i18n"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -715,9 +715,10 @@ dependencies = [
 
 [[package]]
 name = "eda-import"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "eda-core",
+ "eda-i18n",
  "eda-netlist",
  "quick-xml",
  "serde",
@@ -729,7 +730,7 @@ dependencies = [
 
 [[package]]
 name = "eda-library"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "eda-core",
  "eda-i18n",
@@ -740,7 +741,7 @@ dependencies = [
 
 [[package]]
 name = "eda-mcp"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "eda-automation",
  "eda-core",
@@ -755,7 +756,7 @@ dependencies = [
 
 [[package]]
 name = "eda-netlist"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "eda-core",
  "serde",
@@ -763,7 +764,7 @@ dependencies = [
 
 [[package]]
 name = "eda-pcb"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "eda-core",
  "eda-i18n",
@@ -775,7 +776,7 @@ dependencies = [
 
 [[package]]
 name = "eda-simulation"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "eda-core",
  "eda-netlist",
@@ -785,7 +786,7 @@ dependencies = [
 
 [[package]]
 name = "eda-storage"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "eda-core",
  "eda-i18n",

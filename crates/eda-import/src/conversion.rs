@@ -49,12 +49,24 @@ pub fn import_proteus(path: impl AsRef<Path>) -> Result<ImportResult, ImportErro
         }
         "dsn" => {
             let bytes = read_limited(path)?;
-            let companion = path.with_extension("CDB");
-            let cdb = if companion.exists() {
-                Some(read_limited(&companion)?)
-            } else {
-                None
-            };
+            let mut companions = Vec::new();
+            for candidate in [path.with_extension("CDB"), path.with_extension("cdb")] {
+                if candidate.try_exists()? {
+                    let canonical = fs::canonicalize(&candidate)?;
+                    if !companions.contains(&canonical) {
+                        companions.push(canonical);
+                    }
+                }
+            }
+            if companions.len() > 1 {
+                return Err(ImportError::Conversion(eda_i18n::text(
+                    "Catálogos CDB ambíguos: existem arquivos .CDB e .cdb distintos.",
+                )));
+            }
+            let cdb = companions
+                .first()
+                .map(|path| read_limited(path))
+                .transpose()?;
             (bytes, cdb, None, Vec::new())
         }
         _ => {
@@ -69,17 +81,27 @@ pub fn import_proteus(path: impl AsRef<Path>) -> Result<ImportResult, ImportErro
         .map(crate::cdb::parse_cdb)
         .transpose()?;
     let mut result = convert_document(&name, &document, catalog.as_ref(), file_version)?;
+    if file_version.is_none() {
+        result.report.warnings.push(eda_i18n::text("DSN independente: a assinatura ISIS foi reconhecida, mas a versão original não pôde ser confirmada por PROJECT.XML; isto não comprova suporte a todas as versões legadas."));
+    }
+    if ignored
+        .iter()
+        .any(|name| matches!(name.to_ascii_uppercase().as_str(), "ROOT.LYT" | "ROOT.PCB"))
+    {
+        result.report.warnings.push(eda_i18n::text("PCB do contêiner não importada: posicionamentos, cobre, vias, furos, zonas e regras de fabricação permanecem somente no arquivo original."));
+    }
     if !ignored.is_empty() {
-        result.report.warnings.push(format!(
+        result.report.warnings.push(eda_i18n::format(
             "Membros mantidos somente no original e não executados/importados: {members}.",
-            members = ignored.join(", ")
+            &[("members", ignored.join(", "))],
         ));
     }
     if catalog.is_none() {
-        result.report.warnings.push(
-            "Catálogo CDB ausente: referências e pinos foram recuperados somente do DSN.".into(),
-        );
+        result.report.warnings.push(eda_i18n::text(
+            "Catálogo CDB ausente: referências e pinos foram recuperados somente do DSN.",
+        ));
     }
+    result.report.warnings.push(eda_i18n::text("A conversão não preserva integralmente o formato Proteus e não permite reexportação fiel para DSN/PDSPrj. electrical_complete descreve apenas equivalência elétrica, não fidelidade de formato."));
     sync_notes(&mut result);
     Ok(result)
 }
@@ -295,10 +317,12 @@ pub fn convert_document(
             .and_then(|id| catalog?.parts.iter().find(|part| part.id == id));
         let reference = sanitized_reference(&source.reference, index, &mut references);
         if reference != source.reference.trim() {
-            warnings.push(format!(
+            warnings.push(eda_i18n::format(
                 "Referência original \"{original}\" normalizada para {reference}.",
-                original = source.reference.trim(),
-                reference = reference
+                &[
+                    ("original", source.reference.trim().to_owned()),
+                    ("reference", reference.clone()),
+                ],
             ));
         }
         let device = part
@@ -311,8 +335,9 @@ pub fn convert_document(
             .to_owned();
         let (pins, pins_match) = ordered_pins(&source.pins, instance);
         if !source.pins_complete || !pins_match {
-            warnings.push(format!(
-                "{reference}: pinos não reconciliados integralmente entre DSN e CDB."
+            warnings.push(eda_i18n::format(
+                "{reference}: pinos não reconciliados integralmente entre DSN e CDB.",
+                &[("reference", reference.clone())],
             ));
         }
         let mut positions = Vec::new();
@@ -373,8 +398,13 @@ pub fn convert_document(
         });
         let (kind, value) = mapped.unwrap_or((ComponentKind::Imported, 0.0));
         if kind == ComponentKind::Imported {
-            unsupported.push(format!(
-                "{reference}: {device} (valor original: {value_text})"
+            unsupported.push(eda_i18n::format(
+                "{reference}: {device} (valor original: {value_text})",
+                &[
+                    ("reference", reference.clone()),
+                    ("device", device.clone()),
+                    ("value_text", value_text.clone()),
+                ],
             ));
         }
         let mut props = properties(&source.properties_raw);
@@ -501,14 +531,14 @@ pub fn convert_document(
             .map(|instance| instance.reference.clone())
             .collect();
         if !missing.is_empty() {
-            warnings.push(format!(
+            warnings.push(eda_i18n::format(
                 "Entradas CDB sem instância reconciliada no DSN: {entries}.",
-                entries = missing.join(", ")
+                &[("entries", missing.join(", "))],
             ));
             complete = false;
         }
     }
-    warnings.push("Importação experimental para edição e inspeção: fontes especiais, instrumentos, barramentos e todos os tipos de terminais ainda não têm equivalência completa. A simulação deste projeto fica bloqueada para evitar resultados com ligações omitidas.".into());
+    warnings.push(eda_i18n::text("Importação experimental para edição e inspeção: fontes especiais, instrumentos, barramentos e todos os tipos de terminais ainda não têm equivalência completa. A simulação deste projeto fica bloqueada para evitar resultados com ligações omitidas."));
     let report = ImportReport {
         format: "Proteus ISIS 8 (perfil 800)".into(),
         file_version,
@@ -532,17 +562,16 @@ pub fn convert_document(
 fn sync_notes(result: &mut ImportResult) {
     let mut notes = result.report.warnings.clone();
     notes.extend(
-        result
-            .report
-            .unsupported_components
-            .iter()
-            .map(|item| format!("Modelo não suportado: {item}")),
+        result.report.unsupported_components.iter().map(|item| {
+            eda_i18n::format("Modelo não suportado: {item}", &[("item", item.clone())])
+        }),
     );
     if notes.len() > 255 {
         let omitted = notes.len() - 254;
         notes.truncate(254);
-        notes.push(format!(
-            "Mais {omitted} avisos; consulte o relatório completo da importação."
+        notes.push(eda_i18n::format(
+            "Mais {omitted} avisos; consulte o relatório completo da importação.",
+            &[("omitted", omitted.to_string())],
         ));
     }
     for note in &mut notes {

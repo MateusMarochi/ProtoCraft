@@ -74,7 +74,7 @@ impl std::error::Error for DsnError {}
 fn error(offset: usize, message: &str) -> DsnError {
     DsnError {
         offset,
-        message: message.to_owned(),
+        message: eda_i18n::text(message),
     }
 }
 
@@ -226,24 +226,42 @@ fn library_pins(libraries: &mut Libraries<'_>, name: &str) -> (Vec<DsnPin>, Vec<
     let Some(blob) = libraries.get(name) else {
         return (
             pins,
-            vec![format!("Biblioteca embutida de {name} não localizada.")],
+            vec![eda_i18n::format(
+                "Biblioteca embutida de {name} não localizada.",
+                &[("name", name.to_owned())],
+            )],
         );
     };
     let Some(symbol_origin) = marker_point(blob, b"$MKRORIGIN\0") else {
-        return (pins, vec![format!("Origem de {name} ausente ou truncada.")]);
+        return (
+            pins,
+            vec![eda_i18n::format(
+                "Origem de {name} ausente ou truncada.",
+                &[("name", name.to_owned())],
+            )],
+        );
     };
     for (index, off) in occurrences(blob, b"$PIN").enumerate() {
         if index >= 64 {
-            warnings.push(format!("Símbolo {name} excede o limite de 64 pinos."));
+            warnings.push(eda_i18n::format(
+                "Símbolo {name} excede o limite de 64 pinos.",
+                &[("name", name.to_owned())],
+            ));
             pins.clear();
             break;
         }
         let Some((template, after_template)) = cstring(blob, off) else {
-            warnings.push(format!("Template de pino truncado em {name}, 0x{off:X}."));
+            warnings.push(eda_i18n::format(
+                "Template de pino truncado em {name}, 0x{offset}.",
+                &[("name", name.to_owned()), ("offset", format!("{off:X}"))],
+            ));
             continue;
         };
         if !printable(template) || template.len() > 64 {
-            warnings.push(format!("Template de pino inválido em {name}, 0x{off:X}."));
+            warnings.push(eda_i18n::format(
+                "Template de pino inválido em {name}, 0x{offset}.",
+                &[("name", name.to_owned()), ("offset", format!("{off:X}"))],
+            ));
             continue;
         }
         let template_name = text(template);
@@ -283,13 +301,21 @@ fn library_pins(libraries: &mut Libraries<'_>, name: &str) -> (Vec<DsnPin>, Vec<
         })();
         match decoded {
             Some(pin) => pins.push(pin),
-            None => warnings.push(format!(
-                "Pino {template_name} de {name} em 0x{off:X} não recuperado."
+            None => warnings.push(eda_i18n::format(
+                "Pino {template_name} de {name} em 0x{offset} não recuperado.",
+                &[
+                    ("template_name", template_name.clone()),
+                    ("name", name.to_owned()),
+                    ("offset", format!("{off:X}")),
+                ],
             )),
         }
     }
     if pins.is_empty() {
-        warnings.push(format!("Nenhum pino recuperado para {name}."));
+        warnings.push(eda_i18n::format(
+            "Nenhum pino recuperado para {name}.",
+            &[("name", name.to_owned())],
+        ));
     }
     (pins, warnings)
 }
@@ -336,9 +362,54 @@ fn component_header(data: &[u8], off: usize) -> Option<(usize, String)> {
     Some((off + 3 + len, text(name)))
 }
 
+/// A extensão DSN é compartilhada por formatos sem relação entre si.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DsnFormat {
+    ProteusIsis,
+    Specctra,
+    Unknown,
+}
+
+/// Detecta somente assinaturas inequívocas; não valida o restante do arquivo.
+pub fn detect_dsn_format(data: &[u8]) -> DsnFormat {
+    if data.starts_with(b"ISIS SCHEMATIC FILE\x1a") {
+        return DsnFormat::ProteusIsis;
+    }
+    let mut input = data.strip_prefix(b"\xef\xbb\xbf").unwrap_or(data);
+    loop {
+        input = input.trim_ascii_start();
+        if input.first() == Some(&b';') {
+            let Some(end) = input.iter().position(|b| *b == b'\n') else {
+                return DsnFormat::Unknown;
+            };
+            input = &input[end + 1..];
+        } else {
+            break;
+        }
+    }
+    let Some(rest) = input.strip_prefix(b"(") else {
+        return DsnFormat::Unknown;
+    };
+    let rest = rest.trim_ascii_start();
+    if rest.len() > 3
+        && rest[..3].eq_ignore_ascii_case(b"pcb")
+        && (rest[3].is_ascii_whitespace() || rest[3] == b')')
+    {
+        DsnFormat::Specctra
+    } else {
+        DsnFormat::Unknown
+    }
+}
+
 pub fn parse_dsn(data: &[u8]) -> Result<DsnDocument, DsnError> {
     if data.len() > 4 * 1024 * 1024 {
         return Err(error(0, "arquivo excede o limite de 4 MiB"));
+    }
+    if detect_dsn_format(data) == DsnFormat::Specctra {
+        return Err(error(
+            0,
+            "DSN Specctra de PCB não é um esquema Proteus ISIS.",
+        ));
     }
     if !data.starts_with(b"ISIS SCHEMATIC FILE\x1a") {
         return Err(error(0, "assinatura ISIS SCHEMATIC FILE ausente"));
@@ -349,6 +420,7 @@ pub fn parse_dsn(data: &[u8]) -> Result<DsnDocument, DsnError> {
     let end = occurrences(&data[circuit + 1..], b"ISIS CIRCUIT FILE\x1a")
         .next()
         .map_or(data.len(), |o| circuit + 1 + o);
+    let omitted = occurrences(&data[end..], b"ISIS CIRCUIT FILE\x1a").count();
     let section = &data[circuit..end];
     let library_data = &data[..circuit];
     let bounded_data = &data[..end];
@@ -492,8 +564,13 @@ pub fn parse_dsn(data: &[u8]) -> Result<DsnDocument, DsnError> {
             }
         });
         if !pins_complete {
-            pin_warnings.push(format!(
-                "Geometria elétrica incompleta para {reference} ({symbol_name}) em 0x{off:X}."
+            pin_warnings.push(eda_i18n::format(
+                "Geometria elétrica incompleta para {reference} ({symbol_name}) em 0x{offset}.",
+                &[
+                    ("reference", reference.clone()),
+                    ("symbol_name", symbol_name.clone()),
+                    ("offset", format!("{off:X}")),
+                ],
             ));
         }
         document.warnings.extend(pin_warnings);
@@ -544,9 +621,10 @@ pub fn parse_dsn(data: &[u8]) -> Result<DsnDocument, DsnError> {
                 is_ground: true,
             });
         } else {
-            document
-                .warnings
-                .push(format!("Terminal de terra em 0x{off:X} não recuperado."));
+            document.warnings.push(eda_i18n::format(
+                "Terminal de terra em 0x{offset} não recuperado.",
+                &[("offset", format!("{off:X}"))],
+            ));
         }
     }
     // Junções são registros explícitos com três ou mais referências a fios.
@@ -582,7 +660,10 @@ pub fn parse_dsn(data: &[u8]) -> Result<DsnDocument, DsnError> {
             document.junctions.push(position);
         }
     }
-    document.warnings.push("Leitor experimental ISIS 8: folhas adicionais, barramentos, terminais além do terra, geradores e gráficos ainda não são integralmente recuperados; compatibilidade completa não é garantida.".to_owned());
+    if omitted > 0 {
+        document.warnings.push(eda_i18n::format("Seções de circuito adicionais não importadas: {omitted}. Apenas a primeira seção foi convertida.", &[("omitted",omitted.to_string())]));
+    }
+    document.warnings.push(eda_i18n::text("Leitor experimental ISIS 8: folhas adicionais, barramentos, terminais além do terra, geradores e gráficos ainda não são integralmente recuperados; compatibilidade completa não é garantida."));
     if document.components.is_empty() && document.wires.is_empty() {
         return Err(error(circuit, "nenhum componente ou fio reconhecido"));
     }

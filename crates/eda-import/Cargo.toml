@@ -7,6 +7,7 @@ license.workspace = true
 
 [dependencies]
 eda-core.workspace = true
+eda-i18n.workspace = true
 eda-netlist.workspace = true
 serde.workspace = true
 thiserror.workspace = true

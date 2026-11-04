@@ -1,0 +1,182 @@
+name: Release ProtoCraft
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  create-release:
+    name: Create release entry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Validate tag against workspace version
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag_version="${GITHUB_REF_NAME#v}"
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Tag fora de SemVer: $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+          manifest_version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -n 1)"
+          if [[ "$manifest_version" != "$tag_version" ]]; then
+            echo "Tag $GITHUB_REF_NAME diverge da versão do Cargo.toml ($manifest_version)." >&2
+            exit 1
+          fi
+
+      - name: Create release entry before platform builds
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ProtoCraft ${{ github.ref_name }}
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          make_latest: ${{ !contains(github.ref_name, '-') }}
+
+  package-windows:
+    name: Package Windows x64
+    needs: create-release
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      PROTOCRAFT_REQUIRE_WINRES: "1"
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install pinned Rust toolchain and restore Cargo cache
+        uses: actions-rust-lang/setup-rust-toolchain@v2
+
+      - name: Install Inno Setup
+        run: choco install innosetup --yes --no-progress
+
+      - name: Validate and build release binaries
+        run: ./scripts/build.ps1
+        shell: pwsh
+
+      - name: Package portable ZIP and Windows installer
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          $version = $tag.Substring(1)
+          $manifestVersion = (Select-String -LiteralPath 'Cargo.toml' -Pattern '^version = "([^"]+)"').Matches[0].Groups[1].Value
+          if ($manifestVersion -ne $version) {
+              throw "A tag $tag não corresponde à versão do Cargo.toml ($manifestVersion)."
+          }
+
+          ./scripts/package.ps1 -SkipBuild -Version $version
+          ./scripts/installer.ps1 `
+            -Version $version `
+            -Compiler 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+
+          $releaseFiles = @(
+              (Join-Path $PWD "dist\protocraft-$version-windows-x64.exe"),
+              (Join-Path $PWD "dist\protocraft-$version-windows-x64-portable.zip")
+          )
+          $checksumFile = Join-Path $PWD "dist\SHA256SUMS-windows.txt"
+          $checksumLines = foreach ($file in $releaseFiles) {
+              $hash = (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant()
+              "$hash  $([IO.Path]::GetFileName($file))"
+          }
+          [IO.File]::WriteAllLines($checksumFile, $checksumLines, [Text.Encoding]::ASCII)
+
+      - name: Upload Windows packages as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          if-no-files-found: error
+          path: |
+            dist/protocraft-*-windows-x64.exe
+            dist/protocraft-*-windows-x64-portable.zip
+            dist/SHA256SUMS-windows.txt
+
+  package-linux:
+    name: Package Linux x86_64
+    needs: create-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install pinned Rust toolchain and restore Cargo cache
+        uses: actions-rust-lang/setup-rust-toolchain@v2
+
+      - name: Validate tag against workspace version
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag_version="${GITHUB_REF_NAME#v}"
+          manifest_version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -n 1)"
+          if [[ "$manifest_version" != "$tag_version" ]]; then
+            echo "Tag $GITHUB_REF_NAME diverge da versão do Cargo.toml ($manifest_version)." >&2
+            exit 1
+          fi
+
+      - name: Validate and build Linux release binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo fmt --all -- --check
+          cargo check --workspace --all-targets --locked
+          cargo clippy --workspace --all-targets --locked -- -D warnings
+          cargo test --workspace --locked
+          cargo build --release --workspace --locked
+
+      - name: Package Linux application and CLI
+        shell: bash
+        run: bash scripts/package-linux.sh "${GITHUB_REF_NAME#v}"
+
+      - name: Upload Linux package as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-linux
+          if-no-files-found: error
+          path: |
+            dist/protocraft-*-linux-x86_64.tar.gz
+            dist/SHA256SUMS-linux.txt
+
+  publish-assets:
+    name: Attach packages to GitHub release
+    needs: [package-windows, package-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download platform packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Verify release assets exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$(find dist -maxdepth 1 -type f -name 'protocraft-*-windows-x64.exe' -print -quit)"
+          test -n "$(find dist -maxdepth 1 -type f -name 'protocraft-*-windows-x64-portable.zip' -print -quit)"
+          test -n "$(find dist -maxdepth 1 -type f -name 'protocraft-*-linux-x86_64.tar.gz' -print -quit)"
+          test -f dist/SHA256SUMS-windows.txt
+          test -f dist/SHA256SUMS-linux.txt
+
+      - name: Upload packages and checksums to the release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          fail_on_unmatched_files: true
+          files: |
+            dist/protocraft-*-windows-x64.exe
+            dist/protocraft-*-windows-x64-portable.zip
+            dist/SHA256SUMS-windows.txt
+            dist/protocraft-*-linux-x86_64.tar.gz
+            dist/SHA256SUMS-linux.txt

@@ -3,6 +3,10 @@ pub mod cdb;
 pub mod container;
 mod conversion;
 pub mod dsn;
+pub mod interchange;
+pub mod kicad;
+pub mod kicad_schematic;
+pub mod sexpr;
 pub use conversion::{convert_document, import_proteus};
 
 use eda_core::Project;
