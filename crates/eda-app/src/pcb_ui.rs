@@ -58,6 +58,12 @@ pub(super) struct PcbUi {
     width_mm: f64,
     height_mm: f64,
     clearance_mm: f64,
+    net_class_name: String,
+    net_class_net: String,
+    net_class_width_mm: f64,
+    net_class_clearance_mm: f64,
+    net_class_via_mm: f64,
+    net_class_drill_mm: f64,
     dimensions_revision: u64,
     show_airwires: bool,
     preserve_connections: bool,
@@ -107,6 +113,12 @@ impl Default for PcbUi {
             width_mm: 100.0,
             height_mm: 80.0,
             clearance_mm: 0.2,
+            net_class_name: "ALIMENTACAO".into(),
+            net_class_net: String::new(),
+            net_class_width_mm: 0.35,
+            net_class_clearance_mm: 0.2,
+            net_class_via_mm: 0.6,
+            net_class_drill_mm: 0.3,
             dimensions_revision: u64::MAX,
             show_airwires: true,
             preserve_connections: true,
@@ -465,6 +477,13 @@ impl ProtoCraft {
                             self.pcb.width_mm = board.width_nm as f64 / 1e6;
                             self.pcb.height_mm = board.height_nm as f64 / 1e6;
                             self.pcb.clearance_mm = board.clearance_nm as f64 / 1e6;
+                            if let Some((name, rules)) = board.net_classes.first_key_value() {
+                                self.pcb.net_class_name.clone_from(name);
+                                self.pcb.net_class_width_mm = rules.track_width_nm as f64 / 1e6;
+                                self.pcb.net_class_clearance_mm = rules.clearance_nm as f64 / 1e6;
+                                self.pcb.net_class_via_mm = rules.via_diameter_nm as f64 / 1e6;
+                                self.pcb.net_class_drill_mm = rules.via_drill_nm as f64 / 1e6;
+                            }
                             self.pcb.dimensions_revision = self.engine.revision();
                         }
                         ui.horizontal(|ui| {
@@ -487,6 +506,91 @@ impl ProtoCraft {
                             self.command(Command::SetBoard { board });
                             self.pcb.finish_route();
                             self.pcb.fit = true;
+                            self.pcb.report = None;
+                        }
+                        ui.separator();
+                        ui.strong(tr!("Classes de rede"));
+                        ui.label(tr!("As regras nomeadas afetam folgas, largura mínima e o autorroteador."));
+                        for (name, rules) in &board.net_classes {
+                            let nets = rules.net_names.iter().cloned().collect::<Vec<_>>().join(", ");
+                            ui.label(trf!("{name}: {nets} · largura {width} mm · folga {clearance} mm", name=name, nets=nets, width=format!("{:.3}", rules.track_width_nm as f64 / 1e6), clearance=format!("{:.3}", rules.clearance_nm as f64 / 1e6)));
+                        }
+                        if !self.netlist.nets.is_empty() {
+                            egui::ComboBox::from_id_salt("pcb-net-class-network")
+                                .selected_text(if self.pcb.net_class_net.is_empty() {
+                                    tr!("Selecione uma rede")
+                                } else {
+                                    self.pcb.net_class_net.clone()
+                                })
+                                .show_ui(ui, |ui| {
+                                    for net in &self.netlist.nets {
+                                        ui.selectable_value(
+                                            &mut self.pcb.net_class_net,
+                                            net.name.clone(),
+                                            &net.name,
+                                        );
+                                    }
+                                });
+                        }
+                        ui.horizontal(|ui| {
+                            ui.label(tr!("Nome"));
+                            ui.text_edit_singleline(&mut self.pcb.net_class_name);
+                        });
+                        ui.horizontal(|ui| {
+                            ui.label(tr!("Largura mín. (mm)"));
+                            ui.add(egui::DragValue::new(&mut self.pcb.net_class_width_mm).speed(0.05).range(0.05..=10.0));
+                        });
+                        ui.horizontal(|ui| {
+                            ui.label(tr!("Folga mín. (mm)"));
+                            ui.add(egui::DragValue::new(&mut self.pcb.net_class_clearance_mm).speed(0.025).range(0.0..=10.0));
+                        });
+                        ui.horizontal(|ui| {
+                            ui.label(tr!("Via: diâmetro/furo (mm)"));
+                            ui.add(egui::DragValue::new(&mut self.pcb.net_class_via_mm).speed(0.05).range(0.3..=20.0));
+                            ui.add(egui::DragValue::new(&mut self.pcb.net_class_drill_mm).speed(0.05).range(0.1..=19.9));
+                        });
+                        if ui
+                            .add_enabled(
+                                !self.pcb.net_class_name.trim().is_empty()
+                                    && !self.pcb.net_class_net.is_empty(),
+                                egui::Button::new(tr!("Adicionar rede à classe")),
+                            )
+                            .clicked()
+                        {
+                            let mut updated = board.clone();
+                            let rules = updated
+                                .net_classes
+                                .entry(self.pcb.net_class_name.trim().to_owned())
+                                .or_insert_with(|| eda_core::NetClass {
+                                    net_names: Default::default(),
+                                    clearance_nm: nm(self.pcb.net_class_clearance_mm),
+                                    track_width_nm: nm(self.pcb.net_class_width_mm),
+                                    via_diameter_nm: nm(self.pcb.net_class_via_mm),
+                                    via_drill_nm: nm(self.pcb.net_class_drill_mm),
+                                    pad_escape: None,
+                                });
+                            rules.net_names.insert(self.pcb.net_class_net.clone());
+                            rules.clearance_nm = nm(self.pcb.net_class_clearance_mm);
+                            rules.track_width_nm = nm(self.pcb.net_class_width_mm);
+                            rules.via_diameter_nm = nm(self.pcb.net_class_via_mm);
+                            rules.via_drill_nm = nm(self.pcb.net_class_drill_mm);
+                            self.command(Command::SetBoard { board: updated });
+                            self.pcb.report = None;
+                        }
+                        let removals: Vec<_> = board
+                            .net_classes
+                            .keys()
+                            .filter(|name| {
+                                ui.button(trf!("Remover classe {name}", name=name)).clicked()
+                            })
+                            .cloned()
+                            .collect();
+                        if !removals.is_empty() {
+                            let mut updated = board.clone();
+                            for name in removals {
+                                updated.net_classes.remove(&name);
+                            }
+                            self.command(Command::SetBoard { board: updated });
                             self.pcb.report = None;
                         }
                     });
@@ -1240,7 +1344,11 @@ impl ProtoCraft {
                 );
                 painter.rect_stroke(
                     outline,
-                    0.0,
+                    egui::CornerRadius::same(
+                        (board.corner_radius_nm as f32 / 1_000_000.0 * zoom)
+                            .round()
+                            .clamp(0.0, 255.0) as u8,
+                    ),
                     Stroke::new(1.5_f32, Color32::from_rgb(39, 108, 184)),
                     egui::StrokeKind::Inside,
                 );

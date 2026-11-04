@@ -172,6 +172,12 @@ impl ProtoCraft {
         let Some(board) = self.engine.project().board.as_ref() else {
             return;
         };
+        let class = eda_pcb::net_class_for_pin(self.engine.project(), anchor);
+        let track_width_nm = nm(self.pcb.width).max(class.map_or(0, |rules| rules.track_width_nm));
+        let via_diameter_nm =
+            nm(self.pcb.via_diameter_mm).max(class.map_or(0, |rules| rules.via_diameter_nm));
+        let via_drill_nm =
+            nm(self.pcb.via_drill_mm).max(class.map_or(0, |rules| rules.via_drill_nm));
         let mut next = board.tracks.keys().next_back().copied().unwrap_or(0);
         let mut commands = Vec::new();
         let path = eda_pcb::manual_path(start, end, self.pcb.route_mode, self.pcb.route_flip);
@@ -186,7 +192,7 @@ impl ProtoCraft {
                     id,
                     start: segment[0],
                     end: segment[1],
-                    width_nm: nm(self.pcb.width),
+                    width_nm: track_width_nm,
                     layer: self.pcb.layer,
                     net: anchor,
                 },
@@ -222,8 +228,8 @@ impl ProtoCraft {
                     via: Via {
                         id,
                         position: end,
-                        diameter_nm: nm(self.pcb.via_diameter_mm),
-                        drill_nm: nm(self.pcb.via_drill_mm),
+                        diameter_nm: via_diameter_nm,
+                        drill_nm: via_drill_nm,
                         net: anchor,
                     },
                 });

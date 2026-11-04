@@ -1,5 +1,14 @@
 //! Catálogo offline normalizado; dados CC-BY-SA com exceção KiCad, código original.
-use eda_core::{Command, DataSource, DeviceDefinition, DevicePin, Footprint, Point};
+mod pcb_examples;
+mod power;
+mod power_copper;
+use eda_core::{
+    Command, DataSource, DeviceDefinition, DevicePin, Footprint, FootprintLine, NmBounds, NmPoint,
+    Pad, PadShape, PadTechnology, Point,
+};
+pub use pcb_examples::{PcbExampleInfo, load_pcb_example, pcb_example_catalog};
+pub use power::{BuckDesignResult, BuckDesignSpec, buck_pi4_project, lm61460_definition};
+pub use power_copper::{CopperTraceResult, CopperTraceSpec};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -90,19 +99,572 @@ static CATALOG: OnceLock<Result<Catalog, String>> = OnceLock::new();
 pub fn catalog() -> Result<&'static Catalog, String> {
     CATALOG
         .get_or_init(|| {
-            let catalog: Catalog =
+            let mut catalog: Catalog =
                 serde_json::from_str(include_str!("../../../assets/library/catalog.json"))
                     .map_err(|e| format!("Catálogo inválido: {e}"))?;
             if catalog.schema_version != 1 {
                 return Err("Versão do catálogo não suportada.".into());
+            }
+            for (device, footprint) in raspberry_gpio_definitions() {
+                if catalog.devices.iter().any(|entry| entry.id == device.id) {
+                    continue;
+                }
+                let symbol_id = device.id.clone();
+                let record = DeviceRecord {
+                    id: device.id.clone(),
+                    manufacturer: device.manufacturer.clone(),
+                    family: device.family.clone(),
+                    form: device.form.clone(),
+                    description: device.description.clone(),
+                    datasheet: device.datasheet.clone(),
+                    symbol: symbol_id.clone(),
+                    footprint: footprint.id.clone(),
+                    source: device.source.clone(),
+                };
+                catalog.symbols.insert(symbol_id, device.pins);
+                catalog.footprints.insert(footprint.id.clone(), footprint);
+                catalog.devices.push(record);
+            }
+            let (device, footprint) = lm61460_definition();
+            if !catalog.devices.iter().any(|entry| entry.id == device.id) {
+                let symbol_id = device.id.clone();
+                let record = DeviceRecord {
+                    id: device.id.clone(),
+                    manufacturer: device.manufacturer.clone(),
+                    family: device.family.clone(),
+                    form: device.form.clone(),
+                    description: device.description.clone(),
+                    datasheet: device.datasheet.clone(),
+                    symbol: symbol_id.clone(),
+                    footprint: footprint.id.clone(),
+                    source: device.source.clone(),
+                };
+                catalog.symbols.insert(symbol_id, device.pins);
+                catalog.footprints.insert(footprint.id.clone(), footprint);
+                catalog.devices.push(record);
             }
             Ok(catalog)
         })
         .as_ref()
         .map_err(Clone::clone)
 }
+
+/// Pinagem do header GPIO de 40 posições do Raspberry Pi 4 Model B.
+pub fn raspberry_pi_4_gpio_definition() -> (DeviceDefinition, Footprint) {
+    raspberry_classic_40pin_definition("RaspberryPi4B_GPIO", "Raspberry Pi 4 Model B", false, false)
+}
+
+const RASPBERRY_PI_40_PIN_SIGNALS: [&str; 40] = [
+    "3V3",
+    "5V",
+    "GPIO2/SDA1",
+    "5V",
+    "GPIO3/SCL1",
+    "GND",
+    "GPIO4/GPCLK0",
+    "GPIO14/TXD0",
+    "GND",
+    "GPIO15/RXD0",
+    "GPIO17",
+    "GPIO18/PWM0",
+    "GPIO27",
+    "GND",
+    "GPIO22",
+    "GPIO23",
+    "3V3",
+    "GPIO24",
+    "GPIO10/SPI0_MOSI",
+    "GND",
+    "GPIO9/SPI0_MISO",
+    "GPIO25",
+    "GPIO11/SPI0_SCLK",
+    "GPIO8/SPI0_CE0",
+    "GND",
+    "GPIO7/SPI0_CE1",
+    "ID_SD",
+    "ID_SC",
+    "GPIO5",
+    "GND",
+    "GPIO6",
+    "GPIO12/PWM0",
+    "GPIO13/PWM1",
+    "GND",
+    "GPIO19/PCM_FS",
+    "GPIO16",
+    "GPIO26",
+    "GPIO20/PCM_DIN",
+    "GND",
+    "GPIO21/PCM_DOUT",
+];
+
+const RASPBERRY_PI_5_PIN_SIGNALS: [&str; 40] = [
+    "3V3", "5V", "GPIO2", "5V", "GPIO3", "GND", "GPIO4", "GPIO14", "GND", "GPIO15", "GPIO17",
+    "GPIO18", "GPIO27", "GND", "GPIO22", "GPIO23", "3V3", "GPIO24", "GPIO10", "GND", "GPIO9",
+    "GPIO25", "GPIO11", "GPIO8", "GND", "GPIO7", "ID_SD", "ID_SC", "GPIO5", "GND", "GPIO6",
+    "GPIO12", "GPIO13", "GND", "GPIO19", "GPIO16", "GPIO26", "GPIO20", "GND", "GPIO21",
+];
+
+const RASPBERRY_PI_26_PIN_REV1: [&str; 26] = [
+    "3V3",
+    "5V",
+    "GPIO0/SDA0",
+    "5V",
+    "GPIO1/SCL0",
+    "GND",
+    "GPIO4/GPCLK0",
+    "GPIO14/TXD0",
+    "GND",
+    "GPIO15/RXD0",
+    "GPIO17",
+    "GPIO18",
+    "GPIO21",
+    "GND",
+    "GPIO22",
+    "GPIO23",
+    "3V3",
+    "GPIO24",
+    "GPIO10/SPI0_MOSI",
+    "GND",
+    "GPIO9/SPI0_MISO",
+    "GPIO25",
+    "GPIO11/SPI0_SCLK",
+    "GPIO8/SPI0_CE0",
+    "GND",
+    "GPIO7/SPI0_CE1",
+];
+
+const RASPBERRY_PI_26_PIN_REV2: [&str; 26] = [
+    "3V3",
+    "5V",
+    "GPIO2/SDA1",
+    "5V",
+    "GPIO3/SCL1",
+    "GND",
+    "GPIO4/GPCLK0",
+    "GPIO14/TXD0",
+    "GND",
+    "GPIO15/RXD0",
+    "GPIO17",
+    "GPIO18",
+    "GPIO27",
+    "GND",
+    "GPIO22",
+    "GPIO23",
+    "3V3",
+    "GPIO24",
+    "GPIO10/SPI0_MOSI",
+    "GND",
+    "GPIO9/SPI0_MISO",
+    "GPIO25",
+    "GPIO11/SPI0_SCLK",
+    "GPIO8/SPI0_CE0",
+    "GND",
+    "GPIO7/SPI0_CE1",
+];
+
+const RASPBERRY_PICO_PIN_SIGNALS: [&str; 40] = [
+    "GP0",
+    "GP1",
+    "GND",
+    "GP2",
+    "GP3",
+    "GP4",
+    "GP5",
+    "GND",
+    "GP6",
+    "GP7",
+    "GP8",
+    "GP9",
+    "GND",
+    "GP10",
+    "GP11",
+    "GP12",
+    "GP13",
+    "GND",
+    "GP14",
+    "GP15",
+    "GP16",
+    "GP17",
+    "GND",
+    "GP18",
+    "GP19",
+    "GP20",
+    "GP21",
+    "GND",
+    "GP22",
+    "RUN",
+    "GP26/ADC0",
+    "GP27/ADC1",
+    "GND/AGND",
+    "GP28/ADC2",
+    "ADC_VREF",
+    "3V3(OUT)",
+    "3V3_EN",
+    "GND",
+    "VSYS",
+    "VBUS",
+];
+
+#[derive(Clone, Copy)]
+enum RaspberryPinLayout {
+    Alternating { pin_count: usize, flipped: bool },
+    Pico,
+}
+
+fn raspberry_gpio_definitions() -> Vec<(DeviceDefinition, Footprint)> {
+    let mut entries = vec![raspberry_pi_4_gpio_definition()];
+    let classic_40 = [
+        ("RaspberryPi1BPlus_GPIO40", "Raspberry Pi 1 Model B+", false),
+        ("RaspberryPi1APlus_GPIO40", "Raspberry Pi 1 Model A+", false),
+        ("RaspberryPi2B_GPIO40", "Raspberry Pi 2 Model B", false),
+        ("RaspberryPi3B_GPIO40", "Raspberry Pi 3 Model B", false),
+        ("RaspberryPi3BPlus_GPIO40", "Raspberry Pi 3 Model B+", false),
+        ("RaspberryPi3APlus_GPIO40", "Raspberry Pi 3 Model A+", false),
+        ("RaspberryPiZero_GPIO40", "Raspberry Pi Zero", false),
+        ("RaspberryPiZeroW_GPIO40", "Raspberry Pi Zero W", false),
+        ("RaspberryPiZeroWH_GPIO40", "Raspberry Pi Zero WH", false),
+        ("RaspberryPiZero2W_GPIO40", "Raspberry Pi Zero 2 W", false),
+        (
+            "RaspberryPiZero2WWithHeaders_GPIO40",
+            "Raspberry Pi Zero 2 W with headers",
+            false,
+        ),
+        ("RaspberryPi400_GPIO40", "Raspberry Pi 400", true),
+        ("RaspberryPi5_GPIO40", "Raspberry Pi 5", false),
+        ("RaspberryPi500_GPIO40", "Raspberry Pi 500", true),
+        ("RaspberryPi500Plus_GPIO40", "Raspberry Pi 500+", true),
+    ];
+    for (id, family, keyboard) in classic_40 {
+        let pi5 = family.contains("Pi 5") || family.contains("Pi 500");
+        entries.push(raspberry_classic_40pin_definition(
+            id, family, keyboard, pi5,
+        ));
+    }
+
+    entries.push(raspberry_26pin_definition(
+        "RaspberryPi1BRev1_GPIO26",
+        "Raspberry Pi 1 Model B, revisão 1.0",
+        &RASPBERRY_PI_26_PIN_REV1,
+        "https://www.raspberrypi.com/news/upcoming-board-revision/",
+    ));
+    entries.push(raspberry_26pin_definition(
+        "RaspberryPi1BRev2_GPIO26",
+        "Raspberry Pi 1 Model B, revisão 2.0",
+        &RASPBERRY_PI_26_PIN_REV2,
+        "https://www.raspberrypi.com/news/upcoming-board-revision/",
+    ));
+    entries.push(raspberry_26pin_definition(
+        "RaspberryPi1A_GPIO26",
+        "Raspberry Pi 1 Model A (pinagem da revisão 2.0)",
+        &RASPBERRY_PI_26_PIN_REV2,
+        "https://www.raspberrypi.com/news/raspberry-pi-model-a/",
+    ));
+
+    let pico_variants = [
+        ("RaspberryPiPico_GPIO40", "Raspberry Pi Pico", false),
+        ("RaspberryPiPicoH_GPIO40", "Raspberry Pi Pico H", false),
+        ("RaspberryPiPicoW_GPIO40", "Raspberry Pi Pico W", true),
+        ("RaspberryPiPicoWH_GPIO40", "Raspberry Pi Pico WH", true),
+        ("RaspberryPiPico2_GPIO40", "Raspberry Pi Pico 2", false),
+        (
+            "RaspberryPiPico2WithHeaders_GPIO40",
+            "Raspberry Pi Pico 2 with headers",
+            false,
+        ),
+        ("RaspberryPiPico2W_GPIO40", "Raspberry Pi Pico 2 W", true),
+        (
+            "RaspberryPiPico2WWithHeaders_GPIO40",
+            "Raspberry Pi Pico 2 W with headers",
+            true,
+        ),
+    ];
+    for (id, family, wireless) in pico_variants {
+        entries.push(raspberry_pico_definition(id, family, wireless));
+    }
+    entries
+}
+
+fn raspberry_classic_40pin_definition(
+    id: &str,
+    family: &str,
+    keyboard_orientation: bool,
+    pi5_functions: bool,
+) -> (DeviceDefinition, Footprint) {
+    let source = DataSource {
+        project: "Raspberry Pi official computer documentation".into(),
+        revision: format!("{family} 40-pin GPIO header"),
+        url: "https://www.raspberrypi.com/documentation/computers/raspberry-pi.html".into(),
+        license: "Factual connector pin names; original ProtoCraft symbol and footprint geometry"
+            .into(),
+    };
+    let signals: Vec<&str> = if pi5_functions {
+        RASPBERRY_PI_5_PIN_SIGNALS.to_vec()
+    } else {
+        RASPBERRY_PI_40_PIN_SIGNALS.to_vec()
+    };
+    let pins = raspberry_device_pins(
+        &signals,
+        RaspberryPinLayout::Alternating {
+            pin_count: 40,
+            flipped: false,
+        },
+    );
+    let footprint = raspberry_gpio_footprint(
+        if keyboard_orientation {
+            "ProtoCraft_RaspberryPi:GPIO_2x20_2.54mm_KeyboardInverted"
+        } else {
+            "ProtoCraft_RaspberryPi:GPIO_2x20_2.54mm"
+        },
+        if keyboard_orientation {
+            "Header GPIO 2×20, orientação física invertida 180° dos computadores de teclado"
+        } else {
+            "Header GPIO 2×20, passo 2,54 mm; verificar altura e padrão do conector"
+        },
+        40,
+        RaspberryPinLayout::Alternating {
+            pin_count: 40,
+            flipped: keyboard_orientation,
+        },
+        source.clone(),
+    );
+    let device = raspberry_device(
+        id,
+        family,
+        "Header GPIO 2×20",
+        "Pinagem elétrica do header; GPIO usa lógica de 3,3 V e não é tolerante a 5 V. Não emula CPU ou firmware.",
+        "https://www.raspberrypi.com/documentation/computers/raspberry-pi.html",
+        pins,
+        source,
+    );
+    (device, footprint)
+}
+
+fn raspberry_26pin_definition(
+    id: &str,
+    family: &str,
+    signals: &[&str; 26],
+    url: &str,
+) -> (DeviceDefinition, Footprint) {
+    let source = DataSource {
+        project: "Raspberry Pi official historical board documentation".into(),
+        revision: family.into(),
+        url: url.into(),
+        license: "Factual connector pin names; original ProtoCraft symbol and footprint geometry"
+            .into(),
+    };
+    let pins = raspberry_device_pins(
+        signals,
+        RaspberryPinLayout::Alternating {
+            pin_count: 26,
+            flipped: false,
+        },
+    );
+    let footprint = raspberry_gpio_footprint(
+        "ProtoCraft_RaspberryPi:GPIO_2x13_2.54mm",
+        "Header GPIO legado 2×13, passo 2,54 mm",
+        26,
+        RaspberryPinLayout::Alternating {
+            pin_count: 26,
+            flipped: false,
+        },
+        source.clone(),
+    );
+    let device = raspberry_device(
+        id,
+        family,
+        "Header GPIO legado 2×13",
+        "Pinagem de revisão documentada; a revisão 1.0 e a 2.0 diferem nos pinos 3, 5 e 13. GPIO usa lógica de 3,3 V e não é tolerante a 5 V.",
+        url,
+        pins,
+        source,
+    );
+    (device, footprint)
+}
+
+fn raspberry_pico_definition(
+    id: &str,
+    family: &str,
+    wireless: bool,
+) -> (DeviceDefinition, Footprint) {
+    let source = DataSource {
+        project: "Raspberry Pi official Pico-series documentation".into(),
+        revision: format!("{family} GPIO header"),
+        url: "https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html".into(),
+        license: "Factual connector pin names; original ProtoCraft symbol and footprint geometry"
+            .into(),
+    };
+    let pins = raspberry_device_pins(&RASPBERRY_PICO_PIN_SIGNALS, RaspberryPinLayout::Pico);
+    let footprint = raspberry_gpio_footprint(
+        "ProtoCraft_RaspberryPi:Pico_GPIO_2x20_2.54mm_17.78mmRows",
+        "Pinagem Pico 2×20, passo 2,54 mm e distância entre fileiras 17,78 mm",
+        40,
+        RaspberryPinLayout::Pico,
+        source.clone(),
+    );
+    let description = if wireless {
+        "Pinagem física compartilhada da família Pico W; GPIO usa lógica de 3,3 V. Recursos internos de Wi-Fi ocupam alguns GPIOs no módulo. Sem simulação de firmware."
+    } else {
+        "Pinagem física da família Pico; GPIO usa lógica de 3,3 V e não é tolerante a 5 V. Sem simulação de firmware."
+    };
+    let device = raspberry_device(
+        id,
+        family,
+        "Pinagem de placa / GPIO 2×20",
+        description,
+        "https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html",
+        pins,
+        source,
+    );
+    (device, footprint)
+}
+
+fn raspberry_device(
+    id: &str,
+    family: &str,
+    form: &str,
+    description: &str,
+    datasheet: &str,
+    pins: Vec<DevicePin>,
+    source: DataSource,
+) -> DeviceDefinition {
+    DeviceDefinition {
+        id: id.into(),
+        requested_part: id.into(),
+        manufacturer: "Raspberry Pi Ltd".into(),
+        family: family.into(),
+        form: form.into(),
+        description: description.into(),
+        datasheet: datasheet.into(),
+        pins,
+        source,
+    }
+}
+
+fn raspberry_device_pins(signals: &[&str], layout: RaspberryPinLayout) -> Vec<DevicePin> {
+    signals
+        .iter()
+        .enumerate()
+        .map(|(index, name)| {
+            let (column, row, first_y) = match layout {
+                RaspberryPinLayout::Alternating { pin_count, .. } => {
+                    (index % 2, index / 2, 1 - pin_count as i32 / 2)
+                }
+                RaspberryPinLayout::Pico if index < 20 => (0, index, -19),
+                RaspberryPinLayout::Pico => (1, 39 - index, -19),
+            };
+            let electrical_type = match *name {
+                "GND" | "GND/AGND" => "passive",
+                "3V3(OUT)" => "power_out",
+                "3V3" | "5V" | "3V3_EN" | "VSYS" | "VBUS" | "ADC_VREF" => "power_in",
+                _ => "bidirectional",
+            };
+            let x = if column == 0 { -3 } else { 3 };
+            DevicePin {
+                number: (index + 1).to_string(),
+                name: (*name).into(),
+                electrical_type: electrical_type.into(),
+                offset: Point::new(x, first_y + row as i32 * 2),
+                pads: vec![(index + 1).to_string()],
+            }
+        })
+        .collect()
+}
+
+fn raspberry_gpio_footprint(
+    id: &str,
+    description: &str,
+    pin_count: usize,
+    layout: RaspberryPinLayout,
+    source: DataSource,
+) -> Footprint {
+    let pads: Vec<Pad> = (0..pin_count)
+        .map(|index| {
+            let (mut x, mut y) = match layout {
+                RaspberryPinLayout::Alternating { .. } => (
+                    (index / 2) as i64 * 2_540_000,
+                    (index % 2) as i64 * 2_540_000,
+                ),
+                RaspberryPinLayout::Pico if index < 20 => (0, index as i64 * 2_540_000),
+                RaspberryPinLayout::Pico => (17_780_000, (39 - index) as i64 * 2_540_000),
+            };
+            if let RaspberryPinLayout::Alternating {
+                pin_count: layout_pin_count,
+                flipped: true,
+            } = layout
+            {
+                let last_x = (layout_pin_count as i64 / 2 - 1) * 2_540_000;
+                x = last_x - x;
+                y = 2_540_000 - y;
+            }
+            Pad {
+                number: (index + 1).to_string(),
+                position: NmPoint::new(x, y),
+                size: NmPoint::new(1_800_000, 1_800_000),
+                rotation_mdeg: 0,
+                shape: PadShape::Circle,
+                technology: PadTechnology::ThroughHole,
+                drill: Some(NmPoint::new(1_000_000, 1_000_000)),
+                layers: vec!["*.Cu".into(), "F.Mask".into()],
+                roundrect_ratio_ppm: 0,
+                mask_margin_nm: 0,
+                paste_margin_nm: 0,
+                paste_ratio_ppm: 0,
+                polygons: vec![],
+            }
+        })
+        .collect();
+    let max_x = pads.iter().map(|pad| pad.position.x).max().unwrap_or(0);
+    let max_y = pads.iter().map(|pad| pad.position.y).max().unwrap_or(0);
+    let min_x = pads.iter().map(|pad| pad.position.x).min().unwrap_or(0);
+    let min_y = pads.iter().map(|pad| pad.position.y).min().unwrap_or(0);
+    let min = NmPoint::new(min_x - 1_000_000, min_y - 1_000_000);
+    let max = NmPoint::new(max_x + 1_000_000, max_y + 1_000_000);
+    Footprint {
+        id: id.into(),
+        description: description.into(),
+        body_layer: "F.Fab".into(),
+        body_bounds: NmBounds { min, max },
+        pads,
+        lines: vec![
+            FootprintLine {
+                start: NmPoint::new(min.x, min.y),
+                end: NmPoint::new(max.x, min.y),
+                width_nm: 100_000,
+                layer: "F.Fab".into(),
+            },
+            FootprintLine {
+                start: NmPoint::new(max.x, min.y),
+                end: NmPoint::new(max.x, max.y),
+                width_nm: 100_000,
+                layer: "F.Fab".into(),
+            },
+            FootprintLine {
+                start: NmPoint::new(max.x, max.y),
+                end: NmPoint::new(min.x, max.y),
+                width_nm: 100_000,
+                layer: "F.Fab".into(),
+            },
+            FootprintLine {
+                start: NmPoint::new(min.x, max.y),
+                end: NmPoint::new(min.x, min.y),
+                width_nm: 100_000,
+                layer: "F.Fab".into(),
+            },
+        ],
+        keepouts: vec![],
+        source,
+    }
+}
 impl Catalog {
     pub fn search(&self, query: &str) -> Vec<&DeviceRecord> {
+        if !query.contains(char::is_whitespace)
+            && let Some(record) = self
+                .devices
+                .iter()
+                .find(|record| record.id.eq_ignore_ascii_case(query))
+        {
+            return vec![record];
+        }
         let results: Vec<_> = self
             .search_faceted(query, &DeviceSearchFilters::default())
             .into_iter()
@@ -314,7 +876,21 @@ impl Catalog {
     /// O x terminal usado pelo catálogo pode representar sufixo de grau/embalagem;
     /// não criamos aliases de encapsulamento ou de memória por semelhança de nome.
     pub fn find(&self, id: &str) -> Result<&DeviceRecord, String> {
+        let id = if id.eq_ignore_ascii_case("Raspberry Pi 4")
+            || id.eq_ignore_ascii_case("Raspberry Pi 4 Model B")
+        {
+            "RaspberryPi4B_GPIO"
+        } else {
+            id
+        };
         if let Some(record) = self.devices.iter().find(|d| d.id.eq_ignore_ascii_case(id)) {
+            return Ok(record);
+        }
+        let family_query = normalize_search_text(id);
+        if let Some(record) = self.devices.iter().find(|record| {
+            record.manufacturer == "Raspberry Pi Ltd"
+                && normalize_search_text(&record.family) == family_query
+        }) {
             return Ok(record);
         }
         let matches: Vec<_> = self

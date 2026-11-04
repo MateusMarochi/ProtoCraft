@@ -53,7 +53,7 @@ fn help() {
     println!(
         "{}",
         tr!(
-            "ProtoCraft — automação de circuitos\n\nUso:\n  protocraft-cli templates\n  protocraft-cli new --output projeto.protocraft [--template 555-led-1hz] [--name 'Meu circuito'] [--open]\n  protocraft-cli open <projeto.protocraft>\n  protocraft-cli devices [--filter termo] [--limit N] [--offset N]\n  protocraft-cli device <modelo>\n  protocraft-cli device-project <modelo> --output projeto.protocraft\n  protocraft-cli pcb-check <projeto>\n  protocraft-cli pcb-route <projeto> --output roteado.protocraft [--grid-mm 0.25] [--track-width-mm 0.25] [--max-expansions 600000] [--no-optimize]\n  protocraft-cli pcb-info <projeto>\n  protocraft-cli pcb-export <projeto> --format kicad|svg --output arquivo\n  protocraft-cli pcb-manufacture <projeto> --preset jlcpcb|standard --output pasta-nova --kicad caminho/kicad-cli.exe\n  protocraft-cli engines\n  protocraft-cli components\n  protocraft-cli examples <pasta>\n  protocraft-cli import-proteus <arquivo.pdsprj|arquivo.dsn> --output <arquivo.protocraft> [--report <relatorio.json>]\n  protocraft-cli info <arquivo.protocraft>\n  protocraft-cli commands [--filter <termo>]\n  protocraft-cli run <arquivo.protocraft> (--actions <acoes.json> | --cmd <id> --params '<json>' [...]) [--output <novo.protocraft>]\n  protocraft-cli validate <arquivo.protocraft>\n  protocraft-cli netlist <arquivo.protocraft>\n  protocraft-cli simulate <arquivo.protocraft> [--engine stable|dynamic|mixed] [--transient passo_s fim_s] [--csv arquivo.csv]\n  protocraft-cli spice <arquivo.protocraft> [--transient passo_s fim_s] [--output arquivo.cir]\n\nnew cria um projeto novo; --open inicia o editor desktop se estiver junto da CLI.\nrun aplica todos os comandos como uma edição atômica do Engine; use --output para salvar.\ninfo, commands e run escrevem JSON em stdout. Pontos usam coordenadas inteiras da grade.\nImportação Proteus experimental: consulte os avisos e o relatório de limitações.\nSimulação nativa em Rust: motores stable, dynamic e mixed, DC e transiente, modelos genéricos.\nUse engines e components para consultar as opções. C/L iniciam em zero; estados digitais são configuráveis no motor Misto."
+            "ProtoCraft — automação de circuitos\n\nUso:\n  protocraft-cli templates\n  protocraft-cli new --output projeto.protocraft [--template 555-led-1hz|raspberry-pi-4-shield|raspberry-pi-hat] [--name 'Meu circuito'] [--open]\n  protocraft-cli open <projeto.protocraft>\n  protocraft-cli devices [--filter termo] [--limit N] [--offset N]\n  protocraft-cli device <modelo>\n  protocraft-cli device-project <modelo> --output projeto.protocraft\n  protocraft-cli raspberry-pi-4-shield --output projeto.protocraft\n  protocraft-cli raspberry-pi-hat --output projeto.protocraft\n  protocraft-cli pcb-check <projeto>\n  protocraft-cli pcb-route <projeto> --output roteado.protocraft [--grid-mm 0.25] [--track-width-mm 0.25] [--max-expansions 600000] [--no-optimize]\n  protocraft-cli pcb-info <projeto>\n  protocraft-cli pcb-export <projeto> --format kicad|svg --output arquivo\n  protocraft-cli pcb-manufacture <projeto> --preset jlcpcb|standard --output pasta-nova --kicad caminho/kicad-cli.exe\n  protocraft-cli engines\n  protocraft-cli components\n  protocraft-cli examples <pasta>\n  protocraft-cli import-proteus <arquivo.pdsprj|arquivo.dsn> --output <arquivo.protocraft> [--report <relatorio.json>]\n  protocraft-cli info <arquivo.protocraft>\n  protocraft-cli commands [--filter <termo>]\n  protocraft-cli run <arquivo.protocraft> (--actions <acoes.json> | --cmd <id> --params '<json>' [...]) [--output <novo.protocraft>]\n  protocraft-cli validate <arquivo.protocraft>\n  protocraft-cli netlist <arquivo.protocraft>\n  protocraft-cli simulate <arquivo.protocraft> [--engine stable|dynamic|mixed] [--transient passo_s fim_s] [--csv arquivo.csv]\n  protocraft-cli spice <arquivo.protocraft> [--transient passo_s fim_s] [--output arquivo.cir]\n\nnew cria um projeto novo; --open inicia o editor desktop se estiver junto da CLI.\nrun aplica todos os comandos como uma edição atômica do Engine; use --output para salvar.\ninfo, commands e run escrevem JSON em stdout. Pontos usam coordenadas inteiras da grade.\nImportação Proteus experimental: consulte os avisos e o relatório de limitações.\nSimulação nativa em Rust: motores stable, dynamic e mixed, DC e transiente, modelos genéricos.\nUse engines e components para consultar as opções. C/L iniciam em zero; estados digitais são configuráveis no motor Misto."
         )
     );
     println!(
@@ -64,6 +64,18 @@ fn help() {
         "{}",
         tr!(
             "PCB: pcb-sync adiciona footprints; pcb-sync-report inspeciona pendências; pcb-move translada componentes com trilhas conectadas; pcb-assembly exporta BOM e posições. Use <comando> --help."
+        )
+    );
+    println!(
+        "{}",
+        tr!(
+            "PCB avançada: examples inclui a galeria nativa; pcb-netclass lista, cria e remove classes de regras por rede."
+        )
+    );
+    println!(
+        "{}",
+        tr!(
+            "Fontes chaveadas: power-design buck calcula parâmetros de primeira ordem; buck-pi4-12v gera a placa Raspberry Pi 4 de 12 V para 5,1 V / 3 A."
         )
     );
 }
@@ -188,10 +200,12 @@ fn run() -> Result<(), Box<dyn Error>> {
             .iter()
             .map(|(id, _, factory)| (destination.join(format!("{id}.protocraft")), factory()))
             .collect();
-        projects.push((
-            destination.join("stm32-esp32.protocraft"),
-            eda_library::physical_example()?,
-        ));
+        for example in eda_library::pcb_example_catalog() {
+            projects.push((
+                destination.join(format!("{}.protocraft", example.id)),
+                eda_library::load_pcb_example(example.id)?,
+            ));
+        }
         if let Some((path, _)) = projects.iter().find(|(path, _)| path.exists()) {
             return Err(format!(
                 "O destino já contém {path}; nenhum exemplo foi sobrescrito",
@@ -396,6 +410,21 @@ fn list_templates() -> Result<(), Box<dyn Error>> {
         "name": tr!("Demonstração STM32 + ESP32-S3"),
         "description": tr!("Esquema e footprints para estudo físico; não executa firmware.")
     }));
+    templates.push(serde_json::json!({
+        "id": "raspberry-pi-4-shield",
+        "name": tr!("Shield Raspberry Pi 4 — breakout GPIO17"),
+        "description": tr!("PCB 85 × 56 mm com furação de montagem, header GPIO e dois LEDs indicadores.")
+    }));
+    templates.push(serde_json::json!({
+        "id": "raspberry-pi-hat",
+        "name": tr!("Base mecânica Raspberry Pi HAT"),
+        "description": tr!("PCB 65 × 56 mm com cantos de 3 mm, quatro furos padrão e header GPIO; não inclui EEPROM nem conformidade elétrica HAT+.")
+    }));
+    templates.push(serde_json::json!({
+        "id": "buck-pi4-12v",
+        "name": tr!("Fonte chaveada 12 V para Raspberry Pi 4"),
+        "description": tr!("Conversor buck LM61460, 5,1 V / 3 A nominal, PCB 65 × 56,5 mm e GPIO Pi 4; fixture de engenharia, sem validação física.")
+    }));
     println!("{}", serde_json::to_string_pretty(&templates)?);
     Ok(())
 }
@@ -505,6 +534,12 @@ fn run_new_project(args: &[String]) -> Result<(), Box<dyn Error>> {
         eda_core::Project::empty(name.as_deref().unwrap_or(inferred_name))
     } else if template == "stm32-esp32" {
         eda_library::physical_example()?
+    } else if template == "raspberry-pi-4-shield" {
+        physical_cli::raspberry_pi_4_shield_project()?
+    } else if template == "raspberry-pi-hat" {
+        physical_cli::raspberry_pi_hat_project()?
+    } else if template == "buck-pi4-12v" {
+        physical_cli::buck_pi4_12v_project()?
     } else if let Some((_, _, factory)) = eda_core::examples::CATALOG
         .iter()
         .find(|(id, _, _)| *id == template)
@@ -656,7 +691,20 @@ fn command_help(command: &str) -> Option<String> {
             "Uso: protocraft-cli templates\nLista os modelos disponíveis em JSON."
         )),
         "new" | "create" => Some(tr!(
-            "Uso: protocraft-cli new --output <arquivo.protocraft> [--template <id>] [--name <nome>] [--open]\nPara 555-led-1hz: [--ra-ohms R] [--rb-ohms R] [--c-farads F | --frequency-hz Hz] [--led-resistor-ohms R]. Não substitui arquivos existentes; valores em unidades SI."
+            "Uso: protocraft-cli new --output <arquivo.protocraft> [--template <id>] [--name <nome>] [--open]\nPara 555-led-1hz: [--ra-ohms R] [--rb-ohms R] [--c-farads F | --frequency-hz Hz] [--led-resistor-ohms R]. Para o shield Pi, use --template raspberry-pi-4-shield; para a base mecânica HAT, use --template raspberry-pi-hat. Não substitui arquivos existentes; valores em unidades SI."
+        )),
+        "raspberry-pi-4-shield" => Some(tr!(
+            "Uso: protocraft-cli raspberry-pi-4-shield --output <arquivo.protocraft>\nCria o shield Raspberry Pi 4 Model B de exemplo com PCB 85x56 mm, furos, GPIO e LEDs."
+        )),
+        "raspberry-pi-hat" => Some(tr!(
+            "Uso: protocraft-cli raspberry-pi-hat --output <arquivo.protocraft>\nCria uma base mecânica 65×56 mm com cantos de 3 mm, quatro furos HAT e header GPIO de 40 pinos. Não inclui EEPROM nem certifica conformidade elétrica HAT+."
+        )),
+        "buck-pi4-12v" => Some(tr!(
+            "Uso: protocraft-cli buck-pi4-12v --output <arquivo.protocraft>\nGera e roteia o exemplo de fonte 12 V para 5,1 V / 3 A no perfil mecânico Raspberry Pi 4 HAT. O projeto é protótipo e requer validação elétrica, térmica e EMI."
+        )),
+        "power-design" => Some(physical_cli::power_design_help()),
+        "pcb-netclass" => Some(tr!(
+            "Uso: protocraft-cli pcb-netclass <projeto> list | set --name <classe> --net <rede>... --width-mm N --clearance-mm N --via-diameter-mm N --via-drill-mm N --output <novo.protocraft> | remove --name <classe> --output <novo.protocraft>\nA gravação cria um novo projeto; dimensões são regras mínimas em milímetros."
         )),
         "open" => Some(tr!(
             "Uso: protocraft-cli open <arquivo.protocraft>\nAbre o projeto no aplicativo desktop distribuído ao lado da CLI."

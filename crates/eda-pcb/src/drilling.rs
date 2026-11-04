@@ -65,11 +65,7 @@ pub(super) fn check_drills(
     let mut work = 0usize;
     for (i, d) in drills.iter().enumerate() {
         let edge = d.radius + board.edge_clearance_nm as f64;
-        if (d.position.x as f64) < edge
-            || (d.position.y as f64) < edge
-            || d.position.x as f64 + edge > board.width_nm as f64
-            || d.position.y as f64 + edge > board.height_nm as f64
-        {
+        if !board.contains_with_clearance(d.position, edge.ceil() as i64) {
             add(
                 "HOLE_EDGE",
                 format!(

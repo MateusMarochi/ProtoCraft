@@ -33,4 +33,4 @@ ProtoCraft-CLI.cmd new --template 555-led-1hz --frequency-hz 1 --output pisca-1h
 
 RA, RB e o resistor do LED podem ser ajustados com `--ra-ohms`, `--rb-ohms` e `--led-resistor-ohms`. Para escolher diretamente o capacitor, passe `--c-farads` e não use `--frequency-hz` na mesma execução. Os argumentos numéricos usam unidades SI: 47000 representa 47 kΩ e `0.00001` representa 10 µF.
 
-O arquivo salvo é um projeto normal `.protocraft` v6; os valores também podem ser alterados no editor ou por `run --cmd set_component`. A geração de PCB, o posicionamento dos footprints, o roteamento manual, o DRC e a exportação Gerber são etapas separadas.
+O arquivo salvo é um projeto normal `.protocraft` v7; os valores também podem ser alterados no editor ou por `run --cmd set_component`. A geração de PCB, o posicionamento dos footprints, o roteamento manual, o DRC e a exportação Gerber são etapas separadas.

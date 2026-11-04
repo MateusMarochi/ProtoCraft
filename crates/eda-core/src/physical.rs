@@ -385,11 +385,39 @@ pub struct MountingHole {
     pub position: NmPoint,
     pub drill_nm: i64,
 }
+
+/// Restrições elétricas e geométricas aplicadas a redes nomeadas da PCB.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PadEscapeRule {
+    pub track_width_nm: i64,
+    pub max_length_nm: i64,
+    pub via_diameter_nm: i64,
+    pub via_drill_nm: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NetClass {
+    /// Nomes exatos das redes do netlist; a comparação respeita maiúsculas/minúsculas.
+    pub net_names: BTreeSet<String>,
+    pub clearance_nm: i64,
+    pub track_width_nm: i64,
+    pub via_diameter_nm: i64,
+    pub via_drill_nm: i64,
+    /// Exceção explícita para o trecho curto entre um pad SMD e seu escape.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pad_escape: Option<PadEscapeRule>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Board {
     pub width_nm: i64,
     pub height_nm: i64,
+    /// Raio uniforme dos quatro cantos do contorno retangular arredondado.
+    #[serde(default)]
+    pub corner_radius_nm: i64,
     pub thickness_nm: i64,
     pub clearance_nm: i64,
     pub edge_clearance_nm: i64,
@@ -398,12 +426,16 @@ pub struct Board {
     pub vias: BTreeMap<u64, Via>,
     #[serde(default)]
     pub holes: BTreeMap<u64, MountingHole>,
+    /// Regras por rede; redes sem classe herdam os valores globais da placa.
+    #[serde(default)]
+    pub net_classes: BTreeMap<String, NetClass>,
 }
 impl Default for Board {
     fn default() -> Self {
         Self {
             width_nm: 100 * NM_PER_MM,
             height_nm: 80 * NM_PER_MM,
+            corner_radius_nm: 0,
             thickness_nm: 1_600_000,
             clearance_nm: 200_000,
             edge_clearance_nm: 250_000,
@@ -411,19 +443,84 @@ impl Default for Board {
             tracks: BTreeMap::new(),
             vias: BTreeMap::new(),
             holes: BTreeMap::new(),
+            net_classes: BTreeMap::new(),
         }
     }
 }
 impl Board {
+    /// Verifica se um ponto respeita o contorno arredondado e uma margem interna.
+    pub fn contains_with_clearance(&self, point: NmPoint, clearance_nm: i64) -> bool {
+        if clearance_nm < 0 {
+            return false;
+        }
+        let left = clearance_nm;
+        let top = clearance_nm;
+        let right = self.width_nm.saturating_sub(clearance_nm);
+        let bottom = self.height_nm.saturating_sub(clearance_nm);
+        if point.x < left || point.x > right || point.y < top || point.y > bottom {
+            return false;
+        }
+        let radius = self.corner_radius_nm.saturating_sub(clearance_nm).max(0);
+        if radius == 0 {
+            return true;
+        }
+        let cx = if point.x < left + radius {
+            left + radius
+        } else if point.x > right - radius {
+            right - radius
+        } else {
+            point.x
+        };
+        let cy = if point.y < top + radius {
+            top + radius
+        } else if point.y > bottom - radius {
+            bottom - radius
+        } else {
+            point.y
+        };
+        let dx = i128::from(point.x - cx);
+        let dy = i128::from(point.y - cy);
+        dx * dx + dy * dy <= i128::from(radius) * i128::from(radius)
+    }
+
     pub fn validate(&self, project: &Project) -> Result<(), CoreError> {
         if !(NM_PER_MM..=PHYSICAL_LIMIT).contains(&self.width_nm)
             || !(NM_PER_MM..=PHYSICAL_LIMIT).contains(&self.height_nm)
+            || !(0..=self.width_nm.min(self.height_nm) / 2).contains(&self.corner_radius_nm)
             || !(100000..=10000000).contains(&self.thickness_nm)
             || !(0..=10 * NM_PER_MM).contains(&self.clearance_nm)
             || !(0..=10 * NM_PER_MM).contains(&self.edge_clearance_nm)
             || self.tracks.len() + self.vias.len() + self.holes.len() > 20000
+            || self.net_classes.len() > 64
         {
             return Err(invalid("Dimensões ou regras da PCB inválidas."));
+        }
+        let mut assigned_nets = BTreeSet::new();
+        for (name, rules) in &self.net_classes {
+            if name.trim().is_empty()
+                || !text(name, 64)
+                || rules.net_names.is_empty()
+                || rules.net_names.len() > 256
+                || !(0..=10 * NM_PER_MM).contains(&rules.clearance_nm)
+                || !(50_000..=10 * NM_PER_MM).contains(&rules.track_width_nm)
+                || !(300_000..=20 * NM_PER_MM).contains(&rules.via_diameter_nm)
+                || !(100_000..rules.via_diameter_nm).contains(&rules.via_drill_nm)
+                || rules.via_diameter_nm - rules.via_drill_nm < 200_000
+                || rules.pad_escape.as_ref().is_some_and(|escape| {
+                    !(50_000..=rules.track_width_nm).contains(&escape.track_width_nm)
+                        || !(50_000..=2 * NM_PER_MM).contains(&escape.max_length_nm)
+                        || !(300_000..=rules.via_diameter_nm).contains(&escape.via_diameter_nm)
+                        || !(100_000..=rules.via_drill_nm).contains(&escape.via_drill_nm)
+                        || escape.via_diameter_nm - escape.via_drill_nm < 200_000
+                })
+                || rules.net_names.iter().any(|net| {
+                    net.trim().is_empty() || !text(net, 64) || !assigned_nets.insert(net.clone())
+                })
+            {
+                return Err(invalid(
+                    "Classe de rede inválida: confira nome, redes exclusivas, largura, folga e dimensões de via.",
+                ));
+            }
         }
         for (id, p) in &self.placements {
             if !p.position.valid()
@@ -479,5 +576,79 @@ impl Board {
             }
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod net_class_tests {
+    use super::*;
+
+    fn class(name: &str) -> NetClass {
+        NetClass {
+            net_names: BTreeSet::from([name.to_owned()]),
+            clearance_nm: 200_000,
+            track_width_nm: 250_000,
+            via_diameter_nm: 600_000,
+            via_drill_nm: 300_000,
+            pad_escape: None,
+        }
+    }
+
+    #[test]
+    fn pad_escape_round_trip_and_validation_preserve_legacy_classes() {
+        let old = class("VCC");
+        let json = serde_json::to_string(&old).unwrap();
+        assert!(!json.contains("pad_escape"));
+        assert_eq!(serde_json::from_str::<NetClass>(&json).unwrap(), old);
+        let mut project = Project::empty("escape");
+        let mut board = Board::default();
+        let mut rules = old;
+        rules.pad_escape = Some(PadEscapeRule {
+            track_width_nm: 200_000,
+            max_length_nm: 1_000_000,
+            via_diameter_nm: 400_000,
+            via_drill_nm: 200_000,
+        });
+        board.net_classes.insert("POWER".into(), rules.clone());
+        project.board = Some(Box::new(board));
+        project.validate().unwrap();
+        assert_eq!(
+            serde_json::from_str::<NetClass>(&serde_json::to_string(&rules).unwrap()).unwrap(),
+            rules
+        );
+        project
+            .board
+            .as_mut()
+            .unwrap()
+            .net_classes
+            .get_mut("POWER")
+            .unwrap()
+            .pad_escape
+            .as_mut()
+            .unwrap()
+            .max_length_nm = 3 * NM_PER_MM;
+        assert!(project.validate().is_err());
+    }
+
+    #[test]
+    fn board_rejects_a_net_assigned_to_two_classes() {
+        let mut project = Project::empty("classes");
+        let mut board = Board::default();
+        board.net_classes.insert("POWER".into(), class("VCC"));
+        board.net_classes.insert("SIGNAL".into(), class("VCC"));
+        project.board = Some(Box::new(board));
+        assert!(project.validate().is_err());
+    }
+
+    #[test]
+    fn board_rejects_via_rules_with_insufficient_annular_ring() {
+        let mut project = Project::empty("classes");
+        let mut invalid = class("VCC");
+        invalid.via_diameter_nm = 600_000;
+        invalid.via_drill_nm = 450_000;
+        let mut board = Board::default();
+        board.net_classes.insert("POWER".into(), invalid);
+        project.board = Some(Box::new(board));
+        assert!(project.validate().is_err());
     }
 }

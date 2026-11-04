@@ -700,6 +700,7 @@ name = "eda-core"
 version = "0.9.0"
 dependencies = [
  "serde",
+ "serde_json",
  "thiserror 2.0.21",
 ]
 
@@ -731,6 +732,8 @@ name = "eda-library"
 version = "0.9.0"
 dependencies = [
  "eda-core",
+ "eda-i18n",
+ "eda-netlist",
  "serde",
  "serde_json",
 ]

@@ -18,6 +18,7 @@ Este plano organiza o `BACKLOG.md` em entregas progressivas. O objetivo é ampli
 
 ## 3. Cobre e fabricação
 
+- Classes de rede nomeadas: a primeira versão está implementada no formato v7, DRC, edição desktop e autorroteador; prosseguir com regras por região/camada, precedência e perfis somente com contratos e fixtures específicos.
 - Desenvolver zonas e preenchimento determinístico, ilhas e térmicos; em seguida ampliar regras por camada, objeto e classe de rede.
 - Ampliar verificações de furos, anéis, bordas, máscara, pasta e conectividade; cruzar os resultados com ferramenta independente.
 - Validar Gerber/Excellon, BOM e posições de montagem em exemplos pequenos e depois em placas mais representativas; não declarar uma placa fabricável apenas pelo DRC.

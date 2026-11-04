@@ -1724,6 +1724,21 @@ impl ProtoCraft {
                                 ui.close();
                             }
                         }
+                        ui.separator();
+                        ui.menu_button(tr!("Exemplos de PCB"), |ui| {
+                            for example in eda_library::pcb_example_catalog() {
+                                let response = ui.button(eda_i18n::text(example.name));
+                                let response =
+                                    response.on_hover_text(eda_i18n::text(example.description));
+                                if response.clicked() {
+                                    match eda_library::load_pcb_example(example.id) {
+                                        Ok(project) => self.request(Pending::New(project), ctx),
+                                        Err(error) => self.message(eda_i18n::text(&error), true),
+                                    }
+                                    ui.close();
+                                }
+                            }
+                        });
                     });
                     ui.menu_button(tr!("Ajuda"), |ui| {
                         if ui.button(tr!("Atalhos e limites")).clicked() {

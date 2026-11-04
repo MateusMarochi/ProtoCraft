@@ -14,6 +14,165 @@ fn every_catalog_entry_has_valid_exact_pin_to_pad_mapping() {
         assert_eq!(component.pins().len(), c.symbols[&record.symbol].len());
     }
 }
+
+#[test]
+fn raspberry_pi_4_gpio_is_in_the_shared_physical_catalog() {
+    let c = catalog().unwrap();
+    let matches = c.search("Raspberry Pi 4");
+    assert!(
+        matches
+            .iter()
+            .any(|record| record.id == "RaspberryPi4B_GPIO")
+    );
+    assert!(
+        c.manufacturers()
+            .iter()
+            .any(|name| name == "Raspberry Pi Ltd")
+    );
+
+    let (device, footprint) = c.definition("Raspberry Pi 4 Model B").unwrap();
+    assert_eq!(device.pins.len(), 40);
+    assert_eq!(device.pins[0].name, "3V3");
+    assert_eq!(device.pins[1].name, "5V");
+    assert_eq!(device.pins[10].name, "GPIO17");
+    assert_eq!(device.pins[26].name, "ID_SD");
+    assert_eq!(footprint.pads.len(), 40);
+    assert_eq!(
+        footprint
+            .pads
+            .iter()
+            .find(|pad| pad.number == "1")
+            .unwrap()
+            .position,
+        eda_core::NmPoint::new(0, 0)
+    );
+    assert!(
+        c.place_command("RaspberryPi4B_GPIO", Point::new(0, 0))
+            .is_ok()
+    );
+}
+
+#[test]
+fn raspberry_pi_catalog_covers_classic_headers_legacy_revisions_and_pico_families() {
+    let c = catalog().unwrap();
+    for id in [
+        "RaspberryPi1BPlus_GPIO40",
+        "RaspberryPi1APlus_GPIO40",
+        "RaspberryPi2B_GPIO40",
+        "RaspberryPi3B_GPIO40",
+        "RaspberryPi3BPlus_GPIO40",
+        "RaspberryPi3APlus_GPIO40",
+        "RaspberryPiZero_GPIO40",
+        "RaspberryPiZeroW_GPIO40",
+        "RaspberryPiZeroWH_GPIO40",
+        "RaspberryPiZero2W_GPIO40",
+        "RaspberryPiZero2WWithHeaders_GPIO40",
+        "RaspberryPi400_GPIO40",
+        "RaspberryPi5_GPIO40",
+        "RaspberryPi500_GPIO40",
+        "RaspberryPi500Plus_GPIO40",
+        "RaspberryPi1BRev1_GPIO26",
+        "RaspberryPi1BRev2_GPIO26",
+        "RaspberryPi1A_GPIO26",
+        "RaspberryPiPico_GPIO40",
+        "RaspberryPiPicoH_GPIO40",
+        "RaspberryPiPicoW_GPIO40",
+        "RaspberryPiPicoWH_GPIO40",
+        "RaspberryPiPico2_GPIO40",
+        "RaspberryPiPico2WithHeaders_GPIO40",
+        "RaspberryPiPico2W_GPIO40",
+        "RaspberryPiPico2WWithHeaders_GPIO40",
+    ] {
+        let (device, footprint) = c
+            .definition(id)
+            .unwrap_or_else(|error| panic!("{id}: {error}"));
+        let expected = if id.ends_with("GPIO26") { 26 } else { 40 };
+        assert_eq!(device.pins.len(), expected, "{id}");
+        assert_eq!(footprint.pads.len(), expected, "{id}");
+    }
+    assert_eq!(
+        c.definition("Raspberry Pi 5").unwrap().0.pins[2].name,
+        "GPIO2"
+    );
+
+    let rev1 = c.definition("RaspberryPi1BRev1_GPIO26").unwrap().0;
+    let rev2 = c.definition("RaspberryPi1BRev2_GPIO26").unwrap().0;
+    assert_eq!(rev1.pins[2].name, "GPIO0/SDA0");
+    assert_eq!(rev2.pins[2].name, "GPIO2/SDA1");
+    assert_eq!(rev1.pins[4].name, "GPIO1/SCL0");
+    assert_eq!(rev2.pins[4].name, "GPIO3/SCL1");
+    assert_eq!(rev1.pins[12].name, "GPIO21");
+    assert_eq!(rev2.pins[12].name, "GPIO27");
+}
+
+#[test]
+fn raspberry_pi_keyboard_header_is_inverted_and_pico_has_its_own_two_row_layout() {
+    let c = catalog().unwrap();
+    let (_, standard) = c.definition("RaspberryPi4B_GPIO").unwrap();
+    let (_, keyboard) = c.definition("RaspberryPi500Plus_GPIO40").unwrap();
+    assert_eq!(standard.pads[0].position, eda_core::NmPoint::new(0, 0));
+    assert_eq!(
+        keyboard
+            .pads
+            .iter()
+            .find(|pad| pad.number == "1")
+            .unwrap()
+            .position,
+        eda_core::NmPoint::new(48_260_000, 2_540_000)
+    );
+    assert_eq!(
+        keyboard
+            .pads
+            .iter()
+            .find(|pad| pad.number == "40")
+            .unwrap()
+            .position,
+        eda_core::NmPoint::new(0, 0)
+    );
+
+    let (pico, footprint) = c.definition("Raspberry Pi Pico 2 W").unwrap();
+    assert_eq!(pico.pins[0].name, "GP0");
+    assert_eq!(pico.pins[2].name, "GND");
+    assert_eq!(pico.pins[29].name, "RUN");
+    assert_eq!(pico.pins[30].name, "GP26/ADC0");
+    assert_eq!(pico.pins[35].name, "3V3(OUT)");
+    assert_eq!(
+        footprint
+            .pads
+            .iter()
+            .find(|pad| pad.number == "1")
+            .unwrap()
+            .position,
+        eda_core::NmPoint::new(0, 0)
+    );
+    assert_eq!(
+        footprint
+            .pads
+            .iter()
+            .find(|pad| pad.number == "20")
+            .unwrap()
+            .position,
+        eda_core::NmPoint::new(0, 48_260_000)
+    );
+    assert_eq!(
+        footprint
+            .pads
+            .iter()
+            .find(|pad| pad.number == "21")
+            .unwrap()
+            .position,
+        eda_core::NmPoint::new(17_780_000, 48_260_000)
+    );
+    assert_eq!(
+        footprint
+            .pads
+            .iter()
+            .find(|pad| pad.number == "40")
+            .unwrap()
+            .position,
+        eda_core::NmPoint::new(17_780_000, 0)
+    );
+}
 #[test]
 fn f103_lqfp48_pins_dimensions_and_suffix_lookup_match_reference() {
     let c = catalog().unwrap();

@@ -34,8 +34,7 @@ fn read_cam(path: &Path) -> Result<String, String> {
     fs::read_to_string(path).map_err(|e| e.to_string())
 }
 
-// O núcleo exporta somente contorno retangular. Confere fechamento e escala nas
-// coordenadas reais do Gerber, antes de colocá-lo no ZIP para a fábrica.
+// Confere o caminho fechado e as dimensões reais do contorno antes do ZIP.
 fn check_outline(text: &str, project: &Project) -> Result<(), String> {
     let board = project.board.as_ref().ok_or("PCB ausente")?;
     let corners = [
@@ -64,7 +63,18 @@ fn check_outline(text: &str, project: &Project) -> Result<(), String> {
         }
         vertices.push(point);
     }
-    if vertices != corners {
+    let valid = if board.corner_radius_nm == 0 {
+        vertices == corners
+    } else {
+        vertices.len() >= 9
+            && vertices.len() <= 32
+            && vertices.first() == vertices.last()
+            && vertices.iter().map(|p| p.0).min() == Some(0)
+            && vertices.iter().map(|p| p.0).max() == Some(board.width_nm)
+            && vertices.iter().map(|p| p.1).min() == Some(-board.height_nm)
+            && vertices.iter().map(|p| p.1).max() == Some(0)
+    };
+    if !valid {
         return Err("Contorno Gerber difere da PCB em escala 1:1/origem absoluta.".into());
     }
     Ok(())

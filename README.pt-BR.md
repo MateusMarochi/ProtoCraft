@@ -13,8 +13,10 @@ Editor de circuitos eletrônicos para desktop, feito em Rust. Reúne editor de e
 - Editor esquemático com fios, rótulos de rede, ERC, desfazer/refazer e copiar/recortar/colar componentes.
 - Três motores próprios de simulação, análise transiente, gráficos e exportação CSV.
 - Editor PCB de duas camadas com trilhas manuais, autorroteador A* inicial, vias, furos não metalizados e DRC.
+- Classes de rede com folga/largura mínima e dimensões de via aplicadas ao DRC e ao autorroteador; galeria nativa de projetos PCB básicos e complexos no desktop e na CLI.
+- Fluxo inicial de fontes chaveadas: calculadora de buck limitada ao LM61460, projeto de referência 12 V → 5,1 V / 3 A para Raspberry Pi 4 e regras de rede para trilhas de potência.
 - Exportação Gerber/Excellon com preset JLCPCB e validação pelo KiCad CLI externo.
-- Catálogo físico offline com 2.283 entradas STM32 e 48 Espressif.
+- Catálogo físico offline com 2.283 entradas STM32, 48 Espressif e 27 pinagens Raspberry Pi: headers clássicos de 40/26 pinos e famílias Pico/Pico 2.
 - CLI para validação, netlists, simulação, exportação SPICE, autorroteamento, ações de projeto e importação Proteus.
 - Servidor MCP headless por stdio com comandos tipados, busca física facetada, DRC e autorroteamento com revisão esperada.
 - Interface e CLI em português do Brasil e inglês, com seleção pelo idioma do sistema e fallback para inglês; os catálogos JSON podem ser substituídos sem recompilar.
@@ -52,6 +54,12 @@ cargo run -p eda-cli -- mcp --project pisca.protocraft
 
 Consulte o [guia da CLI](docs/cli.md) e o [guia do MCP](docs/mcp.md) para inspeção, edição atômica, validação, autorroteamento, fabricação e importação. O MCP mantém uma sessão headless própria do arquivo indicado; ainda não controla a janela desktop aberta.
 
+Para criar pelo CLI o shield de exemplo para Raspberry Pi 4 Model B, use `raspberry-pi-4-shield --output shield-pi4.protocraft`. O comando cria a placa de 85 × 56 mm com cantos arredondados, furação de montagem, header GPIO de 40 pinos, um ponto de teste identificado para GPIO17 e LEDs indicadores ligados a 5 V e 3,3 V. Consulte o [guia do shield](docs/raspberry-pi-4-shield-prototype.md) para pinagem, fabricação e limites mecânicos.
+
+Para gerar a placa de fonte chaveada de 12 V para 5,1 V / 3 A, use `power-design buck` para obter o cálculo de primeira ordem, `power-design copper` para estimar largura por corrente/queda DC e `buck-pi4-12v --output pi4-buck.protocraft` para criar e rotear o exemplo. O projeto injeta alimentação pelos pinos 5 V do GPIO; nunca conecte simultaneamente uma fonte USB-C ao Pi. Consulte [projeto e limites do conversor](docs/power-conversion.md); o DRC geométrico não demonstra segurança elétrica, térmica ou EMI.
+
+O catálogo também oferece os modelos Raspberry Pi com header GPIO de 40 pinos, as revisões legadas de 26 pinos e todas as variantes de pinagem Pico/Pico 2. Use `devices --filter "Raspberry Pi"` para listar e `device "Raspberry Pi Pico 2 W"` para consultar uma pinagem e seu footprint. `raspberry-pi-hat --output hat.protocraft` cria uma base mecânica no formato HAT de 65 × 56 mm. Esse template não inclui EEPROM nem certificação elétrica HAT+; os Compute Modules permanecem fora do catálogo por usarem conectores e mapas de carrier diferentes. Consulte [catálogo e limites Raspberry Pi](docs/raspberry-pi-catalog.md).
+
 ## Escopo e limitações
 
 O ProtoCraft implementa seus próprios motores e não incorpora código nem binários do Proteus. A importação `.pdsprj`/`.dsn` é experimental e parcial; não há garantia de compatibilidade com todos os projetos Proteus. Os dados de STM32/ESP32 servem ao projeto físico: firmware e periféricos internos não são emulados. Os modelos de simulação são genéricos e educacionais. A exportação para fabricação exige KiCad CLI e revisão independente da placa antes da produção.
@@ -75,3 +83,5 @@ O projeto inicial usa RA=47 kΩ, RB=47 kΩ, LED com resistor limitador de 680 Ω
 ## Construção de PCB: ferramentas adicionais
 
 A [documentação dos fluxos PCB](docs/pcb-workflows.md) explica a sincronização de footprints, movimento com trilhas conectadas, remoção de duplicatas, métricas por rede e relatórios de materiais/posições de montagem. Esses fluxos usam o mesmo domínio pelo desktop e pela CLI e conservam as limitações descritas no guia.
+
+O menu **Exemplos → Exemplos de PCB** contém projetos nativos básicos e complexos, incluindo uma placa 555 roteada, um layout STM32/ESP32 para experimentar o autorroteador, um shield Raspberry Pi 4 e o conversor buck de 3 A. O comando `ProtoCraft-CLI.cmd examples projetos\galeria` exporta a galeria completa para arquivos `.protocraft`; veja [os exemplos e seus estados iniciais](docs/pcb-examples.md).

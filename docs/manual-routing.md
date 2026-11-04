@@ -69,6 +69,6 @@ Mover cobre ou componentes pode abrir conexões com os trechos vizinhos: eles n�
 
 ## Salvar e fabricar
 
-Trilhas, vias e furos ficam no mesmo `.protocraft` v6. Arquivos v1–v5 são migrados, com lista vazia de furos mecânicos quando ausente. Os comandos da CLI compartilham o Engine e estão em [cli.md](cli.md#edição-de-trilhas-e-furos).
+Trilhas, vias, furos e classes de rede ficam no mesmo `.protocraft` v7. Arquivos v1–v6 são migrados; propriedades físicas ausentes recebem valores padrão compatíveis. Os comandos da CLI compartilham o Engine e estão em [cli.md](cli.md#edição-de-trilhas-e-furos).
 
 Em **Fabricação e exportação**, o preset JLCPCB mantém RS-274X/Protel, mm, escala 1:1 e origem absoluta. Vias/pads metalizados saem no Excellon PTH; os furos mecânicos saem no NPTH. O ZIP inclui Gerbers e os dois tipos de furação. A exportação KiCad e a prévia SVG também preservam os furos. A fabricação exige aprovação dos DRCs nativo e externo.

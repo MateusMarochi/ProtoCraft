@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use thiserror::Error;
 
 pub mod examples;
-pub const FORMAT_VERSION: u32 = 6;
+pub const FORMAT_VERSION: u32 = 7;
 pub const MAX_OBJECTS: usize = 20_000;
 const COORD_LIMIT: i32 = 1_000_000;
 
@@ -850,6 +850,29 @@ impl Engine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn rounded_board_outline_is_validated_and_old_projects_default_to_square_corners() {
+        let mut board = Board {
+            width_nm: 85 * NM_PER_MM,
+            height_nm: 56 * NM_PER_MM,
+            corner_radius_nm: 3 * NM_PER_MM,
+            ..Board::default()
+        };
+        assert!(board.contains_with_clearance(NmPoint::new(3 * NM_PER_MM, 3 * NM_PER_MM), 0));
+        assert!(!board.contains_with_clearance(NmPoint::new(500_000, 500_000), 0));
+        assert!(
+            board.contains_with_clearance(NmPoint::new(4 * NM_PER_MM, 4 * NM_PER_MM), NM_PER_MM)
+        );
+        assert!(!board.contains_with_clearance(NmPoint::new(NM_PER_MM, NM_PER_MM), NM_PER_MM));
+        let mut serialized = serde_json::to_value(&board).unwrap();
+        serialized
+            .as_object_mut()
+            .unwrap()
+            .remove("corner_radius_nm");
+        board = serde_json::from_value(serialized).unwrap();
+        assert_eq!(board.corner_radius_nm, 0);
+    }
+
     #[test]
     fn history_limit_and_branching_keep_ids_unique() {
         let mut engine = Engine::new(Project::empty("Histórico")).unwrap();

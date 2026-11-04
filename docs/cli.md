@@ -8,6 +8,26 @@ No Windows, `ProtoCraft-CLI.cmd` compila a versão release do workspace e encami
 
 `templates` lista os IDs e os nomes de todos os modelos. `new` cria um arquivo novo sem substituir um arquivo já existente; por padrão, cria uma folha esquemática vazia.
 
+O CLI também cria diretamente o shield físico de exemplo da Raspberry Pi 4 Model B. Esse comando monta esquemático e PCB com header GPIO, saídas de teste identificadas, LEDs de alimentação, cantos de 3 mm e furação de montagem:
+
+```powershell
+ProtoCraft-CLI.cmd raspberry-pi-4-shield --output projetos\shield-pi4.protocraft
+ProtoCraft-CLI.cmd pcb-check projetos\shield-pi4.protocraft
+ProtoCraft-CLI.cmd pcb-export projetos\shield-pi4.protocraft --format kicad --output shield-pi4.kicad_pcb
+```
+
+Os furos usam a disposição nominal de 58 × 49 mm da Pi 4. A placa de exemplo tem 85 × 56 mm conforme solicitado; isso não garante compatibilidade com todo gabinete, HAT ou conector lateral. Revise posição/altura dos conectores antes de fabricar. Veja o [guia detalhado do shield](raspberry-pi-4-shield-prototype.md).
+
+Para começar uma placa na geometria mecânica Raspberry Pi HAT, sem os componentes do shield de demonstração, use:
+
+```powershell
+ProtoCraft-CLI.cmd raspberry-pi-hat --output projetos\hat-base.protocraft
+```
+
+O template usa contorno de 65 × 56 mm para header through-hole, cantos de 3 mm, quatro furos de 2,75 mm no padrão 58 × 49 mm e o header GPIO completo. Ele é um ponto de partida mecânico: não inclui EEPROM, declaração de device tree, recortes de flex, keepouts de conectores PoE nem validação de conformidade HAT/HAT+.
+
+Consulte [catálogo e limites Raspberry Pi](raspberry-pi-catalog.md) para a lista de pinagens incluídas e os comandos `devices` e `device`.
+
 ```powershell
 ProtoCraft-CLI.cmd templates
 ProtoCraft-CLI.cmd new --output projetos\meu-circuito.protocraft --name "Meu circuito" --open
@@ -30,6 +50,8 @@ ProtoCraft-CLI.cmd simulate projetos\pisca-1hz.protocraft --engine mixed --trans
 Para um exemplo físico completo, com footprints, PCB de duas camadas, roteamento e instruções de fabricação, use [`555-led-1hz-pcb.protocraft`](../examples/555-led-1hz-pcb.protocraft) e consulte o [guia da placa 555](555-led-1hz-pcb.md).
 
 O comando `examples <pasta>` continua gravando o conjunto completo, agora sem substituir nenhum arquivo existente; caso encontre um conflito, interrompe antes de criar os exemplos.
+
+O conjunto inclui cinco projetos físicos nativos com classes de rede: placa básica de trilhas/vias/furos, 555 roteado em duas camadas, layout STM32+ESP32 com conexões pendentes para autorroteamento, shield Raspberry Pi 4 e fonte buck para Pi 4. O desktop também abre os mesmos exemplos no menu **Exemplos → Exemplos de PCB**. Consulte [a galeria PCB](pcb-examples.md) para os critérios e limitações de cada fixture.
 
 ## Inspecionar um projeto
 
@@ -111,7 +133,9 @@ O [guia de simulação mista](mixed-simulation.md) documenta pinagens, parâmetr
 
 `pcb-route <projeto> --output roteado.protocraft [--grid-mm 0.25] [--track-width-mm 0.25] [--max-expansions 600000] [--no-optimize]` executa o autorroteador nativo e grava uma cópia do projeto; a saída não pode substituir a entrada. O plano é limitado por orçamento, usa as duas camadas e valida o DRC antes de ser salvo. O JSON lista rotas realizadas e falhas restantes. Consulte [o guia de autorroteamento](manual-routing.md#autorroteamento-inicial).
 
-As ações físicas estão em `commands` e no [guia STM32/ESP32 e PCB](mcu-pcb.md). Toda coordenada física de ação usa nanômetros; a extensão nativa permanece `.protocraft` (v6). O CLI não emula firmware.
+`pcb-netclass <projeto> list` imprime as classes em JSON. `set` cria ou substitui uma classe, repetindo `--net` para cada rede e informando `--width-mm`, `--clearance-mm`, `--via-diameter-mm` e `--via-drill-mm`; `remove --name <classe>` exclui uma classe. Set e remove exigem `--output` com um caminho novo. As regras são mínimas, aplicam-se ao DRC e ao autorroteador e não representam impedância controlada ou regras específicas de fabricante. Consulte a [galeria de PCB](pcb-examples.md) para projetos prontos.
+
+As ações físicas estão em `commands` e no [guia STM32/ESP32 e PCB](mcu-pcb.md). Toda coordenada física de ação usa nanômetros; a extensão nativa permanece `.protocraft` (v7). O CLI não emula firmware.
 
 ### Edição de trilhas e furos
 
@@ -130,4 +154,18 @@ Para conectar um cliente compatível com MCP, inicie `protocraft-cli mcp --proje
 
 ## Fluxos ampliados de construção PCB
 
-Consulte [Construção de PCB e relatórios de montagem](pcb-workflows.md) para `pcb-sync`, `pcb-sync-report`, `pcb-move`, `pcb-cleanup` e `pcb-assembly`, incluindo unidades e limitações. `pcb-info` agora inclui métricas geométricas por net. A fabricação gera a subpasta `montagem/` com BOM, posições e JSON de pendências, fora do ZIP de fabricação. A preferência `PROTOCRAFT_LANGUAGE=en|pt-BR|system` controla apenas o processo CLI.
+Consulte [Construção de PCB e relatórios de montagem](pcb-workflows.md) para `pcb-sync`, `pcb-sync-report`, `pcb-move`, `pcb-cleanup` e `pcb-assembly`, incluindo unidades e limitações. `pcb-info` agora inclui métricas geométricas por net. `examples <pasta>` exporta cinco projetos nativos de PCB, do básico a um conversor buck de 3 A. A fabricação gera a subpasta `montagem/` com BOM, posições e JSON de pendências, fora do ZIP de fabricação. A preferência `PROTOCRAFT_LANGUAGE=en|pt-BR|system` controla apenas o processo CLI.
+
+### Fonte chaveada buck 12 V para Raspberry Pi 4
+
+O catálogo offline inclui o LM61460 e um cálculo de primeira ordem, ambos reutilizáveis em automações. O cálculo é restrito à faixa do controlador (entrada de 3–36 V, saída até 95% de VIN, corrente de saída dentro do limite de 6 A e frequência de 200 kHz–2,2 MHz). Valores de eficiência são hipóteses; não substituem simulação, protótipo ou medição. Os detalhes, critérios de seleção dos componentes e limites elétricos estão em [projeto do conversor buck](power-conversion.md).
+
+```powershell
+ProtoCraft-CLI.cmd power-design buck
+ProtoCraft-CLI.cmd power-design buck --vin-v 12 --vout-v 5.1 --iout-a 3 --switching-hz 400000 --inductance-uh 4.7
+ProtoCraft-CLI.cmd power-design copper --current-a 3 --copper-um 70 --length-mm 30 --drop-v 0.05
+ProtoCraft-CLI.cmd buck-pi4-12v --output projetos\pi4-buck.protocraft
+ProtoCraft-CLI.cmd pcb-check projetos\pi4-buck.protocraft
+```
+
+`power-design buck` calcula valores ideais de primeira ordem. `power-design copper` combina uma estimativa térmica histórica IPC-2221 com queda DC; não certifica ampacidade nem substitui cálculo térmico. O comando de projeto entrega uma PCB no perfil mecânico HAT de 65 × 56,5 mm, com quatro furos e header de 40 pinos. As classes nominais de entrada, saída e nó chaveado usam largura mínima de 0,8 mm; escapes locais de QFN são validados separadamente pelo DRC. A alimentação chega aos pinos físicos 2 e 4 de 5 V e aos pinos GND; não conecte uma fonte USB-C ao Pi em paralelo com esta placa. O DRC geométrico não valida capacidade de corrente, temperatura, EMI nem fabricação.

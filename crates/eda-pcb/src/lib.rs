@@ -50,6 +50,80 @@ pub struct PcbReport {
     pub pads: usize,
     pub routed_length_mm: f64,
 }
+
+/// Devolve a classe que governa uma rede do netlist atual.
+pub fn net_class_for_id<'a>(
+    board: &'a Board,
+    netlist: &Netlist,
+    id: NetId,
+) -> Option<&'a NetClass> {
+    let name = &netlist.nets.iter().find(|net| net.id == id)?.name;
+    board
+        .net_classes
+        .values()
+        .find(|rules| rules.net_names.contains(name))
+}
+
+/// Resolve uma classe pelo pino-âncora usado por trilhas e vias.
+pub fn net_class_for_pin(project: &Project, pin: PinRef) -> Option<&NetClass> {
+    let board = project.board.as_deref()?;
+    let netlist = build_netlist(project);
+    let id = netlist.net_for_pin(pin)?;
+    net_class_for_id(board, &netlist, id)
+}
+
+fn required_clearance(board: &Board, netlist: &Netlist, a: Option<NetId>, b: Option<NetId>) -> i64 {
+    [
+        Some(board.clearance_nm),
+        a.and_then(|net| net_class_for_id(board, netlist, net).map(|rules| rules.clearance_nm)),
+        b.and_then(|net| net_class_for_id(board, netlist, net).map(|rules| rules.clearance_nm)),
+    ]
+    .into_iter()
+    .flatten()
+    .max()
+    .unwrap_or(board.clearance_nm)
+}
+
+fn allows_pad_escape_track(
+    track: &Track,
+    net: NetId,
+    rules: &NetClass,
+    pads: &[PlacedPad],
+) -> bool {
+    let Some(escape) = &rules.pad_escape else {
+        return false;
+    };
+    let dx = i128::from(track.end.x) - i128::from(track.start.x);
+    let dy = i128::from(track.end.y) - i128::from(track.start.y);
+    track.width_nm >= escape.track_width_nm
+        && dx * dx + dy * dy <= i128::from(escape.max_length_nm).pow(2)
+        && pads.iter().any(|pad| {
+            pad.net == Some(net)
+                && pad.pad.technology == PadTechnology::Smd
+                && pad.layers & if track.layer == BoardSide::Top { 1 } else { 2 } != 0
+                && (pad.position == track.start || pad.position == track.end)
+        })
+}
+
+fn allows_pad_escape_via(
+    via: &Via,
+    net: NetId,
+    rules: &NetClass,
+    pads: &[PlacedPad],
+    board: &Board,
+    netlist: &Netlist,
+) -> bool {
+    let Some(escape) = &rules.pad_escape else {
+        return false;
+    };
+    via.diameter_nm >= escape.via_diameter_nm
+        && via.drill_nm >= escape.via_drill_nm
+        && board.tracks.values().any(|track| {
+            netlist.net_for_pin(track.net) == Some(net)
+                && (track.start == via.position || track.end == via.position)
+                && allows_pad_escape_track(track, net, rules, pads)
+        })
+}
 impl PcbReport {
     pub fn errors(&self) -> usize {
         self.diagnostics
@@ -265,6 +339,7 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
     let pads = placed_pads(project)?;
     let board = project.board.as_ref().ok_or("PCB ausente")?;
     let netlist = build_netlist(project);
+    let used_net_names: BTreeSet<_> = netlist.nets.iter().map(|net| net.name.as_str()).collect();
     let mut report = PcbReport {
         diagnostics: Vec::new(),
         airwires: Vec::new(),
@@ -380,6 +455,61 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
             });
         }
     };
+    for (class_name, rules) in &board.net_classes {
+        for name in &rules.net_names {
+            if !used_net_names.contains(name.as_str()) {
+                add(
+                    "NETCLASS_UNUSED_NET",
+                    format!("A classe {class_name} referencia a rede ausente {name}.",),
+                    vec![],
+                    None,
+                    false,
+                );
+            }
+        }
+    }
+    for track in board.tracks.values() {
+        if let Some(net) = netlist.net_for_pin(track.net)
+            && let Some(rules) = net_class_for_id(board, &netlist, net)
+            && track.width_nm < rules.track_width_nm
+            && !allows_pad_escape_track(track, net, rules, &pads)
+        {
+            add(
+                "NETCLASS_TRACK_WIDTH",
+                format!(
+                    "Trilha {} tem {:.3} mm; a classe exige pelo menos {:.3} mm.",
+                    track.id,
+                    mm(track.width_nm),
+                    mm(rules.track_width_nm)
+                ),
+                vec![],
+                Some(track.start),
+                true,
+            );
+        }
+    }
+    for via in board.vias.values() {
+        if let Some(net) = netlist.net_for_pin(via.net)
+            && let Some(rules) = net_class_for_id(board, &netlist, net)
+            && (via.diameter_nm < rules.via_diameter_nm || via.drill_nm < rules.via_drill_nm)
+            && !allows_pad_escape_via(via, net, rules, &pads, board, &netlist)
+        {
+            add(
+                "NETCLASS_VIA_SIZE",
+                format!(
+                    "Via {} é {:.3}/{:.3} mm; a classe exige pelo menos {:.3}/{:.3} mm (diâmetro/furo).",
+                    via.id,
+                    mm(via.diameter_nm),
+                    mm(via.drill_nm),
+                    mm(rules.via_diameter_nm),
+                    mm(rules.via_drill_nm)
+                ),
+                vec![],
+                Some(via.position),
+                true,
+            );
+        }
+    }
     for c in project.components.values() {
         if matches!(c.kind, ComponentKind::Ground | ComponentKind::Connector) {
             continue;
@@ -406,9 +536,12 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
         }
     }
     for atom in &atoms {
-        let (a, b, c, d) = bounds(&atom.points);
-        let r = atom.radius as i64 + board.edge_clearance_nm;
-        if a - r < 0 || b - r < 0 || c + r > board.width_nm || d + r > board.height_nm {
+        let margin = (atom.radius as i64).saturating_add(board.edge_clearance_nm);
+        if atom
+            .points
+            .iter()
+            .any(|point| !board.contains_with_clearance(*point, margin))
+        {
             add(
                 "BOARD_EDGE",
                 format!("{item} viola a distância à borda.", item = atom.label),
@@ -451,7 +584,15 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
     for (pos, (i, _, max)) in sorted.iter().enumerate() {
         let a = &atoms[*i];
         for (j, min, _) in &sorted[pos + 1..] {
-            if *min > *max + board.clearance_nm {
+            let max_clearance = required_clearance(board, &netlist, a.net, None).max(
+                board
+                    .net_classes
+                    .values()
+                    .map(|rules| rules.clearance_nm)
+                    .max()
+                    .unwrap_or(0),
+            );
+            if *min > *max + max_clearance {
                 break;
             }
             let b = &atoms[*j];
@@ -460,7 +601,8 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
             }
             let ba = bounds(&a.points);
             let bb = bounds(&b.points);
-            let reach = board.clearance_nm as f64 + a.radius + b.radius;
+            let clearance_nm = required_clearance(board, &netlist, a.net, b.net);
+            let reach = clearance_nm as f64 + a.radius + b.radius;
             if ba.1 as f64 - bb.3 as f64 > reach || bb.1 as f64 - ba.3 as f64 > reach {
                 continue;
             }
@@ -473,7 +615,7 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
                 if gap <= 1.0 {
                     union(&mut parents, *i, *j);
                 }
-            } else if gap <= 0.0 || gap < (board.clearance_nm as f64) - 1.0 {
+            } else if gap <= 0.0 || gap < (clearance_nm as f64) - 1.0 {
                 add(
                     if gap <= 0.0 {
                         "COPPER_SHORT"
@@ -485,7 +627,7 @@ pub fn check(project: &Project) -> Result<PcbReport, String> {
                         first = a.label,
                         second = b.label,
                         gap = gap / NM_PER_MM as f64,
-                        minimum = mm(board.clearance_nm)
+                        minimum = mm(clearance_nm)
                     ),
                     a.component.into_iter().chain(b.component).collect(),
                     a.points.first().copied(),

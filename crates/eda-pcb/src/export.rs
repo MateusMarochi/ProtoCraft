@@ -193,8 +193,58 @@ pub fn export_kicad(project: &Project) -> Result<String, String> {
         )
         .map_err(|e| e.to_string())?;
     }
-    writeln!(out,"(gr_rect (start 0 0) (end {:.6} {:.6}) (stroke (width 0.05) (type default)) (fill none) (layer \"Edge.Cuts\"))\n)",mm(board.width_nm),mm(board.height_nm)).map_err(|e|e.to_string())?;
+    write_board_outline(&mut out, board)?;
+    out.push_str(")\n");
     Ok(out)
+}
+fn write_board_outline(out: &mut String, board: &Board) -> Result<(), String> {
+    let width = mm(board.width_nm);
+    let height = mm(board.height_nm);
+    let radius = mm(board.corner_radius_nm);
+    if radius <= 0.0 {
+        writeln!(out,"(gr_rect (start 0 0) (end {width:.6} {height:.6}) (stroke (width 0.05) (type default)) (fill none) (layer \"Edge.Cuts\"))").map_err(|e|e.to_string())?;
+        return Ok(());
+    }
+    let k = std::f64::consts::FRAC_1_SQRT_2;
+    let line = |out: &mut String, a: (f64, f64), b: (f64, f64)| -> Result<(), String> {
+        writeln!(out,"(gr_line (start {:.6} {:.6}) (end {:.6} {:.6}) (stroke (width 0.05) (type default)) (layer \"Edge.Cuts\"))",a.0,a.1,b.0,b.1).map_err(|e|e.to_string())
+    };
+    let arc = |out: &mut String,
+               a: (f64, f64),
+               m: (f64, f64),
+               b: (f64, f64)|
+     -> Result<(), String> {
+        writeln!(out,"(gr_arc (start {:.6} {:.6}) (mid {:.6} {:.6}) (end {:.6} {:.6}) (stroke (width 0.05) (type default)) (layer \"Edge.Cuts\"))",a.0,a.1,m.0,m.1,b.0,b.1).map_err(|e|e.to_string())
+    };
+    line(out, (radius, 0.0), (width - radius, 0.0))?;
+    arc(
+        out,
+        (width - radius, 0.0),
+        (width - radius + radius * k, radius - radius * k),
+        (width, radius),
+    )?;
+    line(out, (width, radius), (width, height - radius))?;
+    arc(
+        out,
+        (width, height - radius),
+        (width - radius + radius * k, height - radius + radius * k),
+        (width - radius, height),
+    )?;
+    line(out, (width - radius, height), (radius, height))?;
+    arc(
+        out,
+        (radius, height),
+        (radius - radius * k, height - radius + radius * k),
+        (0.0, height - radius),
+    )?;
+    line(out, (0.0, height - radius), (0.0, radius))?;
+    arc(
+        out,
+        (0.0, radius),
+        (radius - radius * k, radius - radius * k),
+        (radius, 0.0),
+    )?;
+    Ok(())
 }
 fn xml(text: &str) -> String {
     text.replace('&', "&amp;")
@@ -206,11 +256,14 @@ pub fn export_svg(project: &Project) -> Result<String, String> {
     let pads = placed_pads(project)?;
     let b = project.board.as_ref().ok_or("PCB ausente")?;
     let mut out = format!(
-        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{}mm\" height=\"{}mm\" viewBox=\"0 0 {} {}\"><rect width=\"100%\" height=\"100%\" fill=\"#15372b\"/>",
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{}mm\" height=\"{}mm\" viewBox=\"0 0 {} {}\"><rect width=\"100%\" height=\"100%\" fill=\"#15372b\"/><rect x=\"0\" y=\"0\" width=\"{}\" height=\"{}\" rx=\"{}\" fill=\"none\" stroke=\"#4f9ce8\" stroke-width=\"0.2\"/>",
         mm(b.width_nm),
         mm(b.height_nm),
         mm(b.width_nm),
-        mm(b.height_nm)
+        mm(b.height_nm),
+        mm(b.width_nm),
+        mm(b.height_nm),
+        mm(b.corner_radius_nm)
     );
     for (id, placement) in &b.placements {
         let c = &project.components[id];

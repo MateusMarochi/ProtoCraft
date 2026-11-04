@@ -42,6 +42,7 @@ pub struct AutorouteConfig {
     pub max_expansions_per_connection: usize,
     pub max_total_expansions: usize,
     pub max_optimization_connections: usize,
+    pub prioritize_short_connections: bool,
     pub optimize_routes: bool,
 }
 
@@ -60,6 +61,7 @@ impl Default for AutorouteConfig {
             max_expansions_per_connection: 128_000,
             max_total_expansions: 600_000,
             max_optimization_connections: 32,
+            prioritize_short_connections: false,
             optimize_routes: true,
         }
     }
@@ -107,6 +109,9 @@ struct Endpoint {
 struct Connection {
     net: NetId,
     anchor: PinRef,
+    track_width_nm: i64,
+    via_diameter_nm: i64,
+    via_drill_nm: i64,
     start: Endpoint,
     end: Endpoint,
 }
@@ -413,18 +418,37 @@ struct SearchContext<'a> {
     config: &'a AutorouteConfig,
     net: NetId,
     clearance_nm: i64,
+    class_clearances: &'a BTreeMap<NetId, i64>,
     congestion_range_nm: i64,
     candidates: Vec<usize>,
 }
 
 impl SearchContext<'_> {
+    fn clearance_to(&self, other: Option<NetId>) -> i64 {
+        self.clearance_nm
+            .max(self.class_clearances.get(&self.net).copied().unwrap_or(0))
+            .max(
+                other
+                    .and_then(|net| self.class_clearances.get(&net).copied())
+                    .unwrap_or(0),
+            )
+    }
+
     fn segment_cost(&mut self, start: NmPoint, end: NmPoint, layer: u8) -> Option<f64> {
         let route_radius = self.config.track_width_nm / 2;
         if !segment_inside_board(self.board, start, end, route_radius) {
             return None;
         }
-        let required = route_radius.saturating_add(self.clearance_nm);
-        let query_margin = required.saturating_add(self.congestion_range_nm);
+        let maximum_clearance = self
+            .class_clearances
+            .values()
+            .copied()
+            .max()
+            .unwrap_or(0)
+            .max(self.clearance_nm);
+        let query_margin = route_radius
+            .saturating_add(maximum_clearance)
+            .saturating_add(self.congestion_range_nm);
         let bounds = Bounds::from_points(&[start, end])?.expanded(query_margin);
         self.index.candidates(bounds, &mut self.candidates);
         let mut penalty = 0.0;
@@ -436,6 +460,7 @@ impl SearchContext<'_> {
             {
                 continue;
             }
+            let required = route_radius.saturating_add(self.clearance_to(obstacle.net));
             let distance = segment_shape_distance(start, end, &obstacle.shape);
             if distance + 0.5 < required as f64 {
                 return None;
@@ -452,14 +477,17 @@ impl SearchContext<'_> {
     fn via_clear(&mut self, point: NmPoint) -> bool {
         let radius = self.config.via_diameter_nm / 2;
         let edge = self.board.edge_clearance_nm.saturating_add(radius);
-        if point.x < edge
-            || point.y < edge
-            || point.x > self.board.width_nm.saturating_sub(edge)
-            || point.y > self.board.height_nm.saturating_sub(edge)
-        {
+        if !self.board.contains_with_clearance(point, edge) {
             return false;
         }
-        let required = radius.saturating_add(self.clearance_nm);
+        let maximum_clearance = self
+            .class_clearances
+            .values()
+            .copied()
+            .max()
+            .unwrap_or(0)
+            .max(self.clearance_nm);
+        let required = radius.saturating_add(maximum_clearance);
         let bounds = Bounds {
             min_x: point.x.saturating_sub(required),
             min_y: point.y.saturating_sub(required),
@@ -479,7 +507,11 @@ impl SearchContext<'_> {
                 continue;
             }
             let same_net_via = obstacle.kind == ObstacleKind::Via && obstacle.net == Some(self.net);
-            let via_clearance = if same_net_via { 0 } else { self.clearance_nm };
+            let via_clearance = if same_net_via {
+                0
+            } else {
+                self.clearance_to(obstacle.net)
+            };
             let minimum = radius.saturating_add(via_clearance);
             let distance = point_shape_distance(point, &obstacle.shape);
             if distance + 0.5 < minimum as f64 {
@@ -498,6 +530,14 @@ pub fn autoroute(project: &Project, config: &AutorouteConfig) -> Result<Autorout
     let before = check(project)?;
     let pads = placed_pads(project)?;
     let netlist = build_netlist(project);
+    let class_clearances: BTreeMap<_, _> = netlist
+        .nets
+        .iter()
+        .filter_map(|net| {
+            super::net_class_for_id(board, &netlist, net.id)
+                .map(|rules| (net.id, rules.clearance_nm))
+        })
+        .collect();
     let anchors = net_anchors(&pads, board, &netlist);
     let mut failures = Vec::new();
     let mut connections = Vec::with_capacity(before.airwires.len());
@@ -509,8 +549,17 @@ pub fn autoroute(project: &Project, config: &AutorouteConfig) -> Result<Autorout
             ));
             continue;
         };
-        let start_layers = endpoint_layers(&pads, board, &netlist, airwire.net, airwire.start);
-        let end_layers = endpoint_layers(&pads, board, &netlist, airwire.net, airwire.end);
+        let start = prefer_connected_via(
+            &pads,
+            board,
+            &netlist,
+            airwire.net,
+            airwire.start,
+            airwire.end,
+        );
+        let end = prefer_connected_via(&pads, board, &netlist, airwire.net, airwire.end, start);
+        let start_layers = endpoint_layers(&pads, board, &netlist, airwire.net, start);
+        let end_layers = endpoint_layers(&pads, board, &netlist, airwire.net, end);
         if start_layers == 0 || end_layers == 0 {
             failures.push(failure(
                 airwire,
@@ -518,37 +567,33 @@ pub fn autoroute(project: &Project, config: &AutorouteConfig) -> Result<Autorout
             ));
             continue;
         }
+        let rules = super::net_class_for_id(board, &netlist, airwire.net);
         connections.push(Connection {
             net: airwire.net,
             anchor,
+            track_width_nm: rules.map_or(config.track_width_nm, |rules| rules.track_width_nm),
+            via_diameter_nm: rules.map_or(config.via_diameter_nm, |rules| rules.via_diameter_nm),
+            via_drill_nm: rules.map_or(config.via_drill_nm, |rules| rules.via_drill_nm),
             start: Endpoint {
-                position: airwire.start,
+                position: start,
                 layers: start_layers,
-                drill_radius_nm: endpoint_drill_radius(
-                    &pads,
-                    board,
-                    &netlist,
-                    airwire.net,
-                    airwire.start,
-                ),
+                drill_radius_nm: endpoint_drill_radius(&pads, board, &netlist, airwire.net, start),
             },
             end: Endpoint {
-                position: airwire.end,
+                position: end,
                 layers: end_layers,
-                drill_radius_nm: endpoint_drill_radius(
-                    &pads,
-                    board,
-                    &netlist,
-                    airwire.net,
-                    airwire.end,
-                ),
+                drill_radius_nm: endpoint_drill_radius(&pads, board, &netlist, airwire.net, end),
             },
         });
     }
     connections.sort_by(|a, b| {
         let da = point_distance(a.start.position, a.end.position);
         let db = point_distance(b.start.position, b.end.position);
-        db.total_cmp(&da)
+        if config.prioritize_short_connections {
+            da.total_cmp(&db)
+        } else {
+            db.total_cmp(&da)
+        }
     });
 
     let mut index = build_obstacle_index(project, &pads, &netlist, config)?;
@@ -572,11 +617,19 @@ pub fn autoroute(project: &Project, config: &AutorouteConfig) -> Result<Autorout
         let budget = config
             .max_expansions_per_connection
             .min(config.max_total_expansions - expansions);
-        let result = search_connection(board, &mut index, connection, config, budget);
+        let route_config = config_for_connection(config, connection);
+        let result = search_connection(
+            board,
+            &mut index,
+            connection,
+            &route_config,
+            &class_clearances,
+            budget,
+        );
         expansions = expansions.saturating_add(result.expansions);
         match result.route {
             Some(route) => {
-                add_route_obstacles(&mut index, &route, connection.net, config);
+                add_route_obstacles(&mut index, &route, connection.net, &route_config);
                 routes.push(route);
             }
             None => failures.push(connection_failure(
@@ -603,16 +656,24 @@ pub fn autoroute(project: &Project, config: &AutorouteConfig) -> Result<Autorout
             let mut local_index = build_obstacle_index(project, &pads, &netlist, config)?;
             for (other_index, other) in routes.iter().enumerate() {
                 if other_index != route_index {
-                    add_route_obstacles(&mut local_index, other, other.connection.net, config);
+                    let other_config = config_for_connection(config, &other.connection);
+                    add_route_obstacles(
+                        &mut local_index,
+                        other,
+                        other.connection.net,
+                        &other_config,
+                    );
                 }
             }
             optimization_attempts += 1;
             let remaining = per_route_budget.min(config.max_total_expansions - expansions);
+            let route_config = config_for_connection(config, &routes[route_index].connection);
             let candidate = search_connection(
                 board,
                 &mut local_index,
                 &routes[route_index].connection,
-                config,
+                &route_config,
+                &class_clearances,
                 remaining,
             );
             expansions = expansions.saturating_add(candidate.expansions);
@@ -667,7 +728,7 @@ pub fn autoroute(project: &Project, config: &AutorouteConfig) -> Result<Autorout
                     id: next_track_id,
                     start: segment.start,
                     end: segment.end,
-                    width_nm: config.track_width_nm,
+                    width_nm: route.connection.track_width_nm,
                     layer: segment.layer,
                     net: route.connection.anchor,
                 },
@@ -681,8 +742,8 @@ pub fn autoroute(project: &Project, config: &AutorouteConfig) -> Result<Autorout
                 via: Via {
                     id: next_via_id,
                     position: *position,
-                    diameter_nm: config.via_diameter_nm,
-                    drill_nm: config.via_drill_nm,
+                    diameter_nm: route.connection.via_diameter_nm,
+                    drill_nm: route.connection.via_drill_nm,
                     net: route.connection.anchor,
                 },
             });
@@ -803,6 +864,51 @@ fn net_anchors(
         }
     }
     anchors
+}
+
+fn prefer_connected_via(
+    pads: &[super::PlacedPad],
+    board: &Board,
+    netlist: &eda_netlist::Netlist,
+    net: NetId,
+    point: NmPoint,
+    destination: NmPoint,
+) -> NmPoint {
+    let same_pad = |endpoint| {
+        pads.iter().any(|pad| {
+            pad.net == Some(net)
+                && pad.position == endpoint
+                && (pad.position == point
+                    || pad
+                        .polygons
+                        .iter()
+                        .any(|polygon| point_in_polygon(point, polygon))
+                    || (pad.pad.shape == PadShape::Circle
+                        && point_distance(pad.position, point) <= pad.pad.size.x as f64 / 2.0))
+        })
+    };
+    // Uma ponta visual do airwire pode cair no canto de um pad com fanout.
+    // Reutilizar sua via já conectada permite iniciar na outra face sem procurar
+    // novamente um escape na grade, preservando a ilha elétrica de origem.
+    board
+        .vias
+        .values()
+        .filter(|via| netlist.net_for_pin(via.net) == Some(net))
+        .filter(|via| {
+            via.position == point
+                || board.tracks.values().any(|track| {
+                    netlist.net_for_pin(track.net) == Some(net)
+                        && ((track.start == via.position
+                            && (track.end == point || same_pad(track.end)))
+                            || (track.end == via.position
+                                && (track.start == point || same_pad(track.start))))
+                })
+        })
+        .min_by(|a, b| {
+            point_distance(a.position, destination)
+                .total_cmp(&point_distance(b.position, destination))
+        })
+        .map_or(point, |via| via.position)
 }
 
 fn endpoint_layers(
@@ -1039,11 +1145,20 @@ struct SearchResult {
     expansions: usize,
 }
 
+fn config_for_connection(base: &AutorouteConfig, connection: &Connection) -> AutorouteConfig {
+    let mut config = base.clone();
+    config.track_width_nm = connection.track_width_nm;
+    config.via_diameter_nm = connection.via_diameter_nm;
+    config.via_drill_nm = connection.via_drill_nm;
+    config
+}
+
 fn search_connection(
     board: &Board,
     index: &mut SpatialIndex,
     connection: &Connection,
     config: &AutorouteConfig,
+    class_clearances: &BTreeMap<NetId, i64>,
     budget: usize,
 ) -> SearchResult {
     if budget == 0 {
@@ -1061,6 +1176,7 @@ fn search_connection(
                 config,
                 net: connection.net,
                 clearance_nm: board.clearance_nm,
+                class_clearances,
                 congestion_range_nm: (config.grid_nm * 4).max(NM_PER_MM),
                 candidates: Vec::with_capacity(64),
             };
@@ -1117,9 +1233,12 @@ fn search_connection(
             index,
             connection,
             config,
-            step,
-            margin,
-            attempt_budget,
+            class_clearances,
+            SearchAttempt {
+                step,
+                margin,
+                budget: attempt_budget,
+            },
         );
         expansions = expansions.saturating_add(result.1);
         if let Some(route) = result.0 {
@@ -1135,15 +1254,25 @@ fn search_connection(
     }
 }
 
+struct SearchAttempt {
+    step: i64,
+    margin: i64,
+    budget: usize,
+}
+
 fn astar_attempt(
     board: &Board,
     index: &mut SpatialIndex,
     connection: &Connection,
     config: &AutorouteConfig,
-    step: i64,
-    margin: i64,
-    budget: usize,
+    class_clearances: &BTreeMap<NetId, i64>,
+    attempt: SearchAttempt,
 ) -> (Option<RoutedConnection>, usize) {
+    let SearchAttempt {
+        step,
+        margin,
+        budget,
+    } = attempt;
     let start = connection.start.position;
     let end = connection.end.position;
     let min_x = start.x.min(end.x).saturating_sub(margin).max(0);
@@ -1171,6 +1300,7 @@ fn astar_attempt(
         config,
         net: connection.net,
         clearance_nm: board.clearance_nm,
+        class_clearances,
         congestion_range_nm: (step.saturating_mul(4)).max(NM_PER_MM),
         candidates: Vec::with_capacity(64),
     };
@@ -1597,12 +1727,9 @@ fn octilinear_or_short(start: NmPoint, end: NmPoint, max_stub_nm: i64) -> bool {
 
 fn segment_inside_board(board: &Board, start: NmPoint, end: NmPoint, radius_nm: i64) -> bool {
     let margin = board.edge_clearance_nm.saturating_add(radius_nm);
-    [start, end].iter().all(|point| {
-        point.x >= margin
-            && point.y >= margin
-            && point.x <= board.width_nm.saturating_sub(margin)
-            && point.y <= board.height_nm.saturating_sub(margin)
-    })
+    [start, end]
+        .iter()
+        .all(|point| board.contains_with_clearance(*point, margin))
 }
 
 fn point_distance(a: NmPoint, b: NmPoint) -> f64 {

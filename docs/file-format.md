@@ -1,8 +1,8 @@
 # Formato de projetos e recuperação
 
-Sim. `.protocraft` é o formato nativo próprio do ProtoCraft, diferente dos formatos do Proteus. É JSON UTF-8 legível e documentado, não um contêiner binário fechado. `format_version` é obrigatório e atualmente tem valor `6`. O restante do documento representa `Project`, com nome, mapas de componentes/fios/junções/labels e contador de IDs. Coordenadas são passos inteiros da grade; valores elétricos usam SI. A conectividade é derivada da geometria e não é persistida como uma segunda fonte de verdade.
+Sim. `.protocraft` é o formato nativo próprio do ProtoCraft, diferente dos formatos do Proteus. É JSON UTF-8 legível e documentado, não um contêiner binário fechado. `format_version` é obrigatório e atualmente tem valor `7`. O restante do documento representa `Project`, com nome, mapas de componentes/fios/junções/labels e contador de IDs. Coordenadas são passos inteiros da grade; valores elétricos usam SI. A conectividade é derivada da geometria e não é persistida como uma segunda fonte de verdade.
 
-A leitura e a gravação validam todas as invariantes de `Project::validate`. Arquivos acima de 8 MiB, JSON inválido, dados inconsistentes e versões diferentes de 1, 2, 3, 4, 5 ou 6 são rejeitados. Projetos v1/v2/v3/v4/v5 são migrados em memória para v6, preservando IDs, geometria e valores. Ao salvar por cima de um v1 válido, o backup mantém exatamente os bytes anteriores. Não há migração de versões futuras. O tamanho também é limitado durante a leitura para evitar crescimento do arquivo entre a inspeção e a leitura.
+A leitura e a gravação validam todas as invariantes de `Project::validate`. Arquivos acima de 8 MiB, JSON inválido, dados inconsistentes e versões diferentes de 1, 2, 3, 4, 5 ou 6 são rejeitados. Projetos v1–v6 são migrados em memória para v7, preservando IDs, geometria e valores. Ao salvar por cima de um v1 válido, o backup mantém exatamente os bytes anteriores. Não há migração de versões futuras. O tamanho também é limitado durante a leitura para evitar crescimento do arquivo entre a inspeção e a leitura.
 
 A versão 2 adiciona `Component.imported` opcional: origem, nome do dispositivo, valor original, propriedades inertes e pinos numerados com offsets inteiros. O tipo `Imported` representa dispositivos sem modelo nativo; simulação e SPICE os rejeitam. Pinos personalizados também podem existir em componentes nativos mapeados, preservando conexões ao mover/rotacionar. `Project.import_info` conserva notas e `electrical_complete`; importação parcial bloqueia o motor e informa a limitação no ERC. A interface usa os mesmos pinos do núcleo.
 
@@ -40,3 +40,9 @@ As exportações SPICE contêm texto do circuito; este comando não executa ngsp
 `UpdateTrack`, `UpdateVia`, `AddHole`, `UpdateHole` e `DeleteHole` passam pelo Engine, com validação atômica e undo/redo. Edições não mudam os IDs. Uma via é um furo metalizado associado à rede; um furo mecânico é independente de componentes e preservado ao remover um footprint.
 
 Grade, ângulo de dobra e ferramentas de roteamento são estado de apresentação. Apenas os segmentos confirmados pertencem ao projeto; encerrar/cancelar a prévia não apaga os trechos anteriores. O formato não persiste uma segunda netlist de PCB.
+
+## Versão 7 — classes de rede da PCB
+
+`Board.net_classes` associa um nome de classe a nomes exatos de rede do netlist. Cada classe registra folga mínima, largura mínima de trilha e dimensões mínimas de via, todas em nanômetros. A atribuição é exclusiva por nome de rede; nomes de classe e rede vazios, dimensões inválidas e anéis de via abaixo do limite são recusados. Redes não atribuídas continuam usando as regras globais da placa.
+
+O DRC usa a maior folga entre a regra global e as duas classes envolvidas, e identifica redes atribuídas que desapareceram. O autorroteador aplica largura e dimensões de via da classe da conexão, além da folga das duas redes em conflito. Arquivos v1–v6 recebem um mapa vazio de classes ao migrar; IDs, posições e cobre não mudam.

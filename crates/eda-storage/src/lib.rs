@@ -22,7 +22,7 @@ pub enum StorageError {
     Json(#[from] serde_json::Error),
     #[error("Projeto inválido: {0}")]
     Invalid(String),
-    #[error("Versão de formato {0} não suportada; esta versão lê formatos 1 a 6")]
+    #[error("Versão de formato {0} não suportada; esta versão lê formatos 1 a 7")]
     Version(u64),
     #[error("Arquivo excede o limite de 8 MiB")]
     TooLarge,
@@ -250,6 +250,23 @@ mod tests {
         assert_eq!(migrated.format_version, FORMAT_VERSION);
         save(&path, &migrated).unwrap();
         assert_eq!(fs::read(backup_path(&path)).unwrap(), bytes);
+    }
+
+    #[test]
+    fn v6_board_without_net_classes_migrates_with_empty_class_map() {
+        let mut project = Project::empty("v6-board");
+        project.format_version = 6;
+        project.board = Some(Box::new(eda_core::Board::default()));
+        let mut value = serde_json::to_value(project).unwrap();
+        value["board"]
+            .as_object_mut()
+            .unwrap()
+            .remove("net_classes");
+        value["format_version"] = 6.into();
+        let bytes = serde_json::to_vec(&value).unwrap();
+        let migrated = decode(&bytes).unwrap();
+        assert_eq!(migrated.format_version, FORMAT_VERSION);
+        assert!(migrated.board.unwrap().net_classes.is_empty());
     }
     #[test]
     fn round_trip_and_backup() {

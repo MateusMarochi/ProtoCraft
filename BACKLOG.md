@@ -17,7 +17,7 @@ O sequenciamento de implementação está em [plano-pcb.md](docs/plano-pcb.md). 
 | Núcleo | Engine headless, comandos, revisão e histórico; formato versionado | Validar consistência de histórico, backups e recuperação sob falhas |
 | Esquema | Símbolos, fios, junções, labels, ERC e netlist | Movimento/rotação não acompanha fios; hierarquia e barramentos pendentes |
 | Simulação | DC/transiente e eventos mistos próprios, gráficos e CSV | Modelos genéricos, limites numéricos e sem AC ou execução de firmware |
-| PCB | Duas faces, trilhas/vias/furos, DRC, autorroteador A* | Placa retangular, sem zonas, regras por classe ou roteamento avançado |
+| PCB | Duas faces, trilhas/vias/furos, DRC, autorroteador A* e classes de rede iniciais | Sem zonas ou contornos arbitrários; classes ainda não cobrem regras por região/camada nem precedência |
 | Fabricação | Exportação via KiCad CLI, Gerber/Excellon e preset | Validação independente limitada a fixtures; não garante fabricação |
 | Importação | Perfil restrito Proteus, com bloqueio de simulação | Não prova equivalência elétrica nem importa todos os objetos |
 | Automação | CLI e MCP headless | Sessão MCP não controla documento desktop aberto |
@@ -31,8 +31,9 @@ O sequenciamento de implementação está em [plano-pcb.md](docs/plano-pcb.md). 
 - [x] Relatar comprimento geométrico por rede/face e quantidades de segmentos/vias, sem alegar controle de impedância.
 - [x] Corrigir contato de cobre e furos em folga zero; testar camadas e tolerância do DRC.
 - [x] Validar autorroteamento real pela CLI e ajuda/erros em pt-BR e inglês, com preferência de idioma isolada por processo.
+- [x] Adicionar classes de rede no formato v7; validar atribuições exclusivas, impor largura mínima/folga/tamanho de via no DRC e aplicar perfis ao autorroteador; abrir quatro projetos PCB internos pelo menu e exportá-los pela CLI.
 
-Essas entregas são partes dos itens amplos abaixo. Não implementam zonas, contorno arbitrário, netclasses ou roteamento profissional. Uso e limitações em [pcb-workflows.md](docs/pcb-workflows.md); evidências em [validation.md](docs/validation.md).
+Essas entregas são partes dos itens amplos abaixo. Classes de rede ainda não implementam regras por região/camada, precedência, impedância nem perfis de fabricante. Zonas, contorno arbitrário e roteamento profissional continuam pendentes. Uso e limitações em [pcb-workflows.md](docs/pcb-workflows.md) e [pcb-examples.md](docs/pcb-examples.md); evidências em [validation.md](docs/validation.md).
 
 ## P0 — Integridade e confiança
 
@@ -72,7 +73,7 @@ Essas entregas são partes dos itens amplos abaixo. Não implementam zonas, cont
 ## P2 — PCB avançada
 
 - [ ] Empilhamento e multicamadas, pares de camadas, materiais e espessuras; vias cegas/enterradas somente após modelo e exportação verificáveis.
-- [ ] Classes de rede e regras por objeto/região/camada com precedência explícita, perfis de fabricante e diagnóstico de conflitos.
+- [ ] **Classes avançadas (parcial):** classes nomeadas já controlam largura mínima, folga mínima e tamanho mínimo de via no DRC/autorroteador. Faltam regras por região/camada, precedência, conflitos, perfis de fabricante, limites elétricos e reconciliação após mudanças no netlist.
 - [ ] Roteamento interativo com desvio de obstáculos, push-and-shove, edição preservando conectividade e controle de DRC; limites de desempenho e cancelamento.
 - [ ] Pares diferenciais, espaçamento e skew, ajuste de comprimento, grupos e relatórios com tolerâncias; impedância apenas com modelo e parâmetros de stackup verificáveis.
 - [ ] Autorroteador: rip-up/reroute controlado, regiões e classes, métricas reproduzíveis, orçamento/cancelamento e comparação em placas reais; não prometer conclusão.
