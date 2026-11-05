@@ -4,6 +4,13 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Tag SemVer existente para reconstruir e anexar os pacotes"
+        required: true
+        type: string
+        default: v0.10.0
 
 permissions:
   contents: write
@@ -19,6 +26,8 @@ jobs:
   create-release:
     name: Create release entry
     runs-on: ubuntu-latest
+    env:
+      PROTOCRAFT_RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v5
 
@@ -26,25 +35,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tag_version="${GITHUB_REF_NAME#v}"
-          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-            echo "Tag fora de SemVer: $GITHUB_REF_NAME" >&2
+          tag="$PROTOCRAFT_RELEASE_TAG"
+          tag_version="${tag#v}"
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Tag fora de SemVer: $tag" >&2
             exit 1
           fi
           manifest_version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -n 1)"
           if [[ "$manifest_version" != "$tag_version" ]]; then
-            echo "Tag $GITHUB_REF_NAME diverge da versão do Cargo.toml ($manifest_version)." >&2
+            echo "Tag $tag diverge da versão do Cargo.toml ($manifest_version)." >&2
             exit 1
           fi
 
       - name: Create release entry before platform builds
+        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.ref_name }}
-          name: ProtoCraft ${{ github.ref_name }}
+          tag_name: ${{ env.PROTOCRAFT_RELEASE_TAG }}
+          name: ProtoCraft ${{ env.PROTOCRAFT_RELEASE_TAG }}
           generate_release_notes: true
-          prerelease: ${{ contains(github.ref_name, '-') }}
-          make_latest: ${{ !contains(github.ref_name, '-') }}
+          prerelease: ${{ contains(env.PROTOCRAFT_RELEASE_TAG, '-') }}
+          make_latest: ${{ !contains(env.PROTOCRAFT_RELEASE_TAG, '-') }}
 
   package-windows:
     name: Package Windows x64
@@ -53,6 +64,7 @@ jobs:
     timeout-minutes: 60
     env:
       PROTOCRAFT_REQUIRE_WINRES: "1"
+      PROTOCRAFT_RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v5
 
@@ -69,7 +81,7 @@ jobs:
       - name: Package portable ZIP and Windows installer
         shell: pwsh
         run: |
-          $tag = $env:GITHUB_REF_NAME
+          $tag = $env:PROTOCRAFT_RELEASE_TAG
           $version = $tag.Substring(1)
           $manifestVersion = (Select-String -LiteralPath 'Cargo.toml' -Pattern '^version = "([^"]+)"').Matches[0].Groups[1].Value
           if ($manifestVersion -ne $version) {
@@ -107,6 +119,8 @@ jobs:
     needs: create-release
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    env:
+      PROTOCRAFT_RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v5
 
@@ -117,10 +131,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tag_version="${GITHUB_REF_NAME#v}"
+          tag_version="${PROTOCRAFT_RELEASE_TAG#v}"
           manifest_version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -n 1)"
           if [[ "$manifest_version" != "$tag_version" ]]; then
-            echo "Tag $GITHUB_REF_NAME diverge da versão do Cargo.toml ($manifest_version)." >&2
+            echo "Tag $PROTOCRAFT_RELEASE_TAG diverge da versão do Cargo.toml ($manifest_version)." >&2
             exit 1
           fi
 
@@ -136,7 +150,7 @@ jobs:
 
       - name: Package Linux application and CLI
         shell: bash
-        run: bash scripts/package-linux.sh "${GITHUB_REF_NAME#v}"
+        run: bash scripts/package-linux.sh "${PROTOCRAFT_RELEASE_TAG#v}"
 
       - name: Upload Linux package as a workflow artifact
         uses: actions/upload-artifact@v4
@@ -151,6 +165,8 @@ jobs:
     name: Attach packages to GitHub release
     needs: [package-windows, package-linux]
     runs-on: ubuntu-latest
+    env:
+      PROTOCRAFT_RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
     steps:
       - name: Download platform packages
         uses: actions/download-artifact@v4
@@ -172,7 +188,7 @@ jobs:
       - name: Upload packages and checksums to the release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ env.PROTOCRAFT_RELEASE_TAG }}
           fail_on_unmatched_files: true
           files: |
             dist/protocraft-*-windows-x64.exe

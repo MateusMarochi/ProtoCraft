@@ -853,7 +853,11 @@ mod tests {
         let mut libraries = Libraries::new(&data);
         let (pins, warnings) = library_pins(&mut libraries, "SYNTHETIC");
         assert!(pins.is_empty());
-        assert!(warnings.iter().any(|warning| warning.contains("64 pinos")));
+        let expected_warning = eda_i18n::format(
+            "Símbolo {name} excede o limite de 64 pinos.",
+            &[("name", "SYNTHETIC".to_owned())],
+        );
+        assert!(warnings.contains(&expected_warning));
     }
 
     #[test]
