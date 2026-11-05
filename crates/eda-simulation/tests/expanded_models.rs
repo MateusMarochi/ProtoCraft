@@ -207,6 +207,28 @@ fn led_and_zener_satisfy_kcl_and_show_forward_and_reverse_conduction() {
         assert!((out(&r, "P(X2)") + out(&r, "P(X3)") + out(&r, "P(X1)")).abs() < 1e-7);
     }
 }
+
+#[test]
+fn diode_series_resistance_changes_the_iv_curve_and_is_exported_to_spice() {
+    let mut p = circuit(&[
+        (K::VoltageSource, 10.0, &["IN", "0"]),
+        (K::Resistor, 1000.0, &["IN", "OUT"]),
+        (K::Diode, 1e-12, &["OUT", "0"]),
+    ]);
+    p.components
+        .get_mut(&ComponentId(3))
+        .unwrap()
+        .parameters
+        .diode_series_resistance = 100.0;
+    let result = run(p.clone(), Analysis::Dc, SimulationEngine::Stable);
+    let voltage = out(&result, "V(OUT)");
+    assert!(voltage > 1.3 && voltage < 1.8, "V(OUT)={voltage}");
+    assert!(
+        eda_simulation::export_spice(&p, Analysis::Dc)
+            .unwrap()
+            .contains("RS=1.000000000000000e2")
+    );
+}
 #[test]
 fn transistor_models_respect_beta_and_kcl_in_both_polarities() {
     for (kind, sign) in [(K::Npn, 1.0), (K::Pnp, -1.0)] {

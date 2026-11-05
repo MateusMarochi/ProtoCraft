@@ -216,3 +216,52 @@ fn generic_limits_never_relax_existing_net_classes() {
             .any(|d| d.code == "NETCLASS_TRACK_WIDTH")
     );
 }
+
+#[test]
+fn independent_drill_clearance_and_legacy_json_are_supported() {
+    let mut project = Project::empty("drills");
+    let mut board = Board {
+        clearance_nm: 0,
+        ..Board::default()
+    };
+    for (id, x) in [(1, 10_000_000), (2, 11_100_000)] {
+        board.holes.insert(
+            id,
+            MountingHole {
+                id,
+                position: NmPoint::new(x, 10_000_000),
+                drill_nm: 1_000_000,
+            },
+        );
+    }
+    project.board = Some(Box::new(board));
+    let limits = ManufacturingLimits {
+        min_drill_clearance_nm: 100_002,
+        ..Default::default()
+    };
+    assert!(
+        check(&project, &limits)
+            .unwrap()
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "DFM_DRILL_CLEARANCE")
+    );
+    let exact = ManufacturingLimits {
+        min_drill_clearance_nm: 100_000,
+        ..limits
+    };
+    assert!(
+        !check(&project, &exact)
+            .unwrap()
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "DFM_DRILL_CLEARANCE")
+    );
+    let mut legacy = serde_json::to_value(&exact).unwrap();
+    legacy
+        .as_object_mut()
+        .unwrap()
+        .remove("min_drill_clearance_nm");
+    let restored: ManufacturingLimits = serde_json::from_value(legacy).unwrap();
+    assert_eq!(restored.min_drill_clearance_nm, 250_000);
+}

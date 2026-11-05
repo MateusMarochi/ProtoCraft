@@ -3,6 +3,7 @@ pub mod cdb;
 pub mod container;
 mod conversion;
 pub mod dsn;
+pub mod falstad;
 pub mod interchange;
 pub mod kicad;
 pub mod kicad_schematic;

@@ -1,5 +1,12 @@
 # Proveniência e dependências
 
+O decodificador limitado de links `ctz` do Falstad usa o formato de compressão
+LZ-String de Pieroxy, Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>, MIT.
+Esta adaptação Rust mantém limites próprios de memória e trabalho. O aviso e
+texto integral da licença estão em `docs/licenses/lz-string-LICENSE.md`;
+a origem é <https://github.com/pieroxy/lz-string>. O importador apenas lê dados
+CircuitJS/Falstad: não incorpora código GPL do simulador nem seus exemplos.
+
 O código do ProtoCraft foi implementado originalmente neste projeto. Os símbolos são desenhados por primitivas geométricas próprias. Os exemplos de circuitos são originais e usam relações elétricas públicas. Não há código, binário, modelo de componente, imagem ou biblioteca proprietária do Proteus incluídos.
 
 A imagem `assets/protocraft-logo.png` foi fornecida pelo responsável pelo projeto para uso como identidade visual. Autoria e licença original não foram informadas; este registro não atribui direitos adicionais nem substitui a confirmação desses dados antes de redistribuição pública.
@@ -17,6 +24,7 @@ Dependências diretas adotadas:
 | png 0.18 | Capturas de validação do renderer | MIT OU Apache-2.0 |
 | zip 9.0.5 | Leitura limitada do contêiner em memória | MIT |
 | quick-xml 0.41 | Metadados XML do projeto importado | MIT |
+| url 2.5.8 | Validar estritamente links Falstad antes da decodificação ou consulta | MIT OU Apache-2.0 |
 
 O importador usa a série zip 9, com correções dos avisos RustSec RUSTSEC-2026-0367/0368/0369. A aplicação não chama APIs de extração para disco. Os arquivos de exemplo Proteus de terceiros permanecem externos e não são fixtures distribuídas; testes usuais usam dados sintéticos autorais. Importações locais geradas ficam em `imports/`, ignorada no Git e no pacote.
 

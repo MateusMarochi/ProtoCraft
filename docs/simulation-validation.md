@@ -73,3 +73,13 @@ Testes adicionais exercitam o worker com pausa, avanço, revisão e cancelamento
 | Persistência/CLI/SPICE | Migração v3→v4 e round-trip dos parâmetros; CLI real simula 555 em Misto e recusa Estável; exportação MOS/E/G e recusa explícita dos chips. |
 
 Os resultados independentes dos novos modelos analógicos são registrados em [ngspice-validation.md](ngspice-validation.md). As tolerâncias dos testes não caracterizam dispositivos comerciais nem substituem validação física.
+
+
+## Varreduras e medições — 05/11/2026
+
+- Varredura DC usa o solver existente em snapshots editados pelo Engine; regressão de divisor verifica proporcionalidade entre a fonte e os nós, extremos lineares/log e preservação do original. Entradas inválidas, pedido transiente, cancelamento e prazo zero são recusados.
+- Média e RMS da interpolação linear são integradas por tempo, não por contagem de amostras. Rampa v(t)=t entre 0 e 2 s: média 1 V, integral 2 V·s e RMS sqrt(4/3) V, tolerância 1e-12. Janela 0,5–1,5 s: RMS sqrt(13/12) V.
+- Onda triangular com amostras irregulares: média zero, RMS sqrt(1/3) V, duty 0,5 e frequência 1 Hz, tolerância 1e-12.
+- Tangências/patamares sem passagem confirmada acima não geram subidas; testes cobrem janela recortada, sinal constante, diferencial nulo, unidades/tempos incompatíveis, NaN e overflow.
+
+São medições das séries simuladas, sem calibração de instrumento físico ou estimativa de erro do solver. Os seis testes de medições e dois de varredura do núcleo foram executados e aprovados, assim como subprocessos CLI nos dois idiomas. Detalhes e convenções em [advanced-workflows.md](advanced-workflows.md).

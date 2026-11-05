@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ManufacturingLimits {
+    #[serde(default = "default_drill_clearance_nm")]
+    pub min_drill_clearance_nm: i64,
     pub min_track_width_nm: i64,
     pub min_clearance_nm: i64,
     pub min_via_drill_nm: i64,
@@ -14,9 +16,13 @@ pub struct ManufacturingLimits {
     pub min_annular_ring_nm: i64,
     pub min_copper_edge_clearance_nm: i64,
 }
+fn default_drill_clearance_nm() -> i64 {
+    250_000
+}
 impl Default for ManufacturingLimits {
     fn default() -> Self {
         Self {
+            min_drill_clearance_nm: default_drill_clearance_nm(),
             min_track_width_nm: 150_000,
             min_clearance_nm: 150_000,
             min_via_drill_nm: 300_000,
@@ -75,6 +81,7 @@ pub fn check(
     limits: &ManufacturingLimits,
 ) -> Result<ManufacturingReport, String> {
     let values = [
+        limits.min_drill_clearance_nm,
         limits.min_track_width_nm,
         limits.min_clearance_nm,
         limits.min_via_drill_nm,
@@ -235,6 +242,20 @@ pub fn check(
             });
         }
     }
+    let drill_report =
+        crate::drilling::check_drill_clearance(project, &pads, limits.min_drill_clearance_nm)?;
+    if drill_report.len() >= 1000 {
+        complete = false;
+    }
+    diagnostics.extend(drill_report.into_iter().map(|mut diagnostic| {
+        diagnostic.code = "DFM_DRILL_CLEARANCE".into();
+        diagnostic.message = format!(
+            "{} {}",
+            eda_i18n::text("DFM_DRILL_CLEARANCE"),
+            diagnostic.message
+        );
+        ManufacturingDiagnostic::from(diagnostic)
+    }));
     let native = crate::check(&snapshot)?;
     if native.diagnostics.len() >= 2000 {
         complete = false;

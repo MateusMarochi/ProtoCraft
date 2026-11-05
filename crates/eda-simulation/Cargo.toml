@@ -6,6 +6,7 @@ publish.workspace = true
 license.workspace = true
 
 [dependencies]
+eda-i18n.workspace = true
 eda-core.workspace = true
 eda-netlist.workspace = true
 serde.workspace = true

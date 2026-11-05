@@ -15,10 +15,12 @@ const MAX_STEPS: usize = 20_000;
 const MAX_WORK: usize = 150_000_000;
 
 const VT: f64 = 0.02585;
+pub mod measurements;
 mod mixed;
 mod models;
 mod spice;
 mod stepper;
+pub mod sweep;
 
 /// Motores próprios que compartilham a topologia e os modelos elétricos.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

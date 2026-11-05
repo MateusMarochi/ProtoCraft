@@ -1,0 +1,4 @@
+{
+  "name": "555 sem indicador luminoso",
+  "do_not_populate": ["D1", "RLED"]
+}

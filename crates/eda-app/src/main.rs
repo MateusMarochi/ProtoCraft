@@ -17,6 +17,7 @@ macro_rules! trf {
 
 mod clipboard;
 mod device_ui;
+mod falstad_ui;
 mod geometry;
 mod live;
 mod pcb_ui;
@@ -269,6 +270,7 @@ enum Pending {
     Open,
     OpenRecent(PathBuf),
     Import,
+    ImportFalstad(String),
     Close,
 }
 #[derive(Clone, Copy, PartialEq)]
@@ -518,6 +520,9 @@ struct ProtoCraft {
     unsaved_import: bool,
     import_source: Option<PathBuf>,
     import_notes: Vec<String>,
+    falstad_input: String,
+    show_falstad_dialog: bool,
+    falstad_task: Option<falstad_ui::ImportTask>,
     tool: Tool,
     placement_rotation: u8,
     selected: Option<ObjectId>,
@@ -610,6 +615,9 @@ impl ProtoCraft {
             unsaved_import: false,
             import_source: None,
             import_notes,
+            falstad_input: String::new(),
+            show_falstad_dialog: false,
+            falstad_task: None,
             tool: Tool::Select,
             placement_rotation: 0,
             selected: None,
@@ -711,12 +719,13 @@ impl ProtoCraft {
                         tr!("Projeto ProtoCraft e backups"),
                         &["protocraft", "json", "bak"],
                     )
+                    .add_filter(tr!("falstad.ui.files"), &["txt", "xml", "url"])
                     .pick_file()
                 {
-                    self.open_project_path(path);
+                    self.open_project_path(path, ctx);
                 }
             }
-            Pending::OpenRecent(path) => self.open_project_path(path),
+            Pending::OpenRecent(path) => self.open_project_path(path, ctx),
             Pending::Import => {
                 if let Some(path) = rfd::FileDialog::new()
                     .add_filter(tr!("Projeto Proteus experimental"), &["pdsprj", "dsn"])
@@ -725,13 +734,18 @@ impl ProtoCraft {
                     self.import_path(&path);
                 }
             }
+            Pending::ImportFalstad(input) => self.start_falstad_import(input, ctx),
             Pending::Close => {
                 self.close_allowed = true;
                 ctx.send_viewport_cmd(egui::ViewportCommand::Close);
             }
         }
     }
-    fn open_project_path(&mut self, path: PathBuf) {
+    fn open_project_path(&mut self, path: PathBuf, ctx: &egui::Context) {
+        if falstad_ui::is_source(&path.to_string_lossy()) {
+            self.start_falstad_import(path.to_string_lossy().into_owned(), ctx);
+            return;
+        }
         match eda_storage::load(&path) {
             Ok(project) => {
                 self.replace(project, Some(path.clone()));
@@ -782,6 +796,7 @@ impl ProtoCraft {
                     self.settings.engine = eda_simulation::SimulationEngine::Mixed;
                 }
                 self.path = path;
+                self.falstad_task = None;
                 self.show_home = false;
                 self.saved_revision = 0;
                 self.unsaved_import = false;
@@ -881,6 +896,92 @@ impl ProtoCraft {
                 trf!("Falha ao importar Proteus: {error}", error = error),
                 true,
             ),
+        }
+    }
+    fn start_falstad_import(&mut self, input: String, ctx: &egui::Context) {
+        if self.falstad_task.is_some() {
+            self.message(tr!("falstad.ui.busy"), true);
+            return;
+        }
+        match falstad_ui::start(input, self.engine.revision(), ctx) {
+            Ok(task) => {
+                self.falstad_task = Some(task);
+                self.message(tr!("falstad.ui.loading"), false);
+            }
+            Err(error) => self.message(trf!("falstad.ui.failed", error = error), true),
+        }
+    }
+    fn poll_falstad_import(&mut self, ctx: &egui::Context) {
+        let Some(task) = &self.falstad_task else {
+            return;
+        };
+        let received = task.receiver.try_recv();
+        if matches!(received, Err(mpsc::TryRecvError::Empty)) {
+            ctx.request_repaint_after(Duration::from_millis(50));
+            return;
+        }
+        let Some(task) = self.falstad_task.take() else {
+            return;
+        };
+        if task.revision != self.engine.revision() {
+            self.message(tr!("falstad.ui.stale"), true);
+            return;
+        }
+        match received {
+            Ok(Ok(import)) => {
+                let report = import.report;
+                self.replace(import.project, None);
+                self.unsaved_import = true;
+                self.import_source = task.source;
+                self.import_notes = import_report_notes(report);
+                self.tab = BottomTab::Import;
+                self.message(tr!("falstad.ui.success"), false);
+            }
+            Ok(Err(error)) => self.message(trf!("falstad.ui.failed", error = error), true),
+            Err(mpsc::TryRecvError::Disconnected) => {
+                self.message(tr!("falstad.ui.disconnected"), true)
+            }
+            Err(mpsc::TryRecvError::Empty) => {}
+        }
+    }
+    fn falstad_dialog(&mut self, ctx: &egui::Context) {
+        if !self.show_falstad_dialog {
+            return;
+        }
+        let mut open = self.show_falstad_dialog;
+        let mut import = false;
+        egui::Window::new(tr!("falstad.ui.title"))
+            .open(&mut open)
+            .resizable(true)
+            .show(ctx, |ui| {
+                ui.label(tr!("falstad.ui.prompt"));
+                ui.text_edit_singleline(&mut self.falstad_input);
+                ui.horizontal(|ui| {
+                    if ui.button(tr!("falstad.ui.choose_file")).clicked()
+                        && let Some(path) = rfd::FileDialog::new()
+                            .add_filter(tr!("falstad.ui.files"), &["txt", "xml", "url"])
+                            .pick_file()
+                    {
+                        self.falstad_input = path.to_string_lossy().into_owned();
+                    }
+                    if ui
+                        .add_enabled(
+                            !self.falstad_input.trim().is_empty(),
+                            egui::Button::new(tr!("falstad.ui.import")),
+                        )
+                        .clicked()
+                    {
+                        import = true;
+                    }
+                });
+                ui.small(tr!("falstad.ui.scope"));
+            });
+        self.show_falstad_dialog = open && !import;
+        if import {
+            self.request(
+                Pending::ImportFalstad(self.falstad_input.trim().to_owned()),
+                ctx,
+            );
         }
     }
     fn confirmation(&mut self, ctx: &egui::Context) {
@@ -1115,6 +1216,10 @@ impl ProtoCraft {
                             action = Some(2);
                             ui.close();
                         }
+                        if ui.button(tr!("falstad.ui.title")).clicked() {
+                            action = Some(4);
+                            ui.close();
+                        }
                     });
                     ui.menu_button(tr!("Sistema"), |ui| {
                         if ui.button(tr!("Configurações…")).clicked() {
@@ -1148,6 +1253,7 @@ impl ProtoCraft {
                         (tr!("Novo projeto"), 0),
                         (tr!("Abrir projeto"), 1),
                         (tr!("Importar projeto Proteus"), 2),
+                        (tr!("falstad.ui.title"), 4),
                     ] {
                         if ui.button(label).clicked() {
                             action = Some(id);
@@ -1244,6 +1350,7 @@ impl ProtoCraft {
                                 if ui.button(tr!("Importar projeto Proteus")).clicked() {
                                     action = Some(2);
                                 }
+                                if ui.button(tr!("falstad.ui.title")).clicked() {action=Some(4);}
                                 if ui.button(tr!("Abrir circuito de exemplo")).clicked() {
                                     action = Some(3);
                                 }
@@ -1381,6 +1488,7 @@ impl ProtoCraft {
             Some(1) => self.request(Pending::Open, ctx),
             Some(2) => self.request(Pending::Import, ctx),
             Some(3) => self.request(Pending::New(examples::voltage_divider()), ctx),
+            Some(4) => self.show_falstad_dialog = true,
             _ => {}
         }
         if let Some(path) = open_path {
@@ -1469,6 +1577,10 @@ impl ProtoCraft {
                         }
                         if ui.button(tr!("Importar Proteus…")).clicked() {
                             self.request(Pending::Import, ctx);
+                            ui.close();
+                        }
+                        if ui.button(tr!("falstad.ui.title")).clicked() {
+                            self.show_falstad_dialog = true;
                             ui.close();
                         }
                         if ui.button(tr!("Salvar    Ctrl+S")).clicked() {
@@ -2413,8 +2525,9 @@ impl ProtoCraft {
             ui.separator();
             match self.tab {
                 BottomTab::Import => { egui::ScrollArea::vertical().show(ui, |ui| {
-                    ui.strong(tr!("Importação Proteus experimental"));
-                    if self.import_notes.is_empty() { ui.label(tr!("Use Arquivo → Importar Proteus. A conversão preserva os dados reconhecidos e informa limitações por projeto.")); }
+                    let falstad = self.engine.project().import_info.as_ref().is_some_and(|info| info.source_format.starts_with("Falstad"));
+                    ui.strong(if falstad {tr!("falstad.ui.import_heading")} else {tr!("Importação Proteus experimental")});
+                    if self.import_notes.is_empty() { ui.label(tr!("Use Arquivo → Importar Proteus ou Importar Falstad. A conversão preserva os dados reconhecidos e informa limitações por projeto.")); }
                     for note in &self.import_notes { ui.label(eda_i18n::text(note)); }
                     ui.label(tr!("Símbolos importados são representações originais do ProtoCraft, com pinos nas coordenadas convertidas do projeto."));
                 }); }
@@ -3296,9 +3409,11 @@ impl eframe::App for ProtoCraft {
             }
         }
         self.poll_simulation(&ctx);
+        self.poll_falstad_import(&ctx);
         self.poll_live(&ctx);
         self.shortcuts(&ctx);
         self.refresh_derived();
+        self.falstad_dialog(&ctx);
         if self.show_home {
             self.home(root_ui, &ctx);
             self.confirmation(&ctx);
@@ -3438,7 +3553,16 @@ fn stored_import_notes(project: &Project) -> Vec<String> {
 }
 
 fn import_report_notes(report: eda_import::ImportReport) -> Vec<String> {
-    let mut notes = vec![
+    let heading = if report.format == "falstad" {
+        eda_i18n::format(
+            "falstad.ui.report_summary",
+            &[
+                ("components", report.components.to_string()),
+                ("wires", report.wires.to_string()),
+                ("labels", report.labels.to_string()),
+            ],
+        )
+    } else {
         eda_i18n::format(
             "{project} · FILEVER {filever} · {components} componentes · {wires} fios · {junctions} junções · {labels} rótulos",
             &[
@@ -3455,7 +3579,10 @@ fn import_report_notes(report: eda_import::ImportReport) -> Vec<String> {
                 ("junctions", report.junctions.to_string()),
                 ("labels", report.labels.to_string()),
             ],
-        ),
+        )
+    };
+    let mut notes = vec![
+        heading,
         if report.electrical_complete {
             "Conversão elétrica do subconjunto suportado concluída. Confira ERC e modelos antes de simular.".into()
         } else {
@@ -4275,7 +4402,28 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut startup_source = None;
     let (project, path, message) = if let Some(path) = path {
         let proteus = is_proteus_path(&path);
-        let loaded = if proteus {
+        let falstad = falstad_ui::is_source(&path.to_string_lossy());
+        let loaded = if falstad {
+            let input = path.to_string_lossy();
+            eda_storage::falstad_source::read_source(&input)
+                .and_then(|text| {
+                    let name = if input.starts_with("https://") {
+                        "Falstad"
+                    } else {
+                        path.file_stem()
+                            .and_then(|s| s.to_str())
+                            .unwrap_or("Falstad")
+                    };
+                    eda_import::falstad::import_text(&text, name)
+                })
+                .map(|result| {
+                    startup_import = Some(result.report);
+                    if !input.starts_with("https://") {
+                        startup_source = Some(path.clone());
+                    }
+                    result.project
+                })
+        } else if proteus {
             eda_import::import_proteus(&path)
                 .map(|result| {
                     startup_import = Some(result.report);
@@ -4287,7 +4435,11 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             eda_storage::load(&path).map_err(|error| error.to_string())
         };
         match loaded {
-            Ok(project) => (project, if proteus { None } else { Some(path) }, None),
+            Ok(project) => (
+                project,
+                if proteus || falstad { None } else { Some(path) },
+                None,
+            ),
             Err(error) => (
                 examples::voltage_divider(),
                 None,
@@ -4340,12 +4492,17 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                 app.exit_after_capture = true;
             }
             if let Some(report) = startup_import {
+                let falstad = report.format == "falstad";
                 app.unsaved_import = true;
                 app.import_source = startup_source;
                 app.import_notes = import_report_notes(report);
                 app.tab = BottomTab::Import;
                 app.message(
-                    "Proteus importado. Salve como .protocraft para preservar o resultado.",
+                    if falstad {
+                        tr!("falstad.ui.success")
+                    } else {
+                        tr!("Proteus importado. Salve como .protocraft para preservar o resultado.")
+                    },
                     false,
                 );
             }
@@ -4425,6 +4582,44 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn falstad_worker_replaces_only_successful_import_and_preserves_original() {
+        let dir = tempfile::tempdir().unwrap();
+        let valid = dir.path().join("circuito.txt");
+        let source = "$ 1 0.000005 10.2 50 5 50\nr 0 0 32 0 0 1000\n";
+        std::fs::write(&valid, source).unwrap();
+        let ctx = egui::Context::default();
+        let mut editor = app(Project::empty("Anterior"));
+        editor.start_falstad_import(valid.to_string_lossy().into_owned(), &ctx);
+        for _ in 0..100 {
+            editor.poll_falstad_import(&ctx);
+            if editor.falstad_task.is_none() {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        assert!(editor.falstad_task.is_none());
+        assert_eq!(editor.engine.project().components.len(), 1);
+        assert!(editor.unsaved_import);
+        assert_eq!(editor.import_source.as_deref(), Some(valid.as_path()));
+        assert_eq!(std::fs::read_to_string(&valid).unwrap(), source);
+
+        let invalid = dir.path().join("invalido.txt");
+        std::fs::write(&invalid, "not a Falstad circuit").unwrap();
+        editor.start_falstad_import(invalid.to_string_lossy().into_owned(), &ctx);
+        for _ in 0..100 {
+            editor.poll_falstad_import(&ctx);
+            if editor.falstad_task.is_none() {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        assert!(editor.falstad_task.is_none());
+        assert!(editor.status_error);
+        assert_eq!(editor.engine.project().components.len(), 1);
+        assert_eq!(editor.import_source.as_deref(), Some(valid.as_path()));
+    }
 
     fn app(project: Project) -> ProtoCraft {
         ProtoCraft::new(

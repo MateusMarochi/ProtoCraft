@@ -108,6 +108,8 @@ protocraft-cli simulate examples/divisor.protocraft
 protocraft-cli simulate examples/rc.protocraft --transient 0.0001 0.02 --csv rc.csv
 protocraft-cli spice examples/rc.protocraft --transient 0.0001 0.02 --output rc.cir
 protocraft-cli import-proteus origem.pdsprj --output convertido.protocraft --report importacao.json
+protocraft-cli import-falstad circuito.txt --output circuito.protocraft
+protocraft-cli import-falstad 'https://www.falstad.com/s.py?s=dKcFWE' --output circuito-link.protocraft
 ```
 
 `protocraft-cli --help` lista as opções principais. Os comandos atuais são finitos e headless; não há servidor persistente, MCP ou controle remoto nesta versão.
@@ -173,3 +175,8 @@ ProtoCraft-CLI.cmd pcb-check projetos\pi4-buck.protocraft
 ```
 
 `power-design buck` calcula valores ideais de primeira ordem. `power-design copper` combina uma estimativa térmica histórica IPC-2221 com queda DC; não certifica ampacidade nem substitui cálculo térmico. O comando de projeto entrega uma PCB no perfil mecânico HAT de 65 × 56,5 mm, com quatro furos e header de 40 pinos. As classes nominais de entrada, saída e nó chaveado usam largura mínima de 0,8 mm; escapes locais de QFN são validados separadamente pelo DRC. A alimentação chega aos pinos físicos 2 e 4 de 5 V e aos pinos GND; não conecte uma fonte USB-C ao Pi em paralelo com esta placa. O DRC geométrico não valida capacidade de corrente, temperatura, EMI nem fabricação.
+
+
+## Fluxos adicionais de projeto e análise
+
+`pcb-assembly-variant`, `dc-sweep` e `simulate-measure` estão documentados com exemplos e limites em [advanced-workflows.md](advanced-workflows.md). `pcb-dfm` aceita `min_drill_clearance_nm` e considera a geometria orientada dos rasgos. Use `<comando> --help` para a sintaxe.

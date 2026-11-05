@@ -8,6 +8,7 @@ use std::{
 };
 use thiserror::Error;
 pub mod fabrication;
+pub mod falstad_source;
 
 pub const MAX_FILE_BYTES: u64 = 8 * 1024 * 1024;
 pub const FORMAT_VERSION: u32 = eda_core::FORMAT_VERSION;
@@ -116,13 +117,19 @@ pub fn save(path: impl AsRef<Path>, project: &Project) -> Result<(), StorageErro
 /// Cria um projeto sem substituir um destino que já exista.
 pub fn create_new(path: impl AsRef<Path>, project: &Project) -> Result<(), StorageError> {
     let bytes = encode(project)?;
+    write_new_report(path, &bytes)
+}
+
+/// Publica conteúdo pronto no mesmo filesystem, sem sobrescrever o destino.
+/// A escrita e o sync terminam no temporário antes de o nome final aparecer.
+pub fn write_new_report(path: impl AsRef<Path>, bytes: &[u8]) -> Result<(), StorageError> {
     let path = path.as_ref();
     let parent = path
         .parent()
         .filter(|p| !p.as_os_str().is_empty())
         .unwrap_or(Path::new("."));
     let mut temp = tempfile::NamedTempFile::new_in(parent)?;
-    temp.write_all(&bytes)?;
+    temp.write_all(bytes)?;
     temp.as_file().sync_all()?;
     temp.persist_noclobber(path)
         .map(|_| ())

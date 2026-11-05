@@ -22,6 +22,40 @@ O sequenciamento de implementação está em [plano-pcb.md](docs/plano-pcb.md). 
 | Importação | Perfil restrito Proteus, com bloqueio de simulação | Não prova equivalência elétrica nem importa todos os objetos |
 | Automação | CLI e MCP headless | Sessão MCP não controla documento desktop aberto |
 
+
+## Ciclo de implementação — 05/11/2026
+
+- [x] Importação Falstad/CircuitJS de texto legado, XML, atalhos `.url` e links
+  `cct`/`ctz`/`s.py`, com CLI, abertura desktop, relatório de perdas e bloqueio
+  de simulação para modelos sem equivalência. Ver [escopo](docs/falstad-import.md).
+- [ ] Refinar equivalência elétrica Falstad por elemento e validar netlists
+  diferencialmente antes de habilitar simulação de transistor, MOSFET, chave,
+  diodo, LED e modelos personalizados; reconstruir anotações e instrumentos.
+
+- [x] DFM com limite independente entre furos, rasgos orientados como cápsulas e erro explícito ao exceder diagnósticos/orçamento.
+- [x] Variantes de montagem DNP por configuração externa, BOM/posições filtradas e lista de omitidos, com `pcb-assembly-variant`.
+- [x] Varredura DC linear/log de resistor ou fonte, prazo/cancelamento do lote e resultados completos por ponto: `dc-sweep`.
+- [x] Medições temporais/diferenciais: mínimo/máximo, média, RMS, integral, duty e frequência com cruzamento confirmado: `simulate-measure`.
+- [x] Publicação atômica dos novos relatórios sem sobrescrita; ajuda e erros próprios nos dois idiomas.
+
+São subconjuntos dos itens amplos abaixo. Uso, exemplos e limitações: [advanced-workflows.md](docs/advanced-workflows.md). Variantes filtram montagem sem modificar topologia elétrica. Varreduras não incluem AC, modelos, temperatura ou Monte Carlo. Os novos controles são headless/CLI, sem painéis desktop específicos.
+
+### Próximas entregas priorizadas
+
+| Prioridade | Trabalho | Complexidade e critério de aceite |
+|---|---|---|
+| P0 | Identificação estruturada dos dois objetos e regras de cada diagnóstico DRC | Média: CLI/UI localizam causas por IDs sem interpretar texto traduzido; limites não ocultam diagnósticos como sucesso |
+| P1 | Zonas de cobre por rede/camada, térmicos e remoção de ilhas | Alta: geometria determinística, regeneração, conectividade/folga e saída fabril verificadas independentemente |
+| P1 | Edição conectada de trilhas e rotação/troca de face de footprints | Alta: preservar topologia ou recusar atomicamente, com undo/redo e regressões de ramificações/vias |
+| P1 | Contornos poligonais, recortes e exportação independente de rasgos | Alta: rejeitar autointerseção, preservar unidades/transformações e comparar Gerber/Excellon com leitor externo |
+| P2 | Stackup e multicamadas | Alta: decisão prévia de contrato persistido, migração, regras por camada, vias e exportação coerentes |
+| P2 | Comprimento entre terminais, pares diferenciais e ajuste de skew | Alta: medir caminho contínuo e tratar ramificações; soma de cobre por rede não basta |
+| P2 | AC de pequenos sinais e parâmetros de modelo | Alta: excitação/linearização explícitas, soluções analíticas e comparação independente; recusar modelos sem suporte |
+| P2 | Passo adaptativo e condições iniciais | Alta: estimativa de erro, RC/RLC/descontinuidades, limites e cancelamento |
+| P2 | Instrumentos desktop e variantes com substituição de peças/valores | Média/alta: consumir serviços headless, definir consequências elétricas e impedir resultados obsoletos |
+
+Firmware e 3D permanecem fora deste ciclo. A avaliação-base de 03/11 permanece como histórico; nenhum item amplo foi encerrado apenas por esta entrega parcial.
+
 ## Entregas verificadas em 03/11/2026
 
 - [x] Sincronizar footprints não posicionados pela CLI e pelo mesmo serviço do desktop, preservando cobre e posições existentes; recusar falta de espaço sem mutação.

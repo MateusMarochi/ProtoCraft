@@ -85,8 +85,8 @@ pub(crate) fn export(project: &Project, analysis: Analysis) -> Result<String, Si
                     value
                 };
                 out.push_str(&format!(
-                    "D{id} {p} {n} DGEN{id}\n.model DGEN{id} D(Is={saturation:.15e} N={:.15e}",
-                    params.ideality
+                    "D{id} {p} {n} DGEN{id}\n.model DGEN{id} D(Is={saturation:.15e} N={:.15e} RS={:.15e}",
+                    params.ideality, params.diode_series_resistance
                 ));
                 if c.kind == Zener {
                     out.push_str(&format!(" BV={value:.15e} IBV={saturation:.15e}"));

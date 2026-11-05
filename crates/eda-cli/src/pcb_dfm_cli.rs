@@ -1,11 +1,5 @@
 use eda_pcb::dfm::ManufacturingLimits;
-use std::{
-    collections::BTreeSet,
-    error::Error,
-    fs,
-    io::{Read, Write},
-    path::Path,
-};
+use std::{collections::BTreeSet, error::Error, fs, io::Read, path::Path};
 
 pub fn help() -> String {
     eda_i18n::text(
@@ -70,13 +64,9 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
         {
             return Err(eda_i18n::text("O relatório DFM deve usar a extensão .json.").into());
         }
-        let mut file = fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(output)?;
-        file.write_all(data.as_bytes())?;
-        file.write_all(b"\n")?;
-        file.sync_all()?;
+        let mut bytes = data.as_bytes().to_vec();
+        bytes.push(b'\n');
+        eda_storage::write_new_report(output, &bytes)?;
     }
     println!("{data}");
     if report.errors() > 0 || !report.complete {

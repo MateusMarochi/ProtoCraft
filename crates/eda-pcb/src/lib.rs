@@ -4,6 +4,7 @@ use eda_netlist::{NetId, Netlist, build_netlist};
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
 pub mod assembly;
+pub mod assembly_variants;
 mod autoroute;
 pub mod cleanup;
 pub mod dfm;

@@ -14,11 +14,15 @@ macro_rules! trf {
 }
 
 mod conversion_cli;
+mod falstad_cli;
+mod pcb_assembly_variant_cli;
 mod pcb_cleanup_cli;
 mod pcb_dfm_cli;
 mod pcb_move_cli;
 mod pcb_sync_cli;
 mod physical_cli;
+mod simulation_measure_cli;
+mod simulation_sweep_cli;
 
 use eda_automation::{Action, COMMANDS, parse_action, parse_actions};
 use eda_simulation::{Analysis, SimulationControl, SimulationEngine, SimulationRequest};
@@ -52,6 +56,8 @@ fn configure_language() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 fn help() {
+    println!("{}", tr!("falstad.cli.summary"));
+    println!("{}", eda_i18n::text("advanced_workflows.help"));
     println!(
         "{}",
         tr!(
@@ -148,6 +154,9 @@ fn run() -> Result<(), Box<dyn Error>> {
     if conversion_cli::handles(command) {
         return conversion_cli::run(&args);
     }
+    if command == "import-falstad" {
+        return falstad_cli::run(&args[1..]);
+    }
     if command == "new" || command == "create" {
         return run_new_project(&args[1..]);
     }
@@ -174,6 +183,15 @@ fn run() -> Result<(), Box<dyn Error>> {
     }
     if command == "pcb-dfm" {
         return pcb_dfm_cli::run(&args[1..]);
+    }
+    if command == "pcb-assembly-variant" {
+        return pcb_assembly_variant_cli::run(&args[1..]);
+    }
+    if command == "dc-sweep" {
+        return simulation_sweep_cli::run(&args[1..]);
+    }
+    if command == "simulate-measure" {
+        return simulation_measure_cli::run(&args[1..]);
     }
     if physical_cli::handles(command) {
         return physical_cli::run(&args);
@@ -707,6 +725,10 @@ fn gui_executable() -> Result<PathBuf, Box<dyn Error>> {
 
 fn command_help(command: &str) -> Option<String> {
     match command {
+        "import-falstad" => Some(falstad_cli::help()),
+        "pcb-assembly-variant" => Some(pcb_assembly_variant_cli::help()),
+        "dc-sweep" => Some(simulation_sweep_cli::help()),
+        "simulate-measure" => Some(simulation_measure_cli::help()),
         "pcb-dfm" => Some(pcb_dfm_cli::help()),
         "pcb-route" => Some(tr!(
             "Uso: protocraft-cli pcb-route <projeto> --output novo.protocraft [--grid-mm 0.25] [--track-width-mm 0.25] [--max-expansions 600000] [--passes 1..8] [--no-optimize]\nO orçamento total inclui todas as tentativas e otimizações. O cobre existente é preservado; a saída pode manter conexões pendentes, detalhadas no relatório."

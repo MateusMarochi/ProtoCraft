@@ -212,3 +212,36 @@ A aplicação de desenvolvimento foi aberta com `--pcb --window-position -1500 4
 Uma tentativa inicial da suíte integrada falhou por falta de espaço na geração de símbolos de depuração. Após autorização explícita, foram removidos somente arquivos `.pdb` regeneráveis de `target/debug/deps`; a suíte subsequente passou. A rotação individual de backups usa escrita atômica e leitura limitada; a rotação global de todas as gerações ainda não é transacional.
 
 O build otimizado também concluiu: `cargo build --release -p eda-cli -p eda-app --locked --offline` (4 min 31 s). O executável release respondeu `ProtoCraft 0.8.0`; `pcb-check` do exemplo 555 retornou zero diagnósticos e zero airwires. A janela release foi aberta e capturada no monitor secundário com os mesmos argumentos, gerando `artifacts/pcb-workflows-release-secondary.png`, inspecionada visualmente. O smoke da CLI registrou oito grupos BOM, oito posicionamentos, zero footprints/posições pendentes e sete redes com métricas nesse exemplo.
+
+
+## Ciclo headless de PCB e simulação — 05/11/2026
+
+Implementadas variantes de montagem DNP, limite independente de distância entre furos com geometria orientada de rasgos, varredura DC e medições temporais/diferenciais. Os três agentes tiveram arquivos separados e revisão cruzada; a integração acrescentou i18n e publicação atômica dos relatórios. Uso em [advanced-workflows.md](advanced-workflows.md).
+
+Validações executadas em Windows:
+
+- `cargo fmt --all -- --check` e `git diff --check`: aprovados.
+- `cargo --config build.incremental=false check --workspace --all-targets --locked -j 2`: aprovado.
+- `cargo --config build.incremental=false clippy --workspace --all-targets --locked -j 2 -- -D warnings`: aprovado, após substituir uma closure desnecessária indicada pelo Clippy.
+- `cargo --config build.incremental=false test -p eda-pcb -p eda-simulation -p eda-cli -p eda-storage --locked -j 2`: aprovado, incluindo regressões de roteamento, fonte buck, persistência e fabricação.
+- Após os ajustes finais de Clippy e localização de JSON inválido: 6 testes de medições + 2 de varredura no núcleo e 3 de variantes + 2 de medições + 2 de varredura na CLI aprovados.
+- Catálogos en/pt-BR têm as mesmas chaves; subprocessos validaram os novos comandos e erros nos dois idiomas.
+
+A CLI real executou os exemplos documentados: V1 entre 2 e 10 V gerou VOUT de 1, 2, 3, 4 e 5 V no divisor; a janela após energização apresentou média/RMS de 5 V, dentro de 1 nV; a diferença VIN−VOUT também apresentou 5 V. A variante 555 omitiu D1 e RLED.
+
+A primeira tentativa conjunta falhou por disco cheio (LLVM e linker/PDB), sem resultado de aprovação. Após remoção manual autorizada do cache incremental, as verificações acima foram repetidas com cache desativado e dois processos. Não houve teste completo de todos os crates do workspace: testes executados nos quatro crates indicados; check/Clippy abrangeram o workspace. Não houve teste gráfico, build/teste Linux local, validação física ou nova fabricação independente neste ciclo.
+
+Medição CLI adicional do 555 em Misto, passo 10 µs, janela 5–30 ms, limiar 2,5 V: 479,227410 Hz contra 480,898347 Hz pela expressão 1/[ln(2)·(RA+2RB)·C], desvio de 0,348%, abaixo do limite de 1,5% da regressão. O passo de 200 µs produziu 454,092190 Hz na mesma fixture; esta comparação ilustra que medir a série não corrige o erro de discretização.
+
+O relatório de `pcb-dfm --output` também utiliza o helper de publicação atômica. As quatro regressões CLI de `pcb_advanced` foram repetidas e aprovadas após essa integração.
+
+## Importação Falstad/CircuitJS — 05/11/2026
+
+- cargo fmt --all -- --check, cargo check --workspace --all-targets --locked -j 2, cargo clippy --workspace --all-targets --locked -j 2 -- -D warnings e git diff --check: passaram.
+- Testes focados: 4 em eda-import/tests/falstad.rs, 4 em eda-storage/tests/falstad_source.rs, 2 em eda-cli/tests/falstad_import.rs e 1 teste do worker de importação em eda-app: passaram.
+- A CLI importou 11 arquivos Falstad reais da Área de Trabalho, entre texto legado e XML, além do link curto s.py?s=dKcFWE. Todos foram marcados como parciais por modelos sem equivalência elétrica comprovada; a simulação recusou o projeto parcial. Os arquivos originais permaneceram intactos. Esses circuitos não são distribuídos como fixtures.
+- O executável desktop foi compilado e abriu o link curto no monitor secundário (DISPLAY1, posição -1850,320), com captura PNG inspecionada: esquema, aviso de importação parcial e aba Importação visíveis. O fluxo de clique no modal não foi automatizado porque a ferramenta Computer Use falhou na inicialização; o worker que recebe o arquivo e substitui o documento foi testado sem janela.
+
+Revisão posterior confrontou o mapeamento com o carregador CircuitJS: a sonda `p` tem dois terminais, a saída `O` tem um e `x` é uma anotação. Na revisão de 05/11, o importador passou a omitir esses elementos sem efeito elétrico e a permitir simulação genérica para semicondutores e chaves reconhecidos, com avisos de aproximação. As fontes de dois terminais e a ordem dos pinos dos MOSFETs também foram alinhadas aos terminais elétricos do formato. A resistência interna positiva de fonte é transferida como resistor série; diodos preservam a resistência série no modelo genérico. Os testes focados passaram nesta revisão: 11 regressões do importador, 12 dos modelos de simulação e 4 de integração CLI. O `cargo check --workspace --locked --offline` também passou.
+
+A CLI foi executada com nove arquivos `.txt` Falstad/CircuitJS da Área de Trabalho: todos foram importados como `electrical_complete=true` e completaram análise transiente no motor Misto (passo solicitado 5 µs, duração 0,5 ms). Isso demonstra abertura via conversão para projeto nativo e execução pelo solver ProtoCraft, mas não equivalência de formas de onda/valores com o CircuitJS ou validade física dos modelos genéricos. A interface gráfica não foi exercitada nesta revisão.

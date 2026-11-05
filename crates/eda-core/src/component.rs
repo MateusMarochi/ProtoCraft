@@ -376,6 +376,8 @@ pub struct ModelParameters {
     pub output_resistance: f64,
     pub saturation_current: f64,
     pub ideality: f64,
+    /// Resistência série do modelo genérico de diodo, em ohms.
+    pub diode_series_resistance: f64,
     pub mos_threshold_v: f64,
     pub channel_modulation: f64,
     pub hysteresis_v: f64,
@@ -400,6 +402,7 @@ impl Default for ModelParameters {
             output_resistance: 100.0,
             saturation_current: 1e-14,
             ideality: 1.0,
+            diode_series_resistance: 0.0,
             mos_threshold_v: 2.0,
             channel_modulation: 0.01,
             hysteresis_v: 0.05,
@@ -438,5 +441,7 @@ impl ModelParameters {
             && (0.001..=1e6).contains(&self.output_resistance)
             && (1e-30..=1e-6).contains(&self.saturation_current)
             && (0.5..=4.0).contains(&self.ideality)
+            && self.diode_series_resistance.is_finite()
+            && (0.0..=1e6).contains(&self.diode_series_resistance)
     }
 }

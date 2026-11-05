@@ -38,15 +38,59 @@ pub(crate) fn diode_iv(c: &Component, v: f64) -> (f64, f64) {
     } else {
         c.value
     };
-    let e = (v / vt).clamp(-80.0, 80.0).exp();
-    let mut current = saturation * (e - 1.0);
-    let mut g = saturation * e / vt;
-    if c.kind == ComponentKind::Zener {
-        let reverse = saturation * ((-v - c.value) / vt).clamp(-80.0, 80.0).exp();
-        current -= reverse;
-        g += reverse / vt;
+    let junction_iv = |junction_voltage: f64| {
+        let e = (junction_voltage / vt).clamp(-80.0, 80.0).exp();
+        let mut current = saturation * (e - 1.0);
+        let mut conductance = saturation * e / vt;
+        if c.kind == ComponentKind::Zener {
+            let reverse = saturation
+                * ((-junction_voltage - c.value) / vt)
+                    .clamp(-80.0, 80.0)
+                    .exp();
+            current -= reverse;
+            conductance += reverse / vt;
+        }
+        (current, conductance)
+    };
+    let resistance = c.parameters.diode_series_resistance;
+    if resistance == 0.0 {
+        return junction_iv(v);
     }
-    (current, g)
+    // A bisseção evita que a exponencial de alta polarização trave o Newton
+    // interno. A curva Shockley mais a resistência série é monotônica.
+    let residual =
+        |junction_voltage: f64| junction_voltage + resistance * junction_iv(junction_voltage).0 - v;
+    let mut low = v;
+    let mut high = v;
+    let mut span = (vt * 4.0).max(1e-6);
+    if residual(v) > 0.0 {
+        for _ in 0..64 {
+            low = v - span;
+            if residual(low) <= 0.0 {
+                break;
+            }
+            span *= 2.0;
+        }
+    } else {
+        for _ in 0..64 {
+            high = v + span;
+            if residual(high) >= 0.0 {
+                break;
+            }
+            span *= 2.0;
+        }
+    }
+    for _ in 0..72 {
+        let middle = low + (high - low) * 0.5;
+        if residual(middle) > 0.0 {
+            high = middle;
+        } else {
+            low = middle;
+        }
+    }
+    let junction_voltage = low + (high - low) * 0.5;
+    let (current, conductance) = junction_iv(junction_voltage);
+    (current, conductance / (1.0 + resistance * conductance))
 }
 pub(crate) fn transistor(c: &Component, v: [f64; 3]) -> ([f64; 3], [[f64; 3]; 3]) {
     let sign = if c.kind == ComponentKind::Pnp {

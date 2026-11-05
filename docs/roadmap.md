@@ -116,3 +116,8 @@ Executado o ciclo inicial do [plano de PCB](plano-pcb.md), com detalhes de uso e
 - CLI com preferência de idioma por processo e testes isolados nos dois idiomas.
 
 Permanecem pendentes zonas de cobre, contornos arbitrários, regras hierárquicas por região/camada, multicamadas, rotação conectada, atualização avançada de footprints e roteamento profissional. Classes nomeadas básicas já se aplicam ao DRC e ao autorroteador. As funcionalidades acima não concluem os itens abrangentes do backlog.
+
+
+## Avanços headless de 05/11/2026
+
+Variantes de montagem DNP, varredura DC de resistor/fonte e medições de séries temporais/diferenciais estão implementadas em serviços de núcleo e CLI. DFM considera rasgos orientados como cápsulas e um limite independente entre furações. Os novos relatórios usam publicação atômica sem sobrescrita. Exemplos, critérios e limitações: [advanced-workflows.md](advanced-workflows.md). Zonas, multicamadas, pares diferenciais, AC, passo adaptativo, firmware e 3D continuam pendentes.
