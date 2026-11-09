@@ -10,7 +10,7 @@ ProtoCraft-CLI.cmd pcb-route placa.protocraft --output roteada.protocraft --pass
 
 `--passes` aceita de 1 a 8; o padrão é 1. Cada tentativa parte do cobre original, alterna a ordem e rotaciona deterministicamente a lista de ligações. O motor escolhe o plano com menos airwires; em empate, considera comprimento e penalidade de vias. Cobre preexistente é preservado. As buscas continuam sujeitas ao DRC, às classes de rede e aos limites geométricos atuais de duas camadas.
 
-O orçamento de expansões é repartido entre as tentativas e inclui as otimizações e tentativas rejeitadas pelo DRC. Um plano válido anterior é preservado se uma tentativa posterior falhar. `stats` informa `routing_passes_attempted`, `routing_passes_rejected`, `selected_pass` (base 1), `search_expansions` e o tempo total. Ao fechar todas as ligações, o motor encerra as tentativas restantes. Não há rip-up de trilhas manuais.
+O orçamento de expansões é repartido entre as tentativas e inclui as otimizações e tentativas rejeitadas pelo DRC. Um plano válido anterior é preservado se uma tentativa posterior falhar. `stats` informa `routing_passes_attempted`, `routing_passes_rejected`, `selected_pass` (base 1), `search_expansions` e o tempo total. Ao fechar todas as ligações, o motor encerra as tentativas restantes. O motor não faz rip-up seletivo de trilhas; a CLI oferece `--ripup-all` para refazer todo o cobre em uma cópia do projeto.
 
 Repartir o mesmo orçamento em mais tentativas pode reduzir o trabalho disponível por tentativa e fechar menos conexões que uma tentativa única. A opção permite experimentar outras ordens; compare airwires, comprimento e vias, em vez de presumir melhoria para toda placa. A saída com rotas parciais permanece editável e registra as falhas individuais.
 
@@ -23,6 +23,30 @@ ProtoCraft-CLI.cmd pcb-cleanup placa.protocraft --merge-collinear --output limpa
 Sem a opção, a limpeza conserva o comportamento de remover duplicatas exatas. Com ela, também une trechos contíguos ou sobrepostos da mesma rede, largura e face, preservando o menor ID. Trechos disjuntos ou de camadas, larguras ou redes distintas não são unidos. Pads, vias e ramificações interiores são protegidos; o DRC e as classes de rede são conferidos antes de aceitar uma união. Uma união que deixaria um escape de pad acima do comprimento permitido é descartada.
 
 O plano é um lote atômico reversível no Engine. `removed_tracks` conta segmentos excluídos; `merged_tracks` conta uniões, incluindo trechos totalmente cobertos. O número final de segmentos diminui em `removed_tracks`. A operação recusa aumento de airwires e limita a etapa colinear a 256 segmentos de entrada e 100.000 comparações, com erro explícito se exceder o orçamento. Esse limite torna o custo previsível; placas maiores exigem uma evolução do índice de busca.
+
+## Exigir conclusão na CLI
+
+O comando padrão grava a melhor solução encontrada mesmo quando algumas conexões permanecem pendentes. O JSON retorna `status: "complete"` ou `status: "partial"`; portanto, automações devem conferir esse campo ou o contador `stats.remaining_airwires`.
+
+Para fluxos que só aceitam placas totalmente conectadas, use:
+
+```powershell
+ProtoCraft-CLI.cmd pcb-route placa.protocraft --output roteada.protocraft --require-complete
+```
+
+Se houver airwires, a CLI retorna código diferente de zero, imprime `status: "incomplete"` e não cria o arquivo de saída. O projeto original permanece intacto.
+
+## Cobertura dos exemplos de referência
+
+O teste lento `autoroutes_reference_boards_without_new_physical_violations` remove trilhas e vias em uma cópia de trabalho via `--ripup-all`, executa o autorroteador com orçamento alto e sem otimização e compara o relatório com o DRC. Ele exige conclusão do 555 e do shield; no buck, aceita somente pendências `UNROUTED` e ainda não comprova roteamento integral. Rode-o explicitamente com:
+
+```powershell
+cargo test -p eda-cli --test routing_cli autoroutes_reference_boards_without_new_physical_violations -- --ignored
+```
+
+Na medição inicial de 2026-11-09, o 555 concluiu 15/15 conexões; o shield Pi 4 concluiu 4/7; e o buck concluiu 22/57. Após as melhorias de fanout e orçamento, o shield foi reroteado de cobre limpo com 7/7 airwires resolvidos, zero vias e zero diagnósticos DRC em 21,6 s. O buck foi medido em cópias incrementais: 44/57 na primeira passagem, +6 na segunda e +3 com grade de 0,5 mm, totalizando 53/57. Restaram quatro airwires (VIN12 duas vezes, VCC e FB), somente com diagnóstico `UNROUTED`. A grade de 0,125 mm não reduziu essa pendência. O gerador buck continua produzindo seu exemplo inicial conectado (187 trilhas, zero airwires/erros), mas isso não equivale a reroteamento de cobre limpo.
+
+Essas medições são comparativas, não uma garantia de conclusão. A validação integral do buck e a revisão independente dos arquivos Gerber/Excellon permanecem abertas no `BACKLOG.md`; o teste de reroteamento continua lento e ignorado no conjunto regular. Nenhum dos resultados atesta capacidade de corrente, térmica, EMI ou fabricabilidade.
 
 ## Rever limites do processo de fabricação
 

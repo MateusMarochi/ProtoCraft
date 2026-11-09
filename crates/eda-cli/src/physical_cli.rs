@@ -1087,7 +1087,7 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
             &serde_json::json!({"output":path,"device":c.find(input)?.id,"format_version":eda_core::FORMAT_VERSION}),
         );
     }
-    let project = eda_storage::load(input)?;
+    let mut project = eda_storage::load(input)?;
     if cmd == "pcb-assembly" {
         let mut format = None;
         let mut output = None;
@@ -1151,6 +1151,8 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
     if cmd == "pcb-route" {
         let mut output = None;
         let mut config = eda_pcb::AutorouteConfig::default();
+        let mut require_complete = false;
+        let mut ripup_all = false;
         let mut seen = std::collections::HashSet::new();
         let mut i = 2;
         while i < args.len() {
@@ -1171,8 +1173,12 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
                 "--max-expansions" => {
                     let budget: usize = args.get(i + 1).ok_or("Informe o orçamento")?.parse()?;
                     config.max_total_expansions = budget;
-                    config.max_expansions_per_connection =
-                        config.max_expansions_per_connection.min(budget.max(1));
+                }
+                "--max-expansions-per-connection" => {
+                    config.max_expansions_per_connection = args
+                        .get(i + 1)
+                        .ok_or("Informe o orçamento por conexão")?
+                        .parse()?;
                 }
                 "--passes" => {
                     config.max_routing_passes = args
@@ -1182,6 +1188,21 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
                 }
                 "--no-optimize" => {
                     config.optimize_routes = false;
+                    i += 1;
+                    continue;
+                }
+                "--require-complete" => {
+                    require_complete = true;
+                    i += 1;
+                    continue;
+                }
+                "--ripup-all" => {
+                    ripup_all = true;
+                    i += 1;
+                    continue;
+                }
+                "--prioritize-short" => {
+                    config.prioritize_short_connections = true;
                     i += 1;
                     continue;
                 }
@@ -1206,14 +1227,43 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
         if destination.exists() {
             return Err("O arquivo de saída já existe; escolha outro nome.".into());
         }
+        let (ripped_up_tracks, ripped_up_vias) = if ripup_all {
+            let board = project.board.as_mut().ok_or("O projeto não tem PCB.")?;
+            let tracks = board.tracks.len();
+            let vias = board.vias.len();
+            board.tracks.clear();
+            board.vias.clear();
+            (tracks, vias)
+        } else {
+            (0, 0)
+        };
         let plan = eda_pcb::autoroute(&project, &config)?;
+        if require_complete && plan.stats.remaining_airwires > 0 {
+            json(&serde_json::json!({
+                "status": "incomplete",
+                "output": null,
+                "stats": plan.stats,
+                "failures": plan.failures,
+                "ripped_up_tracks": ripped_up_tracks,
+                "ripped_up_vias": ripped_up_vias,
+                "atomic": true,
+                "format_version": eda_core::FORMAT_VERSION
+            }))?;
+            return Err(tr!(
+                "O autorroteamento ficou incompleto; nenhum arquivo de saída foi criado."
+            )
+            .into());
+        }
         let mut engine = Engine::new(project)?;
         engine.execute(Command::Batch(plan.commands))?;
         eda_storage::create_new(destination, engine.project())?;
         return json(&serde_json::json!({
+            "status": if plan.stats.remaining_airwires == 0 { "complete" } else { "partial" },
             "output": destination,
             "stats": plan.stats,
             "failures": plan.failures,
+            "ripped_up_tracks": ripped_up_tracks,
+            "ripped_up_vias": ripped_up_vias,
             "atomic": true,
             "format_version": eda_core::FORMAT_VERSION
         }));

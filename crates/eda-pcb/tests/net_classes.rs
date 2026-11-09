@@ -100,6 +100,103 @@ fn autorouter_uses_the_netclass_minimum_track_width() {
 }
 
 #[test]
+fn autorouter_generates_drc_checked_escapes_for_dense_power_pads() {
+    let mut project = eda_library::buck_pi4_project().expect("projeto buck válido");
+    let board = project.board.as_mut().expect("PCB do buck");
+    board.tracks.clear();
+    board.vias.clear();
+    let pads = eda_pcb::placed_pads(&project).expect("pads posicionados");
+    let controller_pads: Vec<_> = pads
+        .iter()
+        .filter(|pad| pad.component == ComponentId(2))
+        .map(|pad| pad.position)
+        .collect();
+
+    let plan = autoroute(
+        &project,
+        &AutorouteConfig {
+            // O orçamento baixo força uma execução parcial e exercita os escapes
+            // de potência sem transformar este teste em benchmark de roteamento.
+            max_total_expansions: 5,
+            max_expansions_per_connection: 1,
+            optimize_routes: false,
+            ..AutorouteConfig::default()
+        },
+    )
+    .expect("roteador produz um plano parcial com fanouts");
+    let escape_tracks: Vec<_> = plan
+        .commands
+        .iter()
+        .filter_map(|command| match command {
+            Command::AddTrack { track }
+                if track.net.component == ComponentId(2)
+                    && track.width_nm == 250_000
+                    && controller_pads.contains(&track.start)
+                    && track
+                        .start
+                        .x
+                        .abs_diff(track.end.x)
+                        .max(track.start.y.abs_diff(track.end.y))
+                        <= (2 * NM_PER_MM) as u64 =>
+            {
+                Some(track)
+            }
+            _ => None,
+        })
+        .collect();
+    assert!(!escape_tracks.is_empty(), "deve gerar saídas dos pads QFN");
+    let escape_ends: Vec<_> = escape_tracks.iter().map(|track| track.end).collect();
+    assert!(plan.commands.iter().any(|command| matches!(
+        command,
+        Command::AddVia { via }
+            if via.net.component == ComponentId(2)
+                && escape_ends.contains(&via.position)
+                && via.diameter_nm == 400_000
+                && via.drill_nm == 200_000
+    )));
+
+    let fanout_commands: Vec<_> = plan
+        .commands
+        .iter()
+        .filter(|command| match command {
+            Command::AddTrack { track } => escape_tracks.iter().any(|escape| escape.id == track.id),
+            Command::AddVia { via } => escape_ends.contains(&via.position),
+            _ => false,
+        })
+        .cloned()
+        .collect();
+    let mut engine = Engine::new(project).expect("projeto válido");
+    engine
+        .execute(Command::Batch(fanout_commands))
+        .expect("fanouts aplicados atomicamente");
+    let report = check(engine.project()).expect("DRC após fanout");
+    assert!(
+        report
+            .diagnostics
+            .iter()
+            .filter(|diagnostic| diagnostic.severity == "error")
+            .all(|diagnostic| diagnostic.code == "UNROUTED"),
+        "fanout não pode criar erro geométrico ou violação de classe: {:?}",
+        report
+            .diagnostics
+            .iter()
+            .filter(|diagnostic| diagnostic.severity == "error")
+            .map(|diagnostic| (&diagnostic.code, &diagnostic.message))
+            .collect::<Vec<_>>()
+    );
+    assert!(
+        report.diagnostics.iter().all(|diagnostic| {
+            diagnostic.severity != "error"
+                || !matches!(
+                    diagnostic.code.as_str(),
+                    "COPPER_SHORT" | "CLEARANCE" | "BOARD_EDGE"
+                )
+        }),
+        "fanout não pode introduzir curto, violação de afastamento ou borda"
+    );
+}
+
+#[test]
 fn drc_reports_tracks_below_the_assigned_netclass_width() {
     let mut project =
         eda_library::load_pcb_example("pcb-555-led-1hz").expect("fixture interna 555");

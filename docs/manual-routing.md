@@ -29,10 +29,27 @@ Também há uma operação de CLI que preserva o projeto de entrada e grava um n
 
 ```powershell
 protocraft-cli pcb-route placa.protocraft --output placa-roteada.protocraft
+protocraft-cli pcb-route placa.protocraft --output placa-completa.protocraft --require-complete
+protocraft-cli pcb-route placa.protocraft --output cobre-refeito.protocraft --ripup-all --require-complete
+protocraft-cli pcb-route placa.protocraft --output rota-profunda.protocraft --ripup-all --max-expansions 5000000 --max-expansions-per-connection 900000 --prioritize-short --no-optimize --require-complete
 protocraft-cli pcb-route placa.protocraft --output placa-roteada.protocraft --grid-mm 0.25 --track-width-mm 0.25 --max-expansions 600000 --no-optimize
 ```
 
-O relatório JSON informa conexões roteadas, rotas pendentes, trilhas, vias, comprimento, expansões e falhas individuais. O autorroteador atual cobre placas retangulares de duas camadas; ainda não faz rip-up de trilhas manuais, zonas de cobre, pares diferenciais, controle de impedância ou regras por classe de rede. Para essas situações, revise o resultado e execute **Verificar DRC e conexões** antes de fabricar.
+O relatório JSON informa o estado `complete` ou `partial`, conexões roteadas, rotas pendentes, trilhas, vias, comprimento, expansões e falhas individuais. Sem `--require-complete`, a CLI grava uma saída parcial e retorna sucesso de execução para que o trabalho continue editável. Com essa opção, uma placa incompleta retorna código de erro, imprime o relatório e não cria o arquivo de saída.
+
+`--ripup-all` descarta todas as trilhas e vias somente na cópia de trabalho antes de calcular rotas novas. Use-o para reconstruir o cobre quando as rotas existentes estiverem congestionando o roteamento; o arquivo de entrada permanece intacto. O relatório contabiliza `ripped_up_tracks` e `ripped_up_vias`. O comando não identifica a autoria dos segmentos e não faz rip-up seletivo.
+
+`--max-expansions-per-connection` ajusta o teto individual de busca, até os limites de segurança do motor. `--max-expansions` continua sendo o teto global da execução. `--prioritize-short` tenta primeiro ligações curtas usando a distância original entre os airwires, para que fanouts adicionados não alterem a prioridade da busca. Compare o relatório porque nenhuma ordenação é melhor para toda placa.
+
+Em componentes SMD densos, o autorroteador tenta fanout por vias curtas apenas nos pads que participam de airwires pendentes. Nas redes que declaram `pad_escape`, o escape usa a largura e as dimensões menores autorizadas por essa regra; nas outras redes, usa a largura e as dimensões completas da classe. Cada escape candidato é verificado pelo DRC antes de ser mantido, e as rotas restantes usam os requisitos normais da classe. Se não houver corredor legal, o escape é omitido e a conexão permanece no relatório como pendente.
+
+O teste integral, intencionalmente separado da suíte rápida devido ao tempo de busca do buck, refaz os exemplos a partir de cobre vazio. Ele exige conclusão do 555 e do shield; para o buck aceita o melhor plano parcial enquanto restarem apenas diagnósticos `UNROUTED`. Portanto, esse teste ainda não comprova o reroteamento completo do buck; acompanhe o critério pendente em `BACKLOG.md`:
+
+```powershell
+cargo test -p eda-cli --test routing_cli autoroutes_reference_boards_without_new_physical_violations -- --ignored --exact
+```
+
+O autorroteador atual cobre placas retangulares de duas camadas. Ele usa largura, folga e dimensões de via das classes simples de rede; ainda não oferece rip-up seletivo de trilhas, zonas de cobre, pares diferenciais, controle de impedância, regras por região ou regras por camada. Para essas situações, revise o resultado e execute **Verificar DRC e conexões** antes de fabricar.
 
 ## Vias e troca de camada
 

@@ -730,8 +730,14 @@ fn command_help(command: &str) -> Option<String> {
         "dc-sweep" => Some(simulation_sweep_cli::help()),
         "simulate-measure" => Some(simulation_measure_cli::help()),
         "pcb-dfm" => Some(pcb_dfm_cli::help()),
-        "pcb-route" => Some(tr!(
-            "Uso: protocraft-cli pcb-route <projeto> --output novo.protocraft [--grid-mm 0.25] [--track-width-mm 0.25] [--max-expansions 600000] [--passes 1..8] [--no-optimize]\nO orçamento total inclui todas as tentativas e otimizações. O cobre existente é preservado; a saída pode manter conexões pendentes, detalhadas no relatório."
+        "pcb-route" => Some(format!(
+            "{}\n{}",
+            tr!(
+                "Uso: protocraft-cli pcb-route <projeto> --output novo.protocraft [--grid-mm 0.25] [--track-width-mm 0.25] [--max-expansions 600000] [--max-expansions-per-connection 128000] [--passes 1..8] [--prioritize-short] [--no-optimize] [--require-complete] [--ripup-all]\nO orçamento total limita todas as conexões e tentativas; o orçamento por conexão pode ser elevado para caminhos difíceis. O cobre existente é preservado por padrão; a saída pode manter conexões pendentes, detalhadas no relatório."
+            ),
+            tr!(
+                "Com --require-complete, o comando falha e não grava arquivo se restarem conexões pendentes. Com --ripup-all, ele remove todas as trilhas e vias da cópia de trabalho antes de refazer o roteamento; o arquivo de entrada permanece intacto."
+            )
         )),
         "templates" => Some(tr!(
             "Uso: protocraft-cli templates\nLista os modelos disponíveis em JSON."

@@ -3,7 +3,7 @@
 //! A busca usa uma malha local e esparsa, custos de comprimento/dobra/via,
 //! colisão geométrica com índice espacial e limites explícitos de trabalho.
 
-use super::{Airwire, check, placed_pads};
+use super::{Airwire, PcbReport, check, placed_pads};
 use eda_core::{
     Board, BoardSide, Command, Engine, NM_PER_MM, NmPoint, PadShape, PadTechnology, PinRef,
     Project, Track, Via,
@@ -11,7 +11,7 @@ use eda_core::{
 use eda_netlist::{NetId, build_netlist};
 use serde::Serialize;
 use std::cmp::Ordering;
-use std::collections::{BTreeMap, BinaryHeap, HashMap};
+use std::collections::{BTreeMap, BinaryHeap, HashMap, HashSet};
 use std::time::Instant;
 
 const MIN_GRID_NM: i64 = 50_000;
@@ -114,6 +114,7 @@ struct Endpoint {
 struct Connection {
     net: NetId,
     anchor: PinRef,
+    priority_length_nm: f64,
     track_width_nm: i64,
     via_diameter_nm: i64,
     via_drill_nm: i64,
@@ -606,6 +607,364 @@ fn select_candidate(
     Ok(true)
 }
 
+/// Gera fanouts curtos para pads SMD densos; redes de potência usam a regra de escape
+/// estreito, enquanto as demais respeitam integralmente largura e via da própria classe.
+fn fanout_dense_smd_pads(
+    project: &mut Project,
+    unresolved: &[Airwire],
+    baseline: &PcbReport,
+    escape_only: bool,
+    standard_only: bool,
+) -> Result<Vec<Command>, String> {
+    let pads = placed_pads(project)?;
+    let netlist = build_netlist(project);
+    let board = project
+        .board
+        .as_deref()
+        .cloned()
+        .ok_or_else(|| eda_i18n::text("O projeto não tem PCB."))?;
+    let mut dense_components = HashSet::new();
+    let mut centers = HashMap::<eda_core::ComponentId, (i128, i128, usize)>::new();
+    for pad in pads
+        .iter()
+        .filter(|pad| pad.pad.technology == PadTechnology::Smd)
+    {
+        let center = centers.entry(pad.component).or_default();
+        center.0 += i128::from(pad.position.x);
+        center.1 += i128::from(pad.position.y);
+        center.2 += 1;
+    }
+    for (index, pad) in pads.iter().enumerate() {
+        if pad.pad.technology != PadTechnology::Smd {
+            continue;
+        }
+        if pads.iter().skip(index + 1).any(|other| {
+            other.component == pad.component
+                && other.pad.technology == PadTechnology::Smd
+                && point_distance(pad.position, other.position) <= 800_000.0
+        }) {
+            dense_components.insert(pad.component);
+        }
+    }
+    if dense_components.is_empty() {
+        return Ok(Vec::new());
+    }
+    let mut commands = Vec::new();
+    let mut next_track_id = board
+        .tracks
+        .keys()
+        .copied()
+        .max()
+        .unwrap_or(0)
+        .checked_add(1)
+        .ok_or_else(|| eda_i18n::text("Não há IDs livres para novas trilhas."))?;
+    let mut next_via_id = board
+        .vias
+        .keys()
+        .copied()
+        .max()
+        .unwrap_or(0)
+        .checked_add(1)
+        .ok_or_else(|| eda_i18n::text("Não há IDs livres para novas vias."))?;
+
+    for pad in pads.iter().filter(|pad| {
+        dense_components.contains(&pad.component) && pad.pad.technology == PadTechnology::Smd
+    }) {
+        let (Some(net), Some(pin)) = (pad.net, pad.pin) else {
+            continue;
+        };
+        // O par de endpoints da airwire representa componentes desconectados
+        // da rede; ele pode não incluir o pad QFN específico que precisa de
+        // escape. Como o DRC já confirmou que a rede segue aberta, tentamos
+        // somente pads densos ainda sem trilha conectada nessa mesma rede.
+        let required_for_airwire = unresolved.iter().any(|wire| wire.net == net);
+        if !required_for_airwire {
+            continue;
+        }
+        let Some(rules) = super::net_class_for_id(&board, &netlist, net) else {
+            continue;
+        };
+        if escape_only && rules.pad_escape.is_none() {
+            continue;
+        }
+        if standard_only && rules.pad_escape.is_some() {
+            continue;
+        }
+        let (track_width_nm, via_diameter_nm, via_drill_nm, max_escape_length_nm) =
+            rules.pad_escape.as_ref().map_or(
+                (
+                    rules.track_width_nm,
+                    rules.via_diameter_nm,
+                    rules.via_drill_nm,
+                    2 * NM_PER_MM,
+                ),
+                |escape| {
+                    (
+                        escape.track_width_nm,
+                        escape.via_diameter_nm,
+                        escape.via_drill_nm,
+                        escape.max_length_nm,
+                    )
+                },
+            );
+        let already_connected = board.tracks.values().any(|track| {
+            netlist.net_for_pin(track.net) == Some(net)
+                && (track.start == pad.position || track.end == pad.position)
+        });
+        if already_connected {
+            continue;
+        }
+        let Some((sum_x, sum_y, count)) = centers.get(&pad.component).copied() else {
+            continue;
+        };
+        if count == 0 {
+            continue;
+        }
+        let center = NmPoint::new(
+            (sum_x / count as i128) as i64,
+            (sum_y / count as i128) as i64,
+        );
+        let dx = (pad.position.x - center.x) as f64;
+        let dy = (pad.position.y - center.y) as f64;
+        if dx.hypot(dy) <= 1.0 {
+            continue;
+        }
+        let base_angle = dy.atan2(dx);
+        let angles = [
+            0.0,
+            std::f64::consts::FRAC_PI_6,
+            -std::f64::consts::FRAC_PI_6,
+            std::f64::consts::FRAC_PI_3,
+            -std::f64::consts::FRAC_PI_3,
+            std::f64::consts::FRAC_PI_2,
+            -std::f64::consts::FRAC_PI_2,
+            std::f64::consts::PI,
+        ];
+        let lengths = [650_000_i64, 850_000, 1_100_000, 1_400_000];
+        let side = if pad.layers & 1 != 0 {
+            BoardSide::Top
+        } else if pad.layers & 2 != 0 {
+            BoardSide::Bottom
+        } else {
+            continue;
+        };
+        let mut accepted = false;
+        'candidate: for length in lengths {
+            if length > max_escape_length_nm {
+                continue;
+            }
+            for offset in angles {
+                let angle = base_angle + offset;
+                let via_position = NmPoint::new(
+                    pad.position.x + (angle.cos() * length as f64).round() as i64,
+                    pad.position.y + (angle.sin() * length as f64).round() as i64,
+                );
+                let track = Track {
+                    id: next_track_id,
+                    start: pad.position,
+                    end: via_position,
+                    width_nm: track_width_nm,
+                    layer: side,
+                    net: pin,
+                };
+                let via = Via {
+                    id: next_via_id,
+                    position: via_position,
+                    diameter_nm: via_diameter_nm,
+                    drill_nm: via_drill_nm,
+                    net: pin,
+                };
+                {
+                    let board = project
+                        .board
+                        .as_mut()
+                        .ok_or_else(|| eda_i18n::text("O projeto não tem PCB."))?;
+                    board.tracks.insert(track.id, track.clone());
+                    board.vias.insert(via.id, via.clone());
+                }
+                let after = check(project)?;
+                let legal = after.errors() <= baseline.errors()
+                    && after.airwires.len() <= baseline.airwires.len()
+                    && validate_physical_delta(baseline, &after).is_ok();
+                if legal {
+                    commands.push(Command::AddTrack { track });
+                    commands.push(Command::AddVia { via });
+                    next_track_id = next_track_id
+                        .checked_add(1)
+                        .ok_or_else(|| eda_i18n::text("Não há IDs livres para novas trilhas."))?;
+                    next_via_id = next_via_id
+                        .checked_add(1)
+                        .ok_or_else(|| eda_i18n::text("Não há IDs livres para novas vias."))?;
+                    accepted = true;
+                    break 'candidate;
+                }
+                let board = project
+                    .board
+                    .as_mut()
+                    .ok_or_else(|| eda_i18n::text("O projeto não tem PCB."))?;
+                board.tracks.remove(&track.id);
+                board.vias.remove(&via.id);
+            }
+        }
+        if !accepted {
+            // Se não houver corredor de escape legal, a busca normal ainda pode
+            // rotear o pad; não introduzimos geometria que viole o DRC.
+            continue;
+        }
+    }
+    Ok(commands)
+}
+
+fn has_dense_unescaped_airwire(project: &Project, unresolved: &[Airwire]) -> Result<bool, String> {
+    let pads = placed_pads(project)?;
+    let board = project.board.as_deref().ok_or("O projeto não tem PCB.")?;
+    let netlist = build_netlist(project);
+    for pad in pads
+        .iter()
+        .filter(|pad| pad.pad.technology == PadTechnology::Smd)
+    {
+        let Some(net) = pad.net else {
+            continue;
+        };
+        let touched = unresolved.iter().any(|wire| wire.net == net);
+        if !touched {
+            continue;
+        }
+        let dense = pads.iter().any(|other| {
+            other.component == pad.component
+                && other.pad.technology == PadTechnology::Smd
+                && other.position != pad.position
+                && point_distance(pad.position, other.position) <= 800_000.0
+        });
+        if !dense {
+            continue;
+        }
+        if super::net_class_for_id(board, &netlist, net)
+            .is_some_and(|rules| rules.pad_escape.is_none())
+        {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+fn connections_for_airwires(
+    airwires: &[Airwire],
+    pads: &[super::PlacedPad],
+    board: &Board,
+    netlist: &eda_netlist::Netlist,
+    config: &AutorouteConfig,
+) -> (Vec<Connection>, Vec<AutorouteFailure>) {
+    let anchors = net_anchors(pads, board, netlist);
+    let mut connections = Vec::with_capacity(airwires.len());
+    let mut failures = Vec::new();
+    for airwire in airwires {
+        let Some(anchor) = anchors.get(&airwire.net).copied() else {
+            failures.push(failure(
+                airwire,
+                "A rede não tem pino de referência na PCB.",
+            ));
+            continue;
+        };
+        let start = prefer_connected_via(
+            pads,
+            board,
+            netlist,
+            airwire.net,
+            airwire.start,
+            airwire.end,
+        );
+        let end = prefer_connected_via(pads, board, netlist, airwire.net, airwire.end, start);
+        let start_layers = endpoint_layers(pads, board, netlist, airwire.net, start);
+        let end_layers = endpoint_layers(pads, board, netlist, airwire.net, end);
+        if start_layers == 0 || end_layers == 0 {
+            failures.push(failure(
+                airwire,
+                "Não foi possível identificar a camada do cobre em uma ponta.",
+            ));
+            continue;
+        }
+        let rules = super::net_class_for_id(board, netlist, airwire.net);
+        connections.push(Connection {
+            net: airwire.net,
+            anchor,
+            priority_length_nm: point_distance(airwire.start, airwire.end),
+            track_width_nm: rules.map_or(config.track_width_nm, |rules| rules.track_width_nm),
+            via_diameter_nm: rules.map_or(config.via_diameter_nm, |rules| rules.via_diameter_nm),
+            via_drill_nm: rules.map_or(config.via_drill_nm, |rules| rules.via_drill_nm),
+            start: Endpoint {
+                position: start,
+                layers: start_layers,
+                drill_radius_nm: endpoint_drill_radius(pads, board, netlist, airwire.net, start),
+            },
+            end: Endpoint {
+                position: end,
+                layers: end_layers,
+                drill_radius_nm: endpoint_drill_radius(pads, board, netlist, airwire.net, end),
+            },
+        });
+    }
+    (connections, failures)
+}
+
+fn route_geometry_commands(
+    routes: &[RoutedConnection],
+    board: &Board,
+) -> Result<Vec<Command>, String> {
+    let mut next_track_id = board
+        .tracks
+        .keys()
+        .copied()
+        .max()
+        .unwrap_or(0)
+        .checked_add(1)
+        .ok_or_else(|| eda_i18n::text("Não há IDs livres para novas trilhas."))?;
+    let mut next_via_id = board
+        .vias
+        .keys()
+        .copied()
+        .max()
+        .unwrap_or(0)
+        .checked_add(1)
+        .ok_or_else(|| eda_i18n::text("Não há IDs livres para novas vias."))?;
+    let mut commands = Vec::new();
+    for route in routes {
+        for segment in &route.segments {
+            if segment.start == segment.end {
+                continue;
+            }
+            commands.push(Command::AddTrack {
+                track: Track {
+                    id: next_track_id,
+                    start: segment.start,
+                    end: segment.end,
+                    width_nm: route.connection.track_width_nm,
+                    layer: segment.layer,
+                    net: route.connection.anchor,
+                },
+            });
+            next_track_id = next_track_id
+                .checked_add(1)
+                .ok_or_else(|| eda_i18n::text("Não há IDs livres para novas trilhas."))?;
+        }
+        for position in &route.vias {
+            commands.push(Command::AddVia {
+                via: Via {
+                    id: next_via_id,
+                    position: *position,
+                    diameter_nm: route.connection.via_diameter_nm,
+                    drill_nm: route.connection.via_drill_nm,
+                    net: route.connection.anchor,
+                },
+            });
+            next_via_id = next_via_id
+                .checked_add(1)
+                .ok_or_else(|| eda_i18n::text("Não há IDs livres para novas vias."))?;
+        }
+    }
+    Ok(commands)
+}
+
 fn autoroute_pass(
     project: &Project,
     config: &AutorouteConfig,
@@ -615,10 +974,28 @@ fn autoroute_pass(
 ) -> Result<AutoroutePlan, String> {
     validate_config(config)?;
     let started = Instant::now();
-    let board = project.board.as_deref().ok_or("O projeto não tem PCB.")?;
-    let before = check(project)?;
-    let pads = placed_pads(project)?;
-    let netlist = build_netlist(project);
+    let source_before = check(project)?;
+    let mut routing_project = project.clone();
+    let mut initial_fanout_commands = fanout_dense_smd_pads(
+        &mut routing_project,
+        &source_before.airwires,
+        &source_before,
+        true,
+        false,
+    )?;
+    let board = routing_project
+        .board
+        .as_deref()
+        .ok_or("O projeto não tem PCB.")?;
+    let before = check(&routing_project)?;
+    let pads = placed_pads(&routing_project)?;
+    let netlist = build_netlist(&routing_project);
+    let reserve_fallback = if has_dense_unescaped_airwire(&routing_project, &before.airwires)? {
+        config.max_total_expansions / 5
+    } else {
+        0
+    };
+    let primary_budget = config.max_total_expansions - reserve_fallback;
     let class_clearances: BTreeMap<_, _> = netlist
         .nets
         .iter()
@@ -627,61 +1004,13 @@ fn autoroute_pass(
                 .map(|rules| (net.id, rules.clearance_nm))
         })
         .collect();
-    let anchors = net_anchors(&pads, board, &netlist);
-    let mut failures = Vec::new();
-    let mut connections = Vec::with_capacity(before.airwires.len());
-    for airwire in &before.airwires {
-        let Some(anchor) = anchors.get(&airwire.net).copied() else {
-            failures.push(failure(
-                airwire,
-                "A rede não tem pino de referência na PCB.",
-            ));
-            continue;
-        };
-        let start = prefer_connected_via(
-            &pads,
-            board,
-            &netlist,
-            airwire.net,
-            airwire.start,
-            airwire.end,
-        );
-        let end = prefer_connected_via(&pads, board, &netlist, airwire.net, airwire.end, start);
-        let start_layers = endpoint_layers(&pads, board, &netlist, airwire.net, start);
-        let end_layers = endpoint_layers(&pads, board, &netlist, airwire.net, end);
-        if start_layers == 0 || end_layers == 0 {
-            failures.push(failure(
-                airwire,
-                "Não foi possível identificar a camada do cobre em uma ponta.",
-            ));
-            continue;
-        }
-        let rules = super::net_class_for_id(board, &netlist, airwire.net);
-        connections.push(Connection {
-            net: airwire.net,
-            anchor,
-            track_width_nm: rules.map_or(config.track_width_nm, |rules| rules.track_width_nm),
-            via_diameter_nm: rules.map_or(config.via_diameter_nm, |rules| rules.via_diameter_nm),
-            via_drill_nm: rules.map_or(config.via_drill_nm, |rules| rules.via_drill_nm),
-            start: Endpoint {
-                position: start,
-                layers: start_layers,
-                drill_radius_nm: endpoint_drill_radius(&pads, board, &netlist, airwire.net, start),
-            },
-            end: Endpoint {
-                position: end,
-                layers: end_layers,
-                drill_radius_nm: endpoint_drill_radius(&pads, board, &netlist, airwire.net, end),
-            },
-        });
-    }
+    let (mut connections, mut failures) =
+        connections_for_airwires(&before.airwires, &pads, board, &netlist, config);
     connections.sort_by(|a, b| {
-        let da = point_distance(a.start.position, a.end.position);
-        let db = point_distance(b.start.position, b.end.position);
         if config.prioritize_short_connections {
-            da.total_cmp(&db)
+            a.priority_length_nm.total_cmp(&b.priority_length_nm)
         } else {
-            db.total_cmp(&da)
+            b.priority_length_nm.total_cmp(&a.priority_length_nm)
         }
     });
 
@@ -692,7 +1021,7 @@ fn autoroute_pass(
         let amount = rotation % connections.len();
         connections.rotate_left(amount);
     }
-    let mut index = build_obstacle_index(project, &pads, &netlist, config)?;
+    let mut index = build_obstacle_index(&routing_project, &pads, &netlist, config)?;
     let mut routes = Vec::new();
     let mut expansions = 0usize;
     for (position, connection) in connections.iter().enumerate() {
@@ -703,7 +1032,7 @@ fn autoroute_pass(
             ));
             continue;
         }
-        if expansions >= config.max_total_expansions {
+        if expansions >= primary_budget {
             failures.push(connection_failure(
                 connection,
                 "O orçamento global de busca foi atingido.",
@@ -712,7 +1041,7 @@ fn autoroute_pass(
         }
         let budget = config
             .max_expansions_per_connection
-            .min(config.max_total_expansions - expansions);
+            .min(primary_budget - expansions);
         let route_config = config_for_connection(config, connection);
         let result = search_connection(
             board,
@@ -747,10 +1076,10 @@ fn autoroute_pass(
         let optimization_budget = (config.max_total_expansions / 5).max(1);
         let per_route_budget = (optimization_budget / optimize_count.max(1)).max(1);
         for route_index in (0..optimize_count).rev() {
-            if expansions >= config.max_total_expansions {
+            if expansions >= primary_budget {
                 break;
             }
-            let mut local_index = build_obstacle_index(project, &pads, &netlist, config)?;
+            let mut local_index = build_obstacle_index(&routing_project, &pads, &netlist, config)?;
             for (other_index, other) in routes.iter().enumerate() {
                 if other_index != route_index {
                     let other_config = config_for_connection(config, &other.connection);
@@ -763,7 +1092,7 @@ fn autoroute_pass(
                 }
             }
             optimization_attempts += 1;
-            let remaining = per_route_budget.min(config.max_total_expansions - expansions);
+            let remaining = per_route_budget.min(primary_budget - expansions);
             let route_config = config_for_connection(config, &routes[route_index].connection);
             let candidate = search_connection(
                 board,
@@ -784,29 +1113,120 @@ fn autoroute_pass(
         }
     }
 
-    let mut commands = Vec::new();
-    let mut next_track_id = board
-        .tracks
-        .keys()
-        .copied()
-        .max()
-        .unwrap_or(0)
-        .checked_add(1)
-        .ok_or("Não há IDs livres para novas trilhas.")?;
-    let mut next_via_id = board
-        .vias
-        .keys()
-        .copied()
-        .max()
-        .unwrap_or(0)
-        .checked_add(1)
-        .ok_or("Não há IDs livres para novas vias.")?;
+    let primary_route_count = routes.len();
+    let primary_route_commands = route_geometry_commands(&routes, board)?;
+    let mut fallback_fanout_commands = Vec::new();
+    let mut retry_route_commands = Vec::new();
+    if reserve_fallback > 0 && !failures.is_empty() && expansions < config.max_total_expansions {
+        let mut retry_engine =
+            Engine::new(routing_project.clone()).map_err(|error| error.to_string())?;
+        if !primary_route_commands.is_empty() {
+            retry_engine
+                .execute(Command::Batch(primary_route_commands.clone()))
+                .map_err(|error| format!("O lote inicial de rotas foi recusado: {error}"))?;
+        }
+        let mut retry_project = retry_engine.project().clone();
+        let retry_baseline = check(&retry_project)?;
+        fallback_fanout_commands = fanout_dense_smd_pads(
+            &mut retry_project,
+            &retry_baseline.airwires,
+            &retry_baseline,
+            false,
+            false,
+        )?;
+        let retry_report = check(&retry_project)?;
+        let retry_pads = placed_pads(&retry_project)?;
+        let retry_board = retry_project
+            .board
+            .as_deref()
+            .ok_or_else(|| eda_i18n::text("O projeto não tem PCB."))?;
+        let mut retry_index = build_obstacle_index(&retry_project, &retry_pads, &netlist, config)?;
+        let (mut retry_connections, mut retry_failures) = connections_for_airwires(
+            &retry_report.airwires,
+            &retry_pads,
+            retry_board,
+            &netlist,
+            config,
+        );
+        retry_connections.sort_by(|a, b| {
+            if config.prioritize_short_connections {
+                a.priority_length_nm.total_cmp(&b.priority_length_nm)
+            } else {
+                b.priority_length_nm.total_cmp(&a.priority_length_nm)
+            }
+        });
+        if reverse {
+            retry_connections.reverse();
+        }
+        if !retry_connections.is_empty() {
+            let amount = rotation % retry_connections.len();
+            retry_connections.rotate_left(amount);
+        }
+        for (position, connection) in retry_connections.iter().enumerate() {
+            if position >= config.max_connections || expansions >= config.max_total_expansions {
+                retry_failures.push(connection_failure(
+                    connection,
+                    "O orçamento global de busca foi atingido.",
+                ));
+                continue;
+            }
+            let budget = config
+                .max_expansions_per_connection
+                .min(config.max_total_expansions - expansions);
+            let route_config = config_for_connection(config, connection);
+            let result = search_connection(
+                retry_board,
+                &mut retry_index,
+                connection,
+                &route_config,
+                &class_clearances,
+                budget,
+            );
+            expansions = expansions.saturating_add(result.expansions);
+            *consumed_expansions = expansions;
+            match result.route {
+                Some(route) => {
+                    add_route_obstacles(&mut retry_index, &route, connection.net, &route_config);
+                    routes.push(route);
+                }
+                None => retry_failures.push(connection_failure(
+                    connection,
+                    if result.expansions >= budget {
+                        "Busca limitada pelo orçamento de expansões; tente grade maior ou mais orçamento."
+                    } else {
+                        "Não foi encontrado caminho legal nas duas camadas."
+                    },
+                )),
+            }
+        }
+        failures = retry_failures;
+        retry_route_commands =
+            route_geometry_commands(&routes[primary_route_count..], retry_board)?;
+    }
+
+    let mut commands = Vec::with_capacity(
+        initial_fanout_commands.len()
+            + primary_route_commands.len()
+            + fallback_fanout_commands.len()
+            + retry_route_commands.len(),
+    );
+    commands.append(&mut initial_fanout_commands);
+    commands.extend(primary_route_commands);
+    commands.extend(fallback_fanout_commands);
+    commands.extend(retry_route_commands);
+
     let mut stats = AutorouteStats {
-        initial_airwires: before.airwires.len(),
+        initial_airwires: source_before.airwires.len(),
         routed_connections: routes.len(),
         unrouted_connections: failures.len(),
-        track_count: routes.iter().map(|route| route.segments.len()).sum(),
-        via_count: routes.iter().map(|route| route.vias.len()).sum(),
+        track_count: commands
+            .iter()
+            .filter(|command| matches!(command, Command::AddTrack { .. }))
+            .count(),
+        via_count: commands
+            .iter()
+            .filter(|command| matches!(command, Command::AddVia { .. }))
+            .count(),
         total_length_nm: routes
             .iter()
             .map(|route| route.length_nm.max(0.0).round() as u64)
@@ -816,41 +1236,6 @@ fn autoroute_pass(
         optimized_connections,
         ..AutorouteStats::default()
     };
-    for route in &routes {
-        for segment in &route.segments {
-            if segment.start == segment.end {
-                continue;
-            }
-            commands.push(Command::AddTrack {
-                track: Track {
-                    id: next_track_id,
-                    start: segment.start,
-                    end: segment.end,
-                    width_nm: route.connection.track_width_nm,
-                    layer: segment.layer,
-                    net: route.connection.anchor,
-                },
-            });
-            next_track_id = next_track_id
-                .checked_add(1)
-                .ok_or("A quantidade de trilhas excedeu os IDs disponíveis.")?;
-        }
-        for position in &route.vias {
-            commands.push(Command::AddVia {
-                via: Via {
-                    id: next_via_id,
-                    position: *position,
-                    diameter_nm: route.connection.via_diameter_nm,
-                    drill_nm: route.connection.via_drill_nm,
-                    net: route.connection.anchor,
-                },
-            });
-            next_via_id = next_via_id
-                .checked_add(1)
-                .ok_or("A quantidade de vias excedeu os IDs disponíveis.")?;
-        }
-    }
-
     if !commands.is_empty() {
         let mut candidate_engine =
             Engine::new(project.clone()).map_err(|error| error.to_string())?;
@@ -858,8 +1243,8 @@ fn autoroute_pass(
             .execute(Command::Batch(commands.clone()))
             .map_err(|error| format!("O modelo recusou o plano de roteamento: {error}"))?;
         let after = check(candidate_engine.project())?;
-        validate_physical_delta(&before, &after)?;
-        let expected_remaining = before.airwires.len().saturating_sub(routes.len());
+        validate_physical_delta(&source_before, &after)?;
+        let expected_remaining = source_before.airwires.len().saturating_sub(routes.len());
         if after.airwires.len() > expected_remaining {
             return Err(format!(
                 "Autorroteamento cancelado: o DRC ainda detectou {remaining} conexões pendentes de {planned} rotas planejadas.",
@@ -869,7 +1254,7 @@ fn autoroute_pass(
         }
         stats.remaining_airwires = after.airwires.len();
     } else {
-        stats.remaining_airwires = before.airwires.len();
+        stats.remaining_airwires = source_before.airwires.len();
     }
     stats.elapsed_ms = started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64;
     Ok(AutoroutePlan {
@@ -2039,5 +2424,35 @@ mod pass_selection_tests {
         assert_eq!(best.as_ref().unwrap().stats.selected_pass, 1);
         select_candidate(&mut best, Ok(plan(1, 3)), 0).unwrap();
         assert_eq!(best.as_ref().unwrap().stats.selected_pass, 3);
+    }
+}
+
+#[cfg(test)]
+mod dense_fanout_tests {
+    use super::*;
+
+    #[test]
+    fn control_fanout_uses_full_class_width_and_passes_drc() {
+        let mut project = eda_library::buck_pi4_project().expect("projeto buck válido");
+        let board = project.board.as_mut().expect("PCB do buck");
+        board.tracks.clear();
+        board.vias.clear();
+        let baseline = check(&project).expect("DRC antes do fanout");
+        let commands =
+            fanout_dense_smd_pads(&mut project, &baseline.airwires, &baseline, false, true)
+                .expect("fanout de controle");
+
+        assert!(commands.iter().any(|command| matches!(
+            command,
+            Command::AddTrack { track }
+                if track.net.component == eda_core::ComponentId(2)
+                    && track.net.pin == 1
+                    && track.width_nm == 250_000
+        )));
+        let after = check(&project).expect("DRC após o fanout");
+        assert!(
+            validate_physical_delta(&baseline, &after).is_ok(),
+            "fanout de controle não pode introduzir violação geométrica"
+        );
     }
 }

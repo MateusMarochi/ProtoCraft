@@ -67,6 +67,9 @@ fn routed_pi4_buck_template_has_power_nets_and_passes_cli_drc() {
         "{}",
         String::from_utf8_lossy(&created.stderr)
     );
+    let creation_report: serde_json::Value = serde_json::from_slice(&created.stdout).unwrap();
+    assert_eq!(creation_report["ok"], true);
+    assert_eq!(creation_report["template"], "buck-pi4-12v");
 
     let project: eda_core::Project = eda_storage::load(&path).unwrap();
     project.validate().unwrap();
@@ -161,6 +164,32 @@ fn routed_pi4_buck_template_has_power_nets_and_passes_cli_drc() {
     let report: serde_json::Value = serde_json::from_slice(&drc.stdout).unwrap();
     assert_eq!(report["diagnostics"].as_array().unwrap().len(), 0);
     assert_eq!(report["airwires"].as_array().unwrap().len(), 0);
+
+    let strict_output = directory.path().join("pi4-buck-strict.protocraft");
+    let strict_route = cli(&[
+        "pcb-route",
+        path_text,
+        "--output",
+        strict_output.to_str().unwrap(),
+        "--require-complete",
+    ]);
+    assert!(
+        strict_route.status.success(),
+        "{}",
+        String::from_utf8_lossy(&strict_route.stderr)
+    );
+    let route_report: serde_json::Value = serde_json::from_slice(&strict_route.stdout).unwrap();
+    assert_eq!(route_report["status"], "complete");
+    assert_eq!(route_report["stats"]["remaining_airwires"], 0);
+    assert_eq!(route_report["stats"]["track_count"], 0);
+    let strict_drc = cli(&["pcb-check", strict_output.to_str().unwrap()]);
+    assert!(strict_drc.status.success());
+    let strict_drc_report: serde_json::Value = serde_json::from_slice(&strict_drc.stdout).unwrap();
+    assert_eq!(strict_drc_report["airwires"].as_array().unwrap().len(), 0);
+    assert_eq!(
+        strict_drc_report["diagnostics"].as_array().unwrap().len(),
+        0
+    );
 }
 
 #[test]

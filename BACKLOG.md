@@ -112,9 +112,26 @@ Avanços de 04/11/2026: autorroteamento com ordens alternativas e orçamento glo
 - [ ] **Classes avançadas (parcial):** classes nomeadas já controlam largura mínima, folga mínima e tamanho mínimo de via no DRC/autorroteador. Faltam regras por região/camada, precedência, conflitos, perfis de fabricante, limites elétricos e reconciliação após mudanças no netlist.
 - [ ] Roteamento interativo com desvio de obstáculos, push-and-shove, edição preservando conectividade e controle de DRC; limites de desempenho e cancelamento.
 - [ ] Pares diferenciais, espaçamento e skew, ajuste de comprimento, grupos e relatórios com tolerâncias; impedância apenas com modelo e parâmetros de stackup verificáveis.
-- [ ] Autorroteador: rip-up/reroute controlado, regiões e classes, métricas reproduzíveis, orçamento/cancelamento e comparação em placas reais; não prometer conclusão.
+- [ ] Autorroteador: rip-up/reroute seletivo, regiões e classes, métricas reproduzíveis, orçamento/cancelamento e conclusão em placas densas; não prometer equivalência a roteador profissional.
 - [ ] Planos divididos, costura de vias, via fences e teardrops com regeneração e DRC; testes de conectividade e fabricação.
 - [ ] Pontos de teste, cobertura e relatórios; variantes de montagem, perfis de saída reutilizáveis e verificação pré-produção.
+
+### Validação incremental do autorroteador — 09/11/2026
+
+Implementado nesta rodada: a CLI diferencia saída `complete`/`partial`, pode exigir conclusão sem gravar um arquivo incompleto (`--require-complete`), pode limpar trilhas e vias da cópia de trabalho (`--ripup-all`), limita expansões por conexão e permite priorizar ligações curtas. O autorroteador gera escapes curtos para pads SMD densos, usa largura/diâmetro/furação definidos pela classe de rede e valida cada candidato contra o DRC. Uma etapa de recuperação tenta os pads densos de redes ainda abertas. Testes de classe de rede, fanout e o contrato da CLI cobrem os casos locais; a validação integral de buck segue aberta.
+
+Resultados reais pela CLI, todos em cópias temporárias:
+
+- [x] **Shield Raspberry Pi 4, cobre removido:** `--ripup-all --max-expansions 5000000 --max-expansions-per-connection 900000 --prioritize-short --no-optimize --require-complete` concluiu 7/7 airwires em 21,6 s; removeu 21 trilhas, criou 19 segmentos e zero vias. `pcb-check` retornou zero airwires e zero diagnósticos.
+- [x] **Gerador buck:** `buck-pi4-12v` criou uma placa 65 × 56,5 mm, 12 V para 5,115 V / 3 A, com 187 trilhas, zero airwires e zero erros DRC. Esse resultado usa o roteamento inicial do gerador e não comprova reroteamento do cobre limpo.
+- [x] **Buck, cobre removido e melhor solução acumulada:** uma primeira passagem de cinco milhões de expansões roteou 44/57; uma segunda passagem incremental longa roteou outras 6/13; uma passagem incremental com grade de 0,5 mm roteou outras 3/7. O `pcb-check` final contou 53/57 conexões resolvidas e quatro airwires pendentes: dois em `VIN12`, um em `VCC` e um em `FB`. Só houve diagnósticos `UNROUTED`; não foram introduzidas violações geométricas.
+- [x] A passagem experimental com grade de 0,125 mm não encontrou caminho novo. A comparação com 0,5 mm fica registrada para evitar repetir as mesmas medições sem hipótese.
+- [ ] **Buck completo desde cobre limpo:** fazer `pcb-route ... --ripup-all --require-complete` retornar `status: complete`; verificar `pcb-check` com zero airwires/erros e preservar o arquivo-fonte. Ainda faltam duas ligações `VIN12`, uma `VCC` e uma `FB` no melhor snapshot medido.
+- [ ] Melhorar a busca dos quatro trechos restantes sem relaxar largura, folga, regras de via ou DRC. Investigar escapes do QFN, conectividade em árvore dos barramentos, rip-up seletivo, distribuição de orçamento e efeito da ordem das rotas.
+- [ ] Rodar DRC independente no KiCad sobre a placa roteada e confrontar Gerber/Excellon com os dados do projeto; validar largura/corrente, retorno de GND, térmica e EMI do buck antes de qualquer afirmação de fabricabilidade.
+- [ ] Converter a medição integral de referência em validação contínua adequada ao tempo do CI. O teste de reroteamento continua `#[ignore]` porque o buck usa vários minutos; a cobertura regular atual valida geração e DRC do projeto pronto, não o reroteamento integral.
+
+O shield atingiu o critério de conectividade headless. O buck gerado está eletricamente conectado no modelo geométrico atual, mas o autorroteador genérico ainda não reproduz integralmente as rotas quando todo o cobre inicial é removido. Isso não atesta segurança elétrica ou fabricabilidade; os resultados e limitações estão nas issues de validação do GitHub.
 
 ## P2 — Simulação, instrumentos e bibliotecas
 
