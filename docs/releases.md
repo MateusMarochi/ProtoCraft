@@ -14,10 +14,10 @@ Ao receber uma tag, o workflow cria primeiro a entrada da release e depois compi
 3. Crie e envie uma tag anotada que corresponda à versão:
 
    ```powershell
-   git tag -a v0.11.0 -m "ProtoCraft v0.11.0"
-   git push origin v0.11.0
+   git tag -a v0.11.1 -m "ProtoCraft v0.11.1"
+   git push origin v0.11.1
    ```
 
-O envio da tag inicia `.github/workflows/release.yml`. A entrada da release aparece primeiro; os dois pacotes são anexados quando os jobs de plataforma terminam na aba **Actions**. As notas desta versão estão em [release-notes-v0.11.0.md](release-notes-v0.11.0.md).
+O envio da tag inicia `.github/workflows/release.yml`. A entrada da release aparece primeiro; os pacotes são anexados quando os jobs de plataforma terminam na aba **Actions**. As notas desta versão estão em [release-notes-v0.11.1.md](release-notes-v0.11.1.md).
 
 As atualizações são instaladas executando o novo instalador sobre a versão anterior, desde que a identidade e o caminho de instalação definidos em `installer/ProtoCraft.iss` continuem estáveis. O campo `AppUpdatesURL` leva à página de releases; o aplicativo ainda não possui verificação automática de atualizações.

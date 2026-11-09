@@ -32,6 +32,18 @@ Editor de circuitos eletrônicos para desktop, feito em Rust. Reúne editor de e
 
 Esta placa astável de duas camadas foi posicionada e roteada no ProtoCraft. Ela tem 45 segmentos de trilha, uma via, trilhas de 0,35 mm e 15 conexões concluídas. As trilhas chegam na direção do centro dos pads passantes, mantendo as furações livres. Abra o [projeto nativo](examples/555-led-1hz-pcb.protocraft) ou consulte as [notas da placa e da fabricação](docs/555-led-1hz-pcb.md).
 
+## Shield GPIO para Raspberry Pi 4
+
+<p align="center"><img src="docs/screenshots/protocraft-raspberry-pi-4-shield.svg" alt="Prévia SVG da placa shield Raspberry Pi 4 com header de 40 pinos, furos de montagem, ponto GPIO17 e LEDs de alimentação" width="960"></p>
+
+Este exemplo nativo de duas camadas tem contorno arredondado de 85 × 56 mm, quatro furos de montagem, header GPIO 2×20, ponto de teste GPIO17 e LEDs indicadores de 5 V/3,3 V. O projeto salvo informa 49 pads, 299,56 mm de cobre roteado, nenhum diagnóstico DRC e nenhum airwire na CLI atual. É um protótipo verificado por software: o encaixe físico não foi confirmado, e a placa de 85 mm pode interferir nos conectores ou no gabinete do Pi. Abra o [projeto nativo](examples/raspberry-pi-4-shield.protocraft) e consulte as [notas mecânicas e elétricas](docs/raspberry-pi-4-shield-prototype.md).
+
+## Fonte buck para Raspberry Pi 4 · 12 V para 5,1 V / 3 A
+
+<p align="center"><img src="docs/screenshots/protocraft-raspberry-pi-4-buck.svg" alt="Prévia SVG da placa buck de duas camadas, 12 V para 5,1 V e 3 A, para Raspberry Pi 4" width="960"></p>
+
+O projeto de referência de 65 × 56,5 mm usa o controlador buck LM61460 e trilhas nominais de 0,8 mm nas redes de potência. O arquivo salvo informa 98 pads, 493,54 mm de cobre roteado, nenhum diagnóstico DRC e nenhum airwire na CLI atual. O SVG é uma prévia gerada pelo renderizador de PCB, não uma captura da interface desktop. O projeto não tem simulação de comutação, validação térmica/EMI, revisão independente de fabricação ou teste físico com carga; o DRC geométrico não certifica operação a 3 A. Abra o [projeto nativo](examples/pcb-pi4-12v-buck.protocraft) e consulte os [cálculos e limites do projeto](docs/power-conversion.md).
+
 ## Início rápido
 
 No Windows, execute `Iniciar-ProtoCraft.cmd`. Para compilar o código-fonte, instale a toolchain Rust indicada em `rust-toolchain.toml` e as ferramentas de build C++ MSVC, depois execute:
@@ -67,6 +79,8 @@ O catálogo também oferece os modelos Raspberry Pi com header GPIO de 40 pinos,
 Os novos fluxos de CLI oferecem [tentativas alternativas de rota, limpeza colinear e revisão DFM](docs/pcb-optimization.md), com orçamento de trabalho, identificação de objetos e limites de fabricação configuráveis.
 
 O ProtoCraft implementa seus próprios motores e não incorpora código nem binários do Proteus. A importação `.pdsprj`/`.dsn` é experimental e parcial; não há garantia de compatibilidade com todos os projetos Proteus. Os dados de STM32/ESP32 servem ao projeto físico: firmware e periféricos internos não são emulados. Os modelos de simulação são genéricos e educacionais. A exportação para fabricação exige KiCad CLI e revisão independente da placa antes da produção.
+
+Consulte as [notas da versão 0.11.1](docs/release-notes-v0.11.1.md) para as mudanças desta publicação.
 
 ## Termos de busca
 

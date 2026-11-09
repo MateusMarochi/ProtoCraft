@@ -31,6 +31,18 @@ ProtoCraft is an independent implementation. It does not bundle or require Prote
 
 This two-layer astable 555 board was laid out and routed in ProtoCraft. It has 45 track segments, one via, 0.35 mm tracks, and 15 completed connections. Tracks approach the centers of the through-hole pads while keeping the drill openings clear. Open the [native project](examples/555-led-1hz-pcb.protocraft) or read the [board and fabrication notes](docs/555-led-1hz-pcb.md).
 
+## Raspberry Pi 4 GPIO shield
+
+<p align="center"><img src="docs/screenshots/protocraft-raspberry-pi-4-shield.svg" alt="ProtoCraft SVG board preview of the Raspberry Pi 4 GPIO shield with a 40-pin header, mounting holes, GPIO17 test point and power LEDs" width="960"></p>
+
+This native two-layer example has an 85 × 56 mm rounded outline, four mounting holes, a 2×20 GPIO header, a GPIO17 test point, and 5 V/3.3 V indicators. The saved project reports 49 pads, 299.56 mm of routed copper, no DRC diagnostics, and no airwires in the current CLI. It is a software-checked prototype: physical fit has not been confirmed, and the 85 mm board can interfere with Pi connectors or enclosures. Open the [native project](examples/raspberry-pi-4-shield.protocraft) and read the [mechanical and electrical notes](docs/raspberry-pi-4-shield-prototype.md).
+
+## Raspberry Pi 4 buck supply · 12 V to 5.1 V / 3 A
+
+<p align="center"><img src="docs/screenshots/protocraft-raspberry-pi-4-buck.svg" alt="ProtoCraft SVG board preview of a two-layer 12 V to 5.1 V, 3 A buck supply for Raspberry Pi 4" width="960"></p>
+
+The 65 × 56.5 mm reference design uses an LM61460 buck controller and 0.8 mm nominal power-net tracks. Its saved project reports 98 pads, 493.54 mm of routed copper, no DRC diagnostics, and no airwires in the current CLI. The SVG is a PCB renderer preview, not a desktop screenshot. The project has no switching simulation, thermal/EMI validation, independent fabrication review, or physical load test; its geometric DRC does not certify 3 A operation. Open the [native project](examples/pcb-pi4-12v-buck.protocraft) and read the [design calculations and limitations](docs/power-conversion.md).
+
 ## Quick start
 
 On Windows, run `Iniciar-ProtoCraft.cmd`. To build and launch from source, install the Rust toolchain pinned in `rust-toolchain.toml` and the MSVC C++ build tools, then run:
@@ -62,7 +74,7 @@ See the complete [CLI guide](docs/cli.md), the [extended English guide](README.e
 - [PCB routing and Gerber/Excellon export](docs/manual-routing.md)
 - [STM32/ESP32 physical catalog](docs/mcu-pcb.md)
 - [Proteus import scope and limitations](docs/proteus-import.md)
-- [Roadmap](docs/roadmap.md) · [validation notes](docs/validation.md) · [v0.11.0 release notes](docs/release-notes-v0.11.0.md) · [third-party notices](NOTICE.md)
+- [Roadmap](docs/roadmap.md) · [validation notes](docs/validation.md) · [v0.11.1 release notes](docs/release-notes-v0.11.1.md) · [third-party notices](NOTICE.md)
 
 ## Search terms / Palavras-chave
 
