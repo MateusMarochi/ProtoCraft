@@ -4,7 +4,7 @@
 
 <p align="center"><strong>Português · tradução</strong> · <a href="README.md">English · README principal</a></p>
 
-Editor de circuitos eletrônicos para desktop, feito em Rust. Reúne editor de esquemas, motores próprios de simulação, roteamento manual e autorroteamento inicial de PCB em duas camadas, dados físicos de dispositivos STM32/ESP32, CLI e importador experimental de projetos Proteus.
+Editor de circuitos eletrônicos para desktop, feito em Rust. Reúne editor de esquemas, motores próprios de simulação, roteamento manual e autorroteamento inicial de PCB em duas camadas, catálogos físicos STM32/ESP32/Raspberry Pi, CLI e importadores experimentais de projetos Proteus e Falstad/CircuitJS.
 
 > **Estado do projeto:** em desenvolvimento ativo. O código-fonte, a documentação e os exemplos de circuitos originais distribuídos com o ProtoCraft são licenciados sob MIT ou Apache-2.0, à sua escolha. Dados e assets de terceiros têm termos próprios; consulte [NOTICE.md](NOTICE.md), [LICENSE-MIT](LICENSE-MIT) e [LICENSE-APACHE](LICENSE-APACHE).
 
@@ -20,6 +20,8 @@ Editor de circuitos eletrônicos para desktop, feito em Rust. Reúne editor de e
 - CLI para validação, netlists, simulação, exportação SPICE, autorroteamento, ações de projeto e importação Proteus.
 - Servidor MCP headless por stdio com comandos tipados, busca física facetada, DRC e autorroteamento com revisão esperada.
 - Interface e CLI em português do Brasil e inglês, com seleção pelo idioma do sistema e fallback para inglês; os catálogos JSON podem ser substituídos sem recompilar.
+- Importação de Falstad/CircuitJS por texto legado, XML, .url e link HTTPS. Dispositivos reconhecidos usam modelos genéricos; itens sem suporte bloqueiam a simulação e aparecem no relatório.
+- Fluxos avançados de CLI para relatórios DFM, variantes de montagem, varredura DC de uma fonte/resistor e medições transientes. Consulte [fluxos avançados](docs/advanced-workflows.md) e seus limites.
 - Formato nativo de projeto `.protocraft`.
 
 ## Placa construída no ProtoCraft: pisca-pisca com 555

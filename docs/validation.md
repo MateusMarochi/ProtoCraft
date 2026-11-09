@@ -245,3 +245,11 @@ O relatório de `pcb-dfm --output` também utiliza o helper de publicação atô
 Revisão posterior confrontou o mapeamento com o carregador CircuitJS: a sonda `p` tem dois terminais, a saída `O` tem um e `x` é uma anotação. Na revisão de 05/11, o importador passou a omitir esses elementos sem efeito elétrico e a permitir simulação genérica para semicondutores e chaves reconhecidos, com avisos de aproximação. As fontes de dois terminais e a ordem dos pinos dos MOSFETs também foram alinhadas aos terminais elétricos do formato. A resistência interna positiva de fonte é transferida como resistor série; diodos preservam a resistência série no modelo genérico. Os testes focados passaram nesta revisão: 11 regressões do importador, 12 dos modelos de simulação e 4 de integração CLI. O `cargo check --workspace --locked --offline` também passou.
 
 A CLI foi executada com nove arquivos `.txt` Falstad/CircuitJS da Área de Trabalho: todos foram importados como `electrical_complete=true` e completaram análise transiente no motor Misto (passo solicitado 5 µs, duração 0,5 ms). Isso demonstra abertura via conversão para projeto nativo e execução pelo solver ProtoCraft, mas não equivalência de formas de onda/valores com o CircuitJS ou validade física dos modelos genéricos. A interface gráfica não foi exercitada nesta revisão.
+
+## Preparação da release v0.11.0 — 09/11/2026
+
+- Versão de workspace, lockfile, instalador e padrão de execução manual do workflow alinhados para `0.11.0`/`v0.11.0`; o formato nativo continua v7.
+- `cargo fmt --all -- --check` e `cargo check --workspace --all-targets --locked --offline -j 2` passaram.
+- `cargo test --workspace --locked --offline -j 1` passou com 309 testes ativos. A suíte foi executada após liberar espaço de artefatos e usar `CARGO_PROFILE_TEST_DEBUG=0` e `CARGO_INCREMENTAL=0`, evitando o limite de disco/PDB do primeiro intento.
+- `cargo clippy --workspace --all-targets --locked --offline -j 1 -- -D warnings` passou.
+- Não houve build local dos pacotes de release, teste Linux, validação gráfica desta revisão, verificação elétrica/física de hardware ou comparação global com Proteus/Falstad. A tag inicia os jobs Windows/Linux descritos em `docs/releases.md`.

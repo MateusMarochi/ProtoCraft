@@ -6,7 +6,7 @@
 
 <p align="center"><strong>English · Main README</strong> · <a href="README.pt-BR.md">Português · tradução</a></p>
 
-ProtoCraft is a Rust desktop EDA application with a headless CLI. It combines a schematic editor, electrical rule checking (ERC), original DC and transient simulation engines, two-layer PCB layout and routing, and Gerber/Excellon manufacturing export. It also includes physical component and footprint data for STM32 and ESP32 devices and an experimental importer for selected Proteus project files.
+ProtoCraft is a Rust desktop EDA application with a headless CLI. It combines a schematic editor, electrical rule checking (ERC), original DC and transient simulation engines, two-layer PCB layout and routing, and Gerber/Excellon manufacturing export. It includes experimental importers for selected Proteus and Falstad/CircuitJS files, physical catalogs for STM32, ESP32, and Raspberry Pi, plus CLI workflows for DFM, assembly variants, DC sweeps, and transient measurements.
 
 ProtoCraft is an independent implementation. It does not bundle or require Proteus. Proteus import is partial, and embedded MCU firmware is not emulated.
 
@@ -18,8 +18,9 @@ ProtoCraft is an independent implementation. It does not bundle or require Prote
 - **Circuit simulation:** three built-in Rust engines for DC and transient analysis, with plots and CSV output. Models are generic and educational.
 - **PCB design:** two-layer board editing, manual tracks, vias, non-plated holes, design-rule checks (DRC), and an initial A* autorouter.
 - **Manufacturing files:** RS-274X Gerber and Excellon drill output, with a JLCPCB preset. This optional workflow invokes an explicitly configured KiCad CLI.
-- **MCU physical design:** offline STM32 and ESP32 device, package, pin, pad, and footprint data. Firmware and on-chip peripherals are not simulated.
-- **Project files and import:** native versioned `.protocraft` files and an experimental, partial importer for selected Proteus `.pdsprj` and `.dsn` files.
+- **Physical device design:** offline STM32/ESP32 package and pad data plus Raspberry Pi GPIO header and Pico pinouts. Firmware and on-chip peripherals are not simulated.
+- **Project files and import:** native versioned `.protocraft` files; partial Proteus import; Falstad/CircuitJS text, XML, URL, and link import, with generic models and explicit simulation limits.
+- **Advanced CLI workflows:** DFM reports, assembly variants, DC parameter sweeps, and transient measurements. These do not imply fabrication certification or complete SPICE/Proteus equivalence.
 - **Desktop and automation:** light/dark desktop UI, English and Brazilian Portuguese translations, a headless CLI, and an MCP stdio server for project inspection, typed edits, device search, DRC, and autorouting.
 
 ## Example board built with ProtoCraft: 555 LED blinker
@@ -61,7 +62,7 @@ See the complete [CLI guide](docs/cli.md), the [extended English guide](README.e
 - [PCB routing and Gerber/Excellon export](docs/manual-routing.md)
 - [STM32/ESP32 physical catalog](docs/mcu-pcb.md)
 - [Proteus import scope and limitations](docs/proteus-import.md)
-- [Roadmap](docs/roadmap.md) · [validation notes](docs/validation.md) · [third-party notices](NOTICE.md)
+- [Roadmap](docs/roadmap.md) · [validation notes](docs/validation.md) · [v0.11.0 release notes](docs/release-notes-v0.11.0.md) · [third-party notices](NOTICE.md)
 
 ## Search terms / Palavras-chave
 

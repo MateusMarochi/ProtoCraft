@@ -41,11 +41,12 @@ do executável desktop instalado ao lado da CLI.
 - Para um tipo de elemento desconhecido, o importador não afirma a quantidade
   nem a ordem dos pinos. Mantém apenas as duas pontas geométricas do registro,
   marca a pinagem como desconhecida e bloqueia a simulação do circuito.
-- Condições iniciais não nulas de capacitores/indutores, resistência interna
-  negativa de fonte, dispositivos desconhecidos, MOSFETs com terminal de corpo
-  externo e formas de onda não suportadas mantêm o projeto parcial e bloqueiam
-  a simulação, em vez de serem silenciosamente descartados. Resistência interna
-  positiva de fonte é preservada como resistor série genérico.
+- Condições iniciais não nulas de capacitores/indutores, dispositivos
+  desconhecidos, MOSFETs com terminal de corpo externo e formas de onda não
+  suportadas mantêm o projeto parcial e bloqueiam a simulação, em vez de serem
+  silenciosamente descartados. Resistência interna positiva de fonte é
+  preservada como resistor série genérico. Resistência negativa faz a importação
+  falhar, sem criar projeto.
 - Sondas `p`, marcadores de saída `O` e anotações `x` não têm efeito elétrico;
   são omitidos com aviso, sem bloquear a simulação. Gráficos, instrumentos e a
   disposição visual original não são reconstruídos.

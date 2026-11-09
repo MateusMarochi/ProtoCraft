@@ -4,7 +4,7 @@
 
 <p align="center"><a href="README.md">Main README · English</a> · <a href="README.pt-BR.md">Português · tradução</a></p>
 
-ProtoCraft is a Rust desktop application for electronic design. It brings together a schematic editor, original circuit simulation engines, manual and initial automatic two-layer PCB routing, physical STM32/ESP32 device data, a CLI, and an experimental Proteus project importer.
+ProtoCraft is a Rust desktop application for electronic design. It brings together a schematic editor, original circuit simulation engines, manual and initial automatic two-layer PCB routing, physical STM32/ESP32/Raspberry Pi device data, a CLI, and experimental Proteus and Falstad/CircuitJS importers.
 
 > **Project status:** under active development. Original ProtoCraft source code, documentation, and bundled circuit examples are licensed under MIT or Apache-2.0, at your option. Third-party data and assets have separate terms; see [NOTICE.md](NOTICE.md), [LICENSE-MIT](LICENSE-MIT), and [LICENSE-APACHE](LICENSE-APACHE).
 
@@ -16,10 +16,12 @@ ProtoCraft is a Rust desktop application for electronic design. It brings togeth
 - Three built-in engines: Stable (backward Euler), Dynamic (trapezoidal), and Mixed (analog with digital events). Supports DC and transient analysis, continuous runs, plots, and CSV/SPICE export.
 - Two-layer PCB editor with manual 45-degree, 90-degree, and free-angle tracks, an initial A* autorouter, vias, non-plated holes, geometry editing, and design-rule checks.
 - Manufacturing Gerber/Excellon generation with RS-274X, Protel extensions, millimeters, absolute drill coordinates, 1:1 scale, and ZIP packaging through the JLCPCB preset. KiCad CLI is required for this optional workflow.
-- Offline physical catalog with 2,283 STM32 and 48 Espressif entries, including pins, packages, pads, and dimensions. This is physical design support; MCU firmware is not emulated.
+- Offline physical catalog with 2,283 STM32 and 48 Espressif entries plus Raspberry Pi GPIO/Pico pinouts, including package, pad, and dimension data. This is physical design support; MCU firmware is not emulated.
 - English and Brazilian Portuguese (pt-BR) desktop/CLI localization, selected from the operating-system locale with an English fallback; translators can replace JSON catalogs without rebuilding.
 - Native JSON `.protocraft` format with migrations and recovery backups.
 - Experimental Proteus ISIS 8 import for selected `.pdsprj` and `.dsn` project data, with import reports and preservation of unsupported model information.
+- Falstad/CircuitJS legacy text, XML, `.url`, and HTTPS import; recognized devices map to generic ProtoCraft models, and unsupported features block simulation with an import report.
+- CLI DFM checks, assembly variants, DC sweeps, and transient measurements; their scope and limits are documented in [advanced workflows](docs/advanced-workflows.md).
 - Headless CLI sharing the application’s project, connectivity, and simulation code.
 - Headless MCP stdio server with typed atomic edits, expected revisions, faceted physical-device search, PCB checks, and autorouting.
 

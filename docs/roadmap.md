@@ -6,7 +6,7 @@
 - Coordenadas inteiras, pinos definidos, IDs estáveis, comandos atômicos e undo/redo.
 - Editor esquemático com componentes básicos, fios, junções, rótulos e propriedades.
 - Derivação determinística de redes e ERC inicial.
-- Persistência própria v1 (v5 atual), migração, backup e rejeição de arquivos inválidos/futuros.
+- Persistência própria v1 (v7 atual), migração, backup e rejeição de arquivos inválidos/futuros.
 - MNA original para RLC/fontes DC/diodo genérico, DC e transiente, limites e testes analíticos.
 - Apresentação dos resultados, gráficos, CSV e exportação SPICE.
 - CLI e exemplos originais.
@@ -121,3 +121,12 @@ Permanecem pendentes zonas de cobre, contornos arbitrários, regras hierárquica
 ## Avanços headless de 05/11/2026
 
 Variantes de montagem DNP, varredura DC de resistor/fonte e medições de séries temporais/diferenciais estão implementadas em serviços de núcleo e CLI. DFM considera rasgos orientados como cápsulas e um limite independente entre furações. Os novos relatórios usam publicação atômica sem sobrescrita. Exemplos, critérios e limitações: [advanced-workflows.md](advanced-workflows.md). Zonas, multicamadas, pares diferenciais, AC, passo adaptativo, firmware e 3D continuam pendentes.
+
+## Implementado no ciclo 0.11.0
+
+- Importação Falstad/CircuitJS via desktop e CLI para texto legado, XML, atalhos `.url` e links suportados; vários semicondutores/chaves são simuláveis por modelos genéricos. O relatório identifica aproximações e bloqueia recursos sem suporte.
+- Relatórios de medição transiente, incluindo medidas RMS/janela e diferenças entre traces, além de varredura DC linear/log de uma fonte DC ou resistor. A alteração dos pontos usa snapshots do Engine e não modifica o original.
+- Variantes DNP para relatórios de montagem; essas variantes filtram a lista, sem reconciliar conectividade elétrica.
+- Limites DFM configuráveis, diagnósticos de furação/folgas e relatórios CLI; a verificação continua geométrica e não certifica fabricação.
+
+O formato nativo atual é v7. Permanecem pendentes os itens estruturais abaixo, incluindo hierarquia de esquemas, zonas de cobre, regras por região/camada, roteamento profissional e equivalência geral com Proteus/Falstad.
