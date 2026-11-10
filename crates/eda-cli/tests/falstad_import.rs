@@ -143,7 +143,10 @@ fn imported_txt_with_annotations_and_probes_runs_through_the_cli_simulator() {
         String::from_utf8_lossy(&simulation.stderr)
     );
     let output = String::from_utf8_lossy(&simulation.stdout);
-    assert!(output.contains("Simulação concluída"), "{output}");
+    assert!(
+        output.contains("Simulação concluída:") || output.contains("Simulation complete:"),
+        "{output}"
+    );
     assert!(output.contains("5.000000000 V"), "{output}");
     assert!(csv.is_file());
 }

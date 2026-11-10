@@ -1,5 +1,8 @@
 use eda_core::{ComponentId, NM_PER_MM, PinRef};
-use std::process::Command;
+use std::{process::Command, sync::Mutex};
+
+// Executar os dois roteamentos longos da placa em paralelo tornou o CI instável.
+static BUCK_ROUTING_TEST_LOCK: Mutex<()> = Mutex::new(());
 
 fn cli(args: &[&str]) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_protocraft-cli"))
@@ -58,6 +61,7 @@ fn lm61460_is_searchable_and_exposes_exact_pin_to_pad_mapping() {
 
 #[test]
 fn routed_pi4_buck_template_has_power_nets_and_passes_cli_drc() {
+    let _routing_guard = BUCK_ROUTING_TEST_LOCK.lock().unwrap();
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("pi4-buck.protocraft");
     let path_text = path.to_str().unwrap();
@@ -276,6 +280,7 @@ fn copper_calculator_and_cli_pad_escape_configuration_are_reusable() {
 
 #[test]
 fn direct_buck_command_and_template_are_listed_in_cli() {
+    let _routing_guard = BUCK_ROUTING_TEST_LOCK.lock().unwrap();
     let help = cli(&["buck-pi4-12v", "--help"]);
     assert!(help.status.success());
     assert!(String::from_utf8_lossy(&help.stdout).contains("buck-pi4-12v"));
